@@ -1,0 +1,80 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% load html_extras %}
+{% block title %}
+  <title>MContact - Blog</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - Blog" />
+  <meta property="og:title" content="MContact - Blog" />
+  <meta property="og:description" content="MContact - Blog" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:blog_list' %}" class="route active">Bloq</a>
+    </div>
+  </section>
+
+  <section id="blog-main">
+    <div class="blog-container">
+      <div class="row row-gap-4">
+        {% for blog in blogs %}
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="blog-box">
+              <div class="blog-img">
+                <a href="{{ blog.get_absolute_url }}">
+                  {% if blog.image %}
+                    <img src="{{ blog.image.url }}" alt="{{ blog.title }}" />
+                  {% else %}
+                    <img src="{% static 'images/blog.png' %}" alt="{{ blog.title }}" />
+                  {% endif %}
+                </a>
+              </div>
+              <div class="blog-content">
+                <a href="{{ blog.get_absolute_url }}"><div class="title">{{ blog.title }}</div></a>
+                <div class="description">
+                  {{ blog.description|striptags|html_unescape|truncatechars:100 }}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p>
+            {% trans 'Heç bir bloq yazısı tapılmadı.' %}
+          </p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="pagination">
+      {% if blogs.has_previous %}
+        <div class="page-item prev" aria-label="Əvvəlki səhifə">
+          <a href="?page={{ blogs.previous_page_number }}"><span>&lsaquo;</span></a>
+        </div>
+      {% endif %}
+      {% for num in blogs.paginator.page_range %}
+        {% if blogs.number == num %}
+          <div class="page-item active">{{ num }}</div>
+        {% else %}
+          <div class="page-item">
+            <a href="?page={{ num }}">{{ num }}</a>
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if blogs.has_next %}
+        <div class="page-item next" aria-label="Növbəti səhifə">
+          <a href="?page={{ blogs.next_page_number }}"><span>&rsaquo;</span></a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

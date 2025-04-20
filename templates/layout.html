@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'vendors/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'styles/style.css' %}" />
+    {% block meta_tags %}
+
+    {% endblock %}
+    {% block title %}
+
+    {% endblock %}
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <header id="layout-header">
+      <div class="header-bg">
+        <div class="header-container">
+          <div class="logo">
+            <img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" />
+          </div>
+          <nav class="navbar">
+            <ul>
+              <li>
+                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+              </li>
+            </ul>
+          </nav>
+          <div class="responsive-navbar">
+            <div class="d-flex">
+              <div>
+                <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+              </div>
+              <div class="user-menu">
+                <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+
+                <ul class="user-dropdown-menu">
+                  <li class="user-info">
+                    <img src="{% static 'images/user-default.png' %}" alt="" />
+                    <div>
+                      <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi' }}</div>
+                      <div class="user-email">{{ user.email|default:'guest@gmail.com' }}</div>
+                    </div>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <i class="fa-solid fa-bars"></i>
+              </div>
+            </div>
+          </div>
+          <div class="header-icons">
+            <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+            <div class="user-menu">
+              <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+
+              <ul class="user-dropdown-menu">
+                <li class="user-info">
+                  <img src="{% static 'images/user-default.png' %}" alt="" />
+                  <div>
+                    <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi' }}</div>
+                    <div class="user-email">{{ user.email|default:'guest@gmail.com' }}</div>
+                  </div>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="responsive-header-container">
+          <div class="d-flex">
+            <div class="logo">
+              <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="" />
+            </div>
+            <div class="close-icon">
+              <i class="fa-solid fa-xmark"></i>
+            </div>
+          </div>
+          <ul class="list-unstyled outside-ul">
+            <li>
+              <div>
+                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+              </div>
+              <div class="openmenu-divider-outside"></div>
+            </li>
+          </ul>
+          <div class="responsive-header-contact-content">
+            <div class="mail d-flex">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
+            </div>
+            <div class="phone d-flex">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
+            </div>
+            <div class="openmenu-divider-outside"></div>
+
+            <ul class="responsive-header-social-icons">
+              <li>
+                <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main>
+      {% block main %}
+
+      {% endblock %}
+    </main>
+    <footer>
+      <div class="footer-container">
+        <div class="footer-column footer-left">
+          <div class="footer-logo">
+            <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="M-Kontakt" />
+          </div>
+          <p class="logo-content">M-Kontakt şirkəti Azərbaycan məkanında 2003-cü ildən bu günümüzə qədər hər növ mebellərin istehsalı, mebel aksesuarlarının satışı ilə məşğuldur.</p>
+          <ul class="social-icons">
+            <li>
+              <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
+            </li>
+          </ul>
+
+          <span class="footer-copyright">&copy; 2025 Mkontakt</span>
+        </div>
+
+        <div class="footer-column">
+          <h6>Səhifələr</h6>
+          <ul>
+            <li>
+              <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:products' %}">Məhsullar</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h6>Brendlər</h6>
+          <ul>
+            {% for brand in footer_brands %}
+              <li>
+                <a href="{% url 'MContact:products' %}?brand={{ brand.id }}">{{ brand.name }}</a>
+              </li>
+            {% empty %}
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="footer-column footer-contact">
+          <h6>Əlaqə</h6>
+          <div class="footer-contact-box">
+            <p>Texniki sorğular</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
+            </p>
+          </div>
+          <div class="footer-contact-box">
+            <p>Dəstək xidməti</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.support_email }}"><span>{{ contact_info.support_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.support_mobile }}"><span>{{ contact_info.support_mobile }}</span></a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    {% block scripts %}
+
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="{% static 'scripts/main.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - Məhsul detalları</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="{{ product.title }} - Məhsul detalları" />
+  <meta property="og:title" content="{{ product.title }} - Məhsul detalları" />
+  <meta property="og:description" content="{{ product.description|truncatechars:150 }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  {% if product.images.count > 0 %}
+    <meta property="og:image" content="{{ product.images.all.0.image.url }}" />
+  {% else %}
+    <meta property="og:image" content="{% static 'images/no-image.png' %}" />
+  {% endif %}
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:products' %}" class="route">Məhsullar</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a class="route active">{{ product.title }}</a>
+    </div>
+  </section>
+
+  <section id="selected-product-info">
+    <div class="selected-product-info-container">
+      <div class="row row-gap-4">
+        <div class="col-lg-5 col-12">
+          <div class="selected-product-info-slider">
+            <div class="swiper productDetailSwiper">
+              <div class="swiper-wrapper">
+                {% if product.images.all %}
+                  {% for img in product.images.all %}
+                    <div class="swiper-slide">
+                      <img src="{{ img.image.url }}" alt="{{ product.title }}" />
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class="swiper-slide">
+                    <img src="{% static 'images/no-image.png' %}" alt="{{ product.title }}" />
+                  </div>
+                {% endif %}
+              </div>
+              <div class="swiper-button-prev"></div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-pagination"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7 col-12">
+          <div class="selected-product-info-content">
+            <h1>{{ product.title }}</h1>
+            <span class="subtitle">
+              {% if product.categories.all %}
+                {% for cat in product.categories.all %}
+                  {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              {% endif %}
+            </span>
+            <p>{{ product.description }}</p>
+
+            <span class="price">₼{{ product.price }}</span>
+            <div class="count-and-type">
+              <div class="counter">
+                <button class="counter-btn minus">-</button>
+                <div class="counter-value">1</div>
+                <button class="counter-btn plus">+</button>
+              </div>
+              <div class="type">
+                <select>
+                  <option disabled selected hidden>Məhsulun növü</option>
+                  {% for pt in product.product_types.all %}
+                    <option value="{{ pt.id }}">{{ pt.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="add-to-cart-btn">
+              <button class="add-to-cart-btn__button" data-product="{{ product.id }}">Səbətə əlavə et</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="product-detail-other-products">
+    <div class="other-products-content">
+      <h3>Digər məhsullar</h3>
+    </div>
+    <div class="other-products-container">
+      <div class="row row-gap-4">
+        {% for other in other_products %}
+          <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+            <div class="product-box">
+              <div class="product-img">
+                <img src="{{ other.get_main_image_url }}" alt="{{ other.title }}" />
+                {% if other.discount %}
+                  <div class="product-discount-percent">-{{ other.discount }}%</div>
+                {% endif %}
+                <a href="{% url 'MContact:wishlist-toggle' other.id %}" class="product-add-to-favourites {% if other.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
+              </div>
+              <div class="product-content">
+                <a href="{{ other.get_absolute_url }}"><div class="title">{{ other.title }}</div></a>
+                <div class="description">
+                  {% for cat in other.categories.all %}
+                    {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+                <div class="product-price-and-cart">
+                  <div class="product-price">₼{{ other.price }}</div>
+                  <div class="product-add-to-cart" data-product="{{ product.id }}">
+                    <i class="fa-solid fa-plus"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="see-all-products-btn">
+      <a href="{% url 'MContact:products' %}"><span>Hamısı</span> <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </section>
+{% endblock %}

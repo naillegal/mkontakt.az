@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - OTP kodu</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - OTP kodu" />
+  <meta property="og:title" content="MContact - OTP kodu" />
+  <meta property="og:description" content="MContact - OTP kodu" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="form-main">
+    <div class="form-container">
+      <div class="form">
+        <h1>E-poçtunuzu yoxlayın</h1>
+        <p style="width: 80% !important">
+          Biz
+          <a class="selected-email" href="mailto:mirzayevcausasui@gmail.com">mirzayevcausasui@gmail.com</a>
+          ünvanına sıfırlama linki göndərdik e-poçtda qeyd olunan 5 rəqəmli kodu daxil edin
+        </p>
+
+        <form>
+          <div class="otp-container">
+            <input type="text" maxlength="1" />
+            <input type="text" maxlength="1" />
+            <input type="text" maxlength="1" />
+            <input type="text" maxlength="1" />
+          </div>
+
+          <a href="new-password.html" class="action-btn" style="margin-top: 20px; width: 300px !important">Şifrənin sıfırlanması</a>
+        </form>
+      </div>
+      <div class="form-img">
+        <img src="{% static 'images/form-default.jpg' %}" alt="" />
+        <div class="form-img-content">
+          <h2>Həyatınıza Keyfiyyət və Stil Qatın!</h2>
+          <p>
+            Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br />
+            keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br />
+            mükəmməl seçimlər yaratmaq bizim işimizdir.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

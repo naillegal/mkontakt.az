@@ -1,0 +1,536 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'vendors/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'styles/style.css' %}" />
+
+    <title>MContact - Əsas Səhifə</title>
+  </head>
+  <body>
+    <div id="overlay"></div>
+
+    <header id="home-header">
+      <div class="header-bg">
+        <img src="{% static 'images/home-main-banner.png' %}" alt="Banner" />
+
+        <div class="header-container">
+          <div class="logo">
+            <img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" />
+          </div>
+          <nav class="navbar">
+            <ul>
+              <li>
+                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+              </li>
+              <li>
+                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+              </li>
+            </ul>
+          </nav>
+          <div class="responsive-navbar">
+            <div class="d-flex">
+              <div>
+                <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+              </div>
+              <div class="user-menu">
+                <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+
+                <ul class="user-dropdown-menu">
+                  <li class="user-info">
+                    <img src="{% static 'images/user-default.png' %}" alt="" />
+                    <div>
+                      <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi' }}</div>
+                      <div class="user-email">{{ user.email|default:'guest@gmail.com' }}</div>
+                    </div>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                  </li>
+                  <li>
+                    <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <i class="fa-solid fa-bars"></i>
+              </div>
+            </div>
+          </div>
+          <div class="header-icons">
+            <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+            <div class="user-menu">
+              <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+
+              <ul class="user-dropdown-menu">
+                <li class="user-info">
+                  <img src="{% static 'images/user-default.png' %}" alt="" />
+                  <div>
+                    <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi' }}</div>
+                    <div class="user-email">{{ user.email|default:'guest@gmail.com' }}</div>
+                  </div>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                </li>
+                <li>
+                  <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="responsive-header-container">
+          <div class="d-flex">
+            <div class="logo">
+              <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="" />
+            </div>
+            <div class="close-icon">
+              <i class="fa-solid fa-xmark"></i>
+            </div>
+          </div>
+          <ul class="list-unstyled outside-ul">
+            <li>
+              <div>
+                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+              </div>
+            </li>
+            <li>
+              <div class="openmenu-divider-outside"></div>
+              <div>
+                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+              </div>
+              <div class="openmenu-divider-outside"></div>
+            </li>
+          </ul>
+          <div class="responsive-header-contact-content">
+            <div class="mail d-flex">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
+            </div>
+            <div class="phone d-flex">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
+            </div>
+            <div class="openmenu-divider-outside"></div>
+
+            <ul class="responsive-header-social-icons">
+              <li>
+                <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="main-banner-content">
+          <h1>Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq</h1>
+          <p>AVENTOS HF qaldırmalı mexanizmi sayəsində ikiqat qapılar yuxarıya doğru rahat və səssiz açılır. Mətbəx və yaşayış sahələrində geniş istifadə olunan bu sistem, optimal hərəkət erqonomikası və istənilən mövqedə sabit dayanma imkanı ilə fərqlənir.</p>
+          <a href="{% url 'MContact:products' %}" class="main-banner-content-btn">Ətraflı</a>
+        </div>
+      </div>
+    </header>
+
+    <section id="partners-slider-section">
+      <div class="container">
+        <div class="partners-slider-title">{{ slider_title }}</div>
+        <div class="swiper mySwiper">
+          <div class="swiper-wrapper">
+            {% for partner in partners %}
+              <div class="swiper-slide">
+                <div class="partner-circle">
+                  <img src="{{ partner.image.url }}" alt="{{ partner.title }}" />
+                </div>
+                <p>{{ partner.title }}</p>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="advertisement-slider">
+      <div class="container">
+        <div class="swiper adSwiper">
+          <div class="swiper-wrapper">
+            {% for slide in advertisement_slides %}
+              <div class="swiper-slide">
+                <img src="{{ slide.image.url }}" alt="{{ slide.title }}" />
+                <div class="slide-content">
+                  <h2>{{ slide.title }}</h2>
+                  <p>{{ slide.description }}</p>
+                  <a href="{{ slide.link|default:'#' }}">Məhsula bax</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="recently-products">
+      <div class="recently-products-content">
+        <h3>Yeni əlavə olunan məhsullar</h3>
+        <p>Yenilikləri ilk siz kəşf edin! Mebeliniz üçün ən son texnologiyalara sahib, funksional və estetik məhsullarımızla tanış olun. Keyfiyyət və rahatlıq bir arada!</p>
+      </div>
+      <div class="recently-products-container">
+        <div class="row row-gap-4">
+          {% for product in recent_products %}
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+              <div class="product-box">
+                <div class="product-img">
+                  <img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" />
+                  {% if product.discount %}
+                    <div class="product-discount-percent">-{{ product.discount }}%</div>
+                  {% endif %}
+                  <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
+                </div>
+                <div class="product-content">
+                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
+                  <div class="description">{{ product.description|truncatewords:10 }}</div>
+                  <div class="product-price-and-cart">
+                    <div class="product-price">₼{{ product.price }}</div>
+                    <div class="product-add-to-cart" data-product="{{ product.id }}">
+                      <i class="fa-solid fa-plus"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="see-all-products-btn">
+        <a href="{% url 'MContact:products' %}"><span>Hamısı</span> <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </section>
+
+    <section id="best-categories">
+      <div class="best-categories-content">
+        <h3>Ən çox axtarılan kateqoriyalar</h3>
+        <p>Seçiminizi asanlaşdırmaq üçün ən populyar məhsul kateqoriyalarını bir araya gətirdik. Keyfiyyətli və funksional həlləri kəşf edin!</p>
+      </div>
+
+      <div class="categories">
+        {% if recent_categories|length > 0 %}
+          <div class="left-box">
+            <a href="{% url 'MContact:products' %}?category={{ recent_categories.0.id }}" class="big-category-box">
+              <div class="big-category-box">
+                <img src="{% if recent_categories.0.image %}
+                    {{ recent_categories.0.image.url }}
+                  {% else %}
+                    {% static 'images/best-categories1.jpeg' %}
+                  {% endif %}"
+                  alt="{{ recent_categories.0.name }}" />
+                <div class="category-box-content">
+                  <div class="category-box-title">{{ recent_categories.0.name }}</div>
+                  <div class="category-box-description">Mkontakt</div>
+                </div>
+              </div>
+            </a>
+          </div>
+        {% endif %}
+
+        {% if recent_categories|length > 1 %}
+          <div class="right-box">
+            {% for category in recent_categories|slice:'1:' %}
+              <a href="{% url 'MContact:products' %}?category={{ category.id }}" class="small-category-box">
+                <div class="small-category-box">
+                  <img src="{% if category.image %}
+                      {{ category.image.url }}
+                    {% else %}
+                      {% static 'images/best-categories1.jpeg' %}
+                    {% endif %}"
+                    alt="{{ category.name }}" />
+                  <div class="category-box-content">
+                    <div class="category-box-title">{{ category.name }}</div>
+                    <div class="category-box-description">Mkontakt</div>
+                  </div>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section id="other-products">
+      <div class="other-products-content">
+        <h3>Digər məhsullar</h3>
+      </div>
+      <div class="other-products-container">
+        <div class="row row-gap-4">
+          {% for product in random_products %}
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+              <div class="product-box">
+                <div class="product-img">
+                  <img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" />
+                  {% if product.discount %}
+                    <div class="product-discount-percent">-{{ product.discount }}%</div>
+                  {% endif %}
+                  <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
+                </div>
+                <div class="product-content">
+                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
+                  <div class="description">{{ product.description|truncatewords:10 }}</div>
+                  <div class="product-price-and-cart">
+                    <div class="product-price">₼{{ product.price }}</div>
+                    <div class="product-add-to-cart" data-product="{{ product.id }}">
+                      <i class="fa-solid fa-plus"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="see-all-products-btn">
+        <a href="{% url 'MContact:products' %}"><span>Hamısı</span> <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </section>
+
+    <section id="home-contact-with-us-banner">
+      <div class="home-contact-with-us-banner-container">
+        <img src="{% static 'images/home-contact-with-us-banner.jpeg' %}" alt="" />
+        <div class="home-contact-with-us-banner-content">
+          <div class="home-contact-with-us-banner-title">Bizimlə Əlaqə Saxlayın – Sizin Üçün Buradayıq!</div>
+          <div class="home-contact-with-us-banner-description">Suallarınız var? Sizin üçün ən uyğun həlləri təklif etməyə hazırıq! Əlaqə bölməsinə keçin və bizimlə rahat şəkildə əlaqə qurun.</div>
+          <div class="home-contact-with-us-banner-btn">
+            <a href="{% url 'MContact:contact' %}"><span>Əlaqə</span> <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="our-advantages">
+      <div class="our-advantages-content">
+        <h3>Üstünlüklərimiz – Bizimlə Fərqi Hiss Edin!</h3>
+      </div>
+
+      <div class="our-advantages-container">
+        <div class="row row-gap-4">
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="our-advantages-box">
+              <div class="our-advantages-box-img">
+                <img src="{% static 'images/our-advantages-img1.png' %}" alt="" />
+              </div>
+              <div class="our-advantages-box-title">Yüksək Keyfiyyət</div>
+              <div class="our-advantages-box-description">Məhsullarımız uzunömürlü materiallardan hazırlanır və dayanıqlılığı ilə seçilir.</div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="our-advantages-box">
+              <div class="our-advantages-box-img">
+                <img src="{% static 'images/our-advantages-img2.png' %}" alt="" />
+              </div>
+              <div class="our-advantages-box-title">İnnovativ Həllər</div>
+              <div class="our-advantages-box-description">Son texnologiyalarla hazırlanmış funksional və rahat mexanizmlər təklif edirik.</div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 col-12">
+            <div class="our-advantages-box">
+              <div class="our-advantages-box-img">
+                <img src="{% static 'images/our-advantages-img3.png' %}" alt="" />
+              </div>
+              <div class="our-advantages-box-title">Müştəri Məmnuniyyəti</div>
+              <div class="our-advantages-box-description">Sizə ən yaxşı xidməti təqdim etmək üçün hər zaman dəstək olmağa hazırıq.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="customer-review">
+      <div class="customer-review-content">
+        <h3>Müştərilər rəyləri</h3>
+      </div>
+
+      <div class="customer-review-container">
+        <div class="row">
+          {% for review in customer_reviews %}
+            <div class="col-lg-4 col-md-6 col-12">
+              <div class="customer-review-box">
+                <div class="customer-info">
+                  <div class="customer-info-img">
+                    {% if review.image %}
+                      <img src="{{ review.image.url }}" alt="{{ review.full_name }}" />
+                    {% else %}
+                      <img src="{% static 'images/customer1.jpg' %}" alt="" />
+                    {% endif %}
+                  </div>
+                  <div class="customer-info-content">
+                    <div class="customer-info-name">{{ review.full_name }}</div>
+                    <div class="customer-info-job">Müştəri</div>
+                  </div>
+                </div>
+                <div class="customer-review-description">{{ review.review }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-container">
+        <div class="footer-column footer-left">
+          <div class="footer-logo">
+            <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="M-Kontakt" />
+          </div>
+          <p class="logo-content">M-Kontakt şirkəti Azərbaycan məkanında 2003-cü ildən bu günümüzə qədər hər növ mebellərin istehsalı, mebel aksesuarlarının satışı ilə məşğuldur.</p>
+          <ul class="social-icons">
+            <li>
+              <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
+            </li>
+            <li>
+              <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
+            </li>
+          </ul>
+
+          <span class="footer-copyright">&copy; 2025 Mkontakt</span>
+        </div>
+
+        <div class="footer-column">
+          <h6>Səhifələr</h6>
+          <ul>
+            <li>
+              <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:products' %}">Məhsullar</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+            </li>
+            <li>
+              <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h6>Brendlər</h6>
+          <ul>
+            {% for brand in footer_brands %}
+              <li>
+                <a href="{% url 'MContact:products' %}?brand={{ brand.id }}">{{ brand.name }}</a>
+              </li>
+            {% empty %}
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="footer-column footer-contact">
+          <h6>Əlaqə</h6>
+          <div class="footer-contact-box">
+            <p>Texniki sorğular</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
+            </p>
+          </div>
+          <div class="footer-contact-box">
+            <p>Dəstək xidməti</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.support_email }}"><span>{{ contact_info.support_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.support_mobile }}"><span>{{ contact_info.support_mobile }}</span></a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="{% static 'scripts/main.js' %}"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+          {% for msg in messages %}
+            showToast("{{ msg|escapejs }}");
+          {% endfor %}
+        {% endif %}
+      });
+    </script>
+  </body>
+</html>

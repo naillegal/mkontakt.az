@@ -1,0 +1,129 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - Əlaqə</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - Əlaqə" />
+  <meta property="og:title" content="MContact - Əlaqə" />
+  <meta property="og:description" content="MContact - Əlaqə" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:contact' %}" class="route active">Əlaqə</a>
+    </div>
+  </section>
+
+  <section id="contact-main">
+    <div class="contact-title">
+      <h1>Əlaqə</h1>
+    </div>
+    <div class="contact-container">
+      <div class="row row-gap-5">
+        <div class="col-lg-6 col-12">
+          <h2>Əlaqə vasitələri</h2>
+          <p class="upper-content">
+            Sizin rahatlığınız və məmnuniyyətiniz bizim üçün önəmlidir! 😊
+            <br />
+            Hər hansı sualınız, sifarişiniz və ya əlavə məlumat üçün bizimlə
+            <br />
+            istənilən vaxt əlaqə saxlaya bilərsiniz.
+          </p>
+          <div class="contact-container-content">
+            <p>Texniki sorğular</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
+            </p>
+          </div>
+          <div class="contact-container-content">
+            <p>Dəstək xidməti</p>
+            <p>
+              E-mail:
+              <a href="mailto:{{ contact_info.support_email }}"><span>{{ contact_info.support_email }}</span></a>
+            </p>
+            <p>
+              Mobil:
+              <a href="tel:{{ contact_info.support_mobile }}"><span>{{ contact_info.support_mobile }}</span></a>
+            </p>
+          </div>
+          <div class="social">
+            <p>Sosial şəbəkələrdə bizi izləyin</p>
+            <ul class="social-icons">
+              <li>
+                <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
+              </li>
+              <li>
+                <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-6 col-12">
+          <div class="form-container">
+            {% if messages %}
+              <div class="messages">
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <form action="{% url 'MContact:contact-submit' %}" method="post">
+              {% csrf_token %}
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="ad">Ad</label>
+                  <input type="text" id="ad" name="name" placeholder="Adınızı daxil edin" required />
+                </div>
+                <div class="form-group">
+                  <label for="shirket">Şirkət</label>
+                  <input type="text" id="shirket" name="company" placeholder="Şirkət adını daxil edin" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" name="email" placeholder="Email daxil edin" />
+                </div>
+                <div class="form-group">
+                  <label for="telefon">Telefon</label>
+                  <input type="tel" id="telefon" name="phone" placeholder="Nömrənizi daxil edin" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="message">İsmarıc</label>
+                  <textarea id="message" name="message" placeholder="İsmarıc yazın" rows="4" required></textarea>
+                </div>
+              </div>
+              <button type="submit">Göndər</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="iframe-main">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3152.8767116975365!2d-122.4278433!3d37.7764669!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808580a0fdc532a5%3A0x3239f8fa6ed6f3bd!2sChurch%20of%208%20Wheels!5e0!3m2!1sen!2sus!4v1678713119989!5m2!1sen!2sus" width="100%" height="400" style="border: 0" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </section>
+{% endblock %}

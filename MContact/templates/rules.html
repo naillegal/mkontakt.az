@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - İstifadə qaydaları</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - İstifadə qaydaları" />
+  <meta property="og:title" content="MContact - İstifadə qaydaları" />
+  <meta property="og:description" content="MContact - İstifadə qaydaları" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:rules' %}" class="route active">İstifadə qaydaları</a>
+    </div>
+  </section>
+
+  <section id="about-us-content-main">
+    <div class="title">
+      <h1>İstifadə qaydaları</h1>
+    </div>
+    <div class="about-us-content">
+      <p>
+        <strong>1. Qeydiyyat və Giriş</strong>
+      </p>
+      <p>
+        &bull; Saytımıza qeydiyyatdan keçərkən doğru və tam məlumatlar təqdim etməlisiniz.<br />
+        &bull; Hesabınızı yalnız şəxsi məqsədləriniz üçün istifadə edin və üçüncü şəxslərə verməyin.<br />
+        &bull; Hesabınızın təhlükəsizliyinə cavabdehsiniz və şifrənizin məxfiliyini qoruyun.
+      </p>
+
+      <p>
+        <strong>2. Məhsul Seçimi və Sifarişi</strong>
+      </p>
+      <p>
+        &bull; Məhsul seçərkən məhsulun təsvirini və qiymətini diqqətlə oxuyun.<br />
+        &bull; Məhsul sifariş edərkən səhv məlumat daxil etməmək üçün diqqətli olun.<br />
+        &bull; Saytımızda yalnız mövcud olan məhsullar sifariş verilə bilər.<br />
+      </p>
+
+      <p>
+        <strong>3. Ödəniş və Çatdırılma</strong>
+      </p>
+      <p>
+        &bull; Ödəniş prosesində göstərdiyiniz məlumatların doğru və aktual olması vacibdir.<br />
+        &bull; Sifarişinizin çatdırılma ünvanını düzgün və tam şəkildə təqdim edin.<br />
+        &bull; Ödəniş tamamlandıqdan sonra sifarişinizi geri qaytarmaq və ya dəyişdirmək mümkün olmayacaq.
+      </p>
+
+      <p>
+        <strong>4. Qadağan Edilən Fəaliyyətlər</strong>
+      </p>
+      <p>
+        &bull; Saytımızda digər istifadəçilərin hüquqlarına zərər verən və ya qanunlara uyğun olmayan fəaliyyətlər qadağandır.<br />
+        &bull; Sayt üzərindən saxta və ya yanıltıcı məlumat vermək, müştəri məlumatlarını pozmaq və ya spam göndərmək qətiyyən yolverilməzdir.
+      </p>
+
+      <p>
+        <strong>5. İstifadəçi Hüquqları və Məsuliyyətlər</strong>
+      </p>
+      <p>
+        &bull; Saytı istifadə edərkən bütün qanunlara və nizamnamələrə riayət etmək vacibdir.<br />
+        &bull; Məhsul və xidmətlərimizə dair hər hansı bir şikayət və ya problem yaranarsa, müştəri xidmətimizlə əlaqə saxlamaq lazımdır.
+      </p>
+
+      <p>
+        <strong>6. İstifadəçi Məlumatlarının Qorunması</strong>
+      </p>
+      <p>
+        &bull; Şəxsi məlumatlarınızın təhlükəsizliyi bizim üçün önəmlidir. Məlumatlarınız yalnız xidmətin təmin edilməsi məqsədilə istifadə olunacaq.<br />
+        &bull; İstifadəçi məlumatlarının üçüncü tərəflərlə paylaşılması yalnız qanuni tələblərə uyğun olaraq həyata keçiriləcək.<br />
+      </p>
+
+      <p>
+        <strong>7. Saytın Dəyişdirilməsi və Bağlanması</strong>
+      </p>
+      <p>
+        &bull; Saytımızın funksiyalarında dəyişiklik etmək və ya xidmətləri müvəqqəti olaraq dayandırmaq haqqına sahibik.<br />
+        &bull; İstifadəçilər bu dəyişikliklərə dərhal riayət etməli və uyğun olaraq davranmalıdırlar.
+      </p>
+    </div>
+  </section>
+{% endblock %}

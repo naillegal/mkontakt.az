@@ -1,0 +1,155 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - Səbət</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - Səbət" />
+  <meta property="og:title" content="MContact - Səbət" />
+  <meta property="og:description" content="MContact - Səbət" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+  <section id="cart-main">
+    <div class="cart-main-container">
+      <div class="cart-title">
+        <h1>Səbət</h1>
+      </div>
+
+      {% if cart.items.exists %}
+        <div class="if-cart-exists">
+          <div class="cart-container">
+            <div class="cart-container-left">
+              <div class="left-upper">
+                <div class="cart-show-product-count">
+                  Səbət <span>({{ cart.items.count }} Məhsul)</span>
+                </div>
+                <hr />
+                <div class="select-and-delete-actions">
+                  <button class="select-all">Hamısını seç</button>
+                  <button class="delete-selected"><i class="fa-solid fa-trash-can"></i> Seçilənləri sil</button>
+                </div>
+              </div>
+
+              {% for item in page_obj %}
+                <div class="left-under cart-item" data-id="{{ item.id }}">
+                  <div class="cart-product-box">
+                    <div class="cart-product-img">
+                      <img src="{{ item.product.get_main_image_url }}" alt="{{ item.product.title }}" />
+                    </div>
+                    <div class="cart-product-general-actions">
+                      <div class="cart-product-content-and-delete">
+                        <div class="cart-product-content">
+                          <div class="cart-product-title">
+                            <div>{{ item.product.title }}</div>
+                            <input type="checkbox" id="checkbox-{{ item.id }}" class="select-one" />
+                            <label for="checkbox-{{ item.id }}"><span class="custom-checkbox"></span></label>
+                          </div>
+                          <div class="cart-product-description">
+                            {% for c in item.product.categories.all %}
+                              {{ c.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                          </div>
+                        </div>
+                        <div class="cart-product-delete">
+                          <i class="fa-solid fa-xmark"></i>
+                        </div>
+                      </div>
+                      <div class="cart-product-count-and-price">
+                        <div class="cart-product-count">
+                          <div class="counter">
+                            <button class="counter-btn minus" data-action="dec">-</button>
+                            <div class="counter-value">{{ item.quantity }}</div>
+                            <button class="counter-btn plus" data-action="inc">+</button>
+                          </div>
+                        </div>
+                        <div class="cart-product-price">₼{{ item.product.price|floatformat:2 }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+
+              {% if page_obj.has_other_pages %}
+                <div class="pagination">
+                  {% if page_obj.has_previous %}
+                    <a class="page-item prev" href="?page={{ page_obj.previous_page_number }}"><span>&lsaquo;</span></a>
+                  {% else %}
+                    <div class="page-item prev">
+                      <span>&lsaquo;</span>
+                    </div>
+                  {% endif %}
+
+                  {% for p in page_obj.paginator.page_range %}
+                    {% if p == page_obj.number %}
+                      <div class="page-item active">{{ p }}</div>
+                    {% else %}
+                      <a class="page-item" href="?page={{ p }}">{{ p }}</a>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if page_obj.has_next %}
+                    <a class="page-item next" href="?page={{ page_obj.next_page_number }}"><span>&rsaquo;</span></a>
+                  {% else %}
+                    <div class="page-item next">
+                      <span>&rsaquo;</span>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="cart-container-right">
+              <div class="submit-discount-code-container">
+                <input type="text" id="discount-code-input" placeholder="Endirim kodu daxil edin" />
+                <button id="apply-discount">Tətbiq et</button>
+              </div>
+              <div class="payment-info-container">
+                <div class="payment-info-title">Ödəniş məlumatları</div>
+                <div class="price">
+                  <div>Qiymət</div>
+                  <div>₼{{ cart.raw_total|floatformat:2 }}</div>
+                </div>
+                <div class="product-discount">
+                  <div>Məhsul endirimi</div>
+                  <div>-₼{{ cart.product_discount|floatformat:2 }}</div>
+                </div>
+                <div class="discount-code">
+                  <div>Endirim kodu</div>
+                  <div>-₼{{ discount_amount|floatformat:2 }}</div>
+                </div>
+                <div class="delivery-price">
+                  <div>Çatdırılma</div>
+                  <div>Ödənişsiz</div>
+                </div>
+                <hr />
+                <div class="subtotal">
+                  <div>Ümumi</div>
+                  <div>₼{{ cart.grand_total|floatformat:2 }}</div>
+                </div>
+                <div class="submit-cart">
+                  <a href="{% url 'MContact:order' %}" id="go-order">Davam edin</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="if-cart-doesnt-exists">
+          <div class="img-container">
+            <img src="{% static 'images/if-cart-doesnt-exists-img.png' %}" alt="" />
+            <div class="img-container-content">
+              <h6>Səbətində məhsul yoxdur</h6>
+              <p>İstədiyin məhsulu səbətinə əlavə et.</p>
+              <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

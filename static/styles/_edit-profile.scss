@@ -1,0 +1,135 @@
+#edit-profile {
+  background-color: rgba(247, 247, 247, 1);
+  padding: 50px 0px 5px 0px;
+  .profile-title {
+    h1 {
+      text-align: center;
+      color: rgba(0, 0, 0, 1);
+      font-size: 48px;
+      font-weight: 600;
+    }
+  }
+  .profile-info-container {
+    background-color: rgba(255, 255, 255, 1);
+    padding: 30px 0px;
+    width: 80%;
+    margin: 50px auto;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 36px;
+    img {
+      width: 80px;
+      height: 80px;
+      margin: auto;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .profile-info-name {
+      margin-top: 10px;
+      color: rgba(0, 0, 0, 1);
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .profile-info-number {
+      a {
+        color: rgba(20, 48, 130, 1);
+        text-decoration: none;
+      }
+    }
+    .profile-info-change-password {
+      a {
+        font-size: 20px;
+        color: rgba(0, 0, 0, 1);
+      }
+    }
+  }
+}
+
+#edit-profile-form {
+  background-color: rgba(247, 247, 247, 1);
+  padding-bottom: 50px;
+  form {
+    width: 80%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 1);
+    }
+
+    .input-container {
+      position: relative;
+      margin-bottom: 20px;
+
+      input {
+        width: 100%;
+        height: 50px;
+        padding: 0 50px 0 20px;
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        transition: box-shadow 0.2s, border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(20, 48, 130, 1);
+        }
+      }
+
+      i {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 18px;
+        color: rgba(20, 48, 130, 1);
+      }
+    }
+
+    .phone-input {
+      img {
+        position: absolute;
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%);
+        height: 20px;
+        width: 20px;
+      }
+      &::after {
+        content: "";
+        position: absolute;
+        left: 60px;
+        top: 15%;
+        width: 1px;
+        height: 70%;
+        background-color: #ccc;
+      }
+      input {
+        padding-left: 80px;
+      }
+    }
+
+    .action-btn {
+      padding: 15px;
+      border-radius: 50px;
+      border: none;
+      background-color: rgba(20, 48, 130, 1);
+      color: #fff;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition: opacity 0.2s ease-in-out;
+      text-decoration: none;
+      margin-top: 20px;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}

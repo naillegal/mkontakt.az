@@ -1,0 +1,27 @@
+#about-us-content-main {
+  background-color: rgba(247, 247, 247, 1);
+  padding-bottom: 50px;
+  .title {
+    h1 {
+      font-weight: 600;
+      margin-bottom: 40px;
+      text-align: center;
+      font-size: 42px;
+      color: rgba(0, 0, 0, 1);
+    }
+  }
+  .about-us-content {
+    width: 80%;
+    margin: 50px auto;
+    background-color: #ffffff;
+    color: rgba(0, 0, 0, 1);
+    font-size: 15px;
+    line-height: 34px;
+    padding: 50px 25px 40px 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    @media (max-width: 768px) {
+      font-size: 13px;
+    }
+  }
+}

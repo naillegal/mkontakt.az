@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - Sifariş</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - Sifariş" />
+  <meta property="og:title" content="MContact - Sifariş" />
+  <meta property="og:description" content="MContact - Sifariş" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="form-main">
+    <div class="form-container">
+      <div style="width: 100% !important" class="form">
+        <h1 class="text-center">Sifariş</h1>
+        <form method="post" action="{% url 'MContact:order-create' %}">
+          {% csrf_token %}
+
+          <label>Ad soyad</label>
+          <input type="text" name="full_name" value="{{ current_user.full_name|default:'' }}" placeholder="Ad soyadınızı daxil edin" required />
+
+          <label>Telefon nömrəsi</label>
+          <div class="phone-input">
+            <img src="{% static 'images/az-flag.png' %}" alt="Azerbaijan Flag" />
+            <input type="tel" name="phone" value="{{ current_user.phone|default:'' }}" placeholder="00 000 00 00" required />
+          </div>
+
+          <label>Çatdırılma ünvanı</label>
+          <input type="text" name="address" placeholder="Çatdırılma ünvanını daxil et" required />
+
+          <label>Çatdırılma tarixi</label>
+          <input type="date" name="delivery_date" required />
+
+          <label>Çatdırılma saatı</label>
+          <input type="time" name="delivery_time" required />
+
+          <button type="submit" style="margin-top: 20px" class="action-btn">Təsdiq</button>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

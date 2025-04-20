@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - {{ blog.title }}</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="{{ blog.title }} - MContact Blog" />
+  <meta property="og:title" content="MContact - {{ blog.title }}" />
+  <meta property="og:description" content="{{ blog.title }} - MContact Blog" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  {% if blog.image %}
+    <meta property="og:image" content="{{ blog.image.url }}" />
+  {% else %}
+    <meta property="og:image" content="{% static 'images/blog.png' %}" />
+  {% endif %}
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:blog_list' %}" class="route">Bloq</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="#" class="route active">{{ blog.title }}</a>
+    </div>
+  </section>
+
+  <section id="blog-detail-main">
+    <div class="blog-detail-title">
+      <h1>{{ blog.title }}</h1>
+    </div>
+    <div class="blog-detail-container">
+      <div class="blog-detail-box">
+        <div class="blog-detail-img">
+          <a href="#">
+            {% if blog.image %}
+              <img src="{{ blog.image.url }}" alt="{{ blog.title }}" />
+            {% else %}
+              <img src="{% static 'images/blog.png' %}" alt="{{ blog.title }}" />
+            {% endif %}
+          </a>
+        </div>
+        <div class="blog-detail-content">
+          <div class="description">{{ blog.description|safe }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

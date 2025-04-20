@@ -1,0 +1,200 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  <title>MContact - Məhsullar</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact - Məhsullar" />
+  <meta property="og:title" content="MContact - Məhsullar" />
+  <meta property="og:description" content="MContact - Məhsullar" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="mini-routes">
+    <div class="routes">
+      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
+      <a href="{% url 'MContact:products' %}" class="route active">Məhsullar</a>
+    </div>
+  </section>
+
+  <section id="products-container">
+    <div class="products-container-content">
+      <h3>Məhsullar</h3>
+    </div>
+
+    <div class="regulation-products">
+      <div class="regulation-products-content-wrapper">
+        <div class="regulation-products-content">
+          <div>
+            <i class="fa-brands fa-elementor"></i>
+          </div>
+          <div>Tənzimləmə</div>
+        </div>
+        <div class="regulation-products-dropdown">
+          <div class="cheapest" data-ordering="price_asc">Əvvəlcə ucuz</div>
+          <div class="expensive" data-ordering="price_desc">Əvvəlcə baha</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-and-products">
+      <div class="filter">
+        <div class="filter-title">Filter</div>
+
+        <div class="filter-by">
+          <div class="toggle-filter">
+            <div class="filter-by-name">Brendlər</div>
+            <div class="filter-by-icon">
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+          <div class="filter-dropdown">
+            <ul>
+              {% for brand in brands %}
+                <li>
+                  <label>
+                    <input type="checkbox" name="brand" value="{{ brand.id }}" />
+                    {{ brand.name }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div class="filter-by">
+          <div class="toggle-filter">
+            <div class="filter-by-name">Kateqoriyalar</div>
+            <div class="filter-by-icon">
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+          <div class="filter-dropdown">
+            <ul>
+              {% for category in categories %}
+                <li>
+                  <label>
+                    <input type="checkbox" name="category" value="{{ category.id }}" />
+                    {{ category.name }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div class="filter-by">
+          <div class="toggle-filter">
+            <div class="filter-by-name">Qiymət</div>
+            <div class="filter-by-icon">
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+          <div class="filter-dropdown">
+            <div class="price-avg">
+              <div class="min-price">
+                <input placeholder="Min" type="number" name="min_price" />
+              </div>
+              <div class="max-price">
+                <input placeholder="Max" type="number" name="max_price" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-btns">
+          <button class="apply-btn">Təsdiq et</button>
+          <button class="reset-btn">Sıfırla</button>
+        </div>
+      </div>
+      <div class="if-products-exists">
+        <div class="products-list">
+          <div class="row row-gap-4">
+            {% if page_obj.object_list %}
+              {% for product in page_obj %}
+                <div class="col-lg-3 col-md-4 col-sm-4 col-6">
+                  <div class="product-box">
+                    <div class="product-img">
+                      <img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" />
+                      {% if product.discount %}
+                        <div class="product-discount-percent">-{{ product.discount }}%</div>
+                      {% endif %}
+                      <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
+                    </div>
+                    <div class="product-content">
+                      <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
+                      <div class="description">
+                        {% if product.categories.all %}
+                          {% for cat in product.categories.all %}
+                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                          {% endfor %}
+                        {% endif %}
+                      </div>
+                      <div class="product-price-and-cart">
+                        <div class="product-price">₼{{ product.price }}</div>
+                        <div class="product-add-to-cart" data-product="{{ product.id }}">
+                          <i class="fa-solid fa-plus"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                  document.querySelector('.if-products-exists').style.display = 'none'
+                  document.querySelector('.if-products-doesnt-exists').style.display = 'block'
+                })
+              </script>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="if-products-doesnt-exists" style="display: none;">
+        <div class="img-container">
+          <img src="{% static 'images/if-products-doesnt-exists-img.png' %}" alt="" />
+          <div class="img-container-content">
+            <h6>Məhsul tapılmadı</h6>
+            <p>Seçdiyiniz filtirə əsasən məhsul tapılmadı</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a class="page-item prev" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}"><span>&lsaquo;</span></a>
+        {% else %}
+          <div class="page-item prev" aria-label="Əvvəlki səhifə">
+            <span>&lsaquo;</span>
+          </div>
+        {% endif %}
+
+        {% for p in page_obj.paginator.page_range %}
+          {% if p == page_obj.number %}
+            <div class="page-item active">{{ p }}</div>
+          {% else %}
+            <a class="page-item" href="?page={{ p }}{{ request.GET.urlencode|safe|cut:'page=' }}">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a class="page-item next" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}"><span>&rsaquo;</span></a>
+        {% else %}
+          <div class="page-item next" aria-label="Növbəti səhifə">
+            <span>&rsaquo;</span>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
