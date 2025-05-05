@@ -37,32 +37,32 @@
   <section id="edit-profile-form">
     <form action="{% url 'MContact:edit_profile' %}" method="post" enctype="multipart/form-data">
       {% csrf_token %}
-  
+
       <label>Ad soyad</label>
       <div class="input-container">
         <input name="full_name" type="text" value="{{ user.full_name }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
-  
+
       <label>E‑poçt ünvanı</label>
       <div class="input-container">
         <input name="email" type="email" value="{{ user.email }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
-  
+
       <label>Telefon nömrəsi</label>
       <div class="input-container phone-input">
         <img src="{% static 'images/az-flag.png' %}" alt="Azerbaijan Flag" />
         <input name="phone" type="tel" value="{{ user.phone }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
-  
+
       <label>Doğum tarixi</label>
       <div class="input-container">
         <input name="birth_date" type="date" value="{{ user.birth_date|date:'Y-m-d' }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
-  
+
       <button type="submit" class="action-btn">Təsdiq</button>
     </form>
   </section>

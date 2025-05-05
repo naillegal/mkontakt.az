@@ -23,7 +23,9 @@
       <div class="header-bg">
         <div class="header-container">
           <div class="logo">
-            <img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" />
+            <a href="{% url 'MContact:index' %}">
+              <img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" />
+            </a>
           </div>
           <nav class="navbar">
             <ul>
@@ -50,7 +52,9 @@
                 <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
               </div>
               <div class="user-menu">
-                <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+                <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
+                  <i class="fa-solid fa-user"></i>
+                </span>
 
                 <ul class="user-dropdown-menu">
                   <li class="user-info">
@@ -82,7 +86,9 @@
           <div class="header-icons">
             <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
             <div class="user-menu">
-              <span class="user-toggle"><i class="fa-solid fa-user"></i></span>
+              <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
+                <i class="fa-solid fa-user"></i>
+              </span>
 
               <ul class="user-dropdown-menu">
                 <li class="user-info">

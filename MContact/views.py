@@ -25,10 +25,17 @@ from django.contrib import messages
 def about_us(request):
     return render(request, 'about-us.html')
 
-
 def rules(request):
     return render(request, 'rules.html')
 
+def forget_password(request):
+    return render(request, 'forget-password.html')
+
+def otp(request):
+    return render(request, 'otp.html')
+
+def new_password(request):
+    return render(request, 'new-password.html')
 
 def products(request):
     all_brands = Brand.objects.all().order_by('name')

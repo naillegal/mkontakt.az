@@ -74,7 +74,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
                 'MContact.context_processors.contact_info_processor', 
-                "MContact.context_processors.current_user",
+                "MContact.context_processors.user_context",
             ],
         },
     },

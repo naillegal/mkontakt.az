@@ -7,12 +7,15 @@ def contact_info_processor(request):
         'footer_brands': Brand.objects.all().order_by('-created_at')[:5],
     }
 
-
-def current_user(request):
+def user_context(request):
     uid = request.session.get("user_id")
+    print("user_id from session:", uid)
     if uid:
         try:
-            return {"current_user": User.objects.get(pk=uid)}
+            user = User.objects.get(pk=uid)
+            print("user from DB:", user)
+            return {"user": user}
         except User.DoesNotExist:
             pass
-    return {"current_user": None}
+    return {"user": None}
+

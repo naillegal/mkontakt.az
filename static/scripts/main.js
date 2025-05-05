@@ -426,11 +426,14 @@ document.addEventListener("DOMContentLoaded", function () {
 // layout dropdown menu scripts
 document.addEventListener("DOMContentLoaded", () => {
   const userMenus = document.querySelectorAll(".user-menu");
+
   if (!userMenus.length) return;
 
   userMenus.forEach((menu) => {
     const toggle = menu.querySelector(".user-toggle");
     if (!toggle) return;
+
+    const dropdown = menu.querySelector(".user-dropdown-menu");
 
     const closeMenu = (e) => {
       if (!menu.contains(e.target)) {
@@ -440,7 +443,17 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     toggle.addEventListener("click", (e) => {
+      e.preventDefault();
       e.stopPropagation();
+
+      const isAuthenticated = toggle.dataset.authenticated === "1";
+
+      if (!isAuthenticated) {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/login/?next=${encodeURIComponent(currentUrl)}`;
+        return;
+      }
+
       menu.classList.toggle("active");
 
       if (menu.classList.contains("active")) {
@@ -473,7 +486,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       if (res.status === 403) {
-        window.location.href = "/login/?next=" + window.location.pathname;
+        window.location.href = "{% url 'MContact:login' %}?next=" + encodeURIComponent(currentUrl);
         return;
       }
 
