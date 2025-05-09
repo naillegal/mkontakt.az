@@ -3,6 +3,8 @@ from django.utils.text import slugify
 from django.urls import reverse
 from django.templatetags.static import static
 from ckeditor.fields import RichTextField
+from datetime import timedelta
+from django.utils import timezone
 
 
 class Brand(models.Model):
@@ -418,3 +420,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.order} • {self.product.title}"
+
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=4)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=5)
+
+    class Meta:
+        verbose_name = "Şifrə sıfırlama OTP"
+        verbose_name_plural = "Şifrə sıfırlama OTP-lər"
+
+    def __str__(self):
+        return f"{self.user.email} – {self.code}"

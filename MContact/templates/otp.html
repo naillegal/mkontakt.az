@@ -17,23 +17,33 @@
     <div class="form-container">
       <div class="form">
         <h1>E-poçtunuzu yoxlayın</h1>
-        <p style="width: 80% !important">
+        <p style="width:80%!important">
           Biz
-          <a class="selected-email" href="mailto:mirzayevcausasui@gmail.com">mirzayevcausasui@gmail.com</a>
-          ünvanına sıfırlama linki göndərdik e-poçtda qeyd olunan 5 rəqəmli kodu daxil edin
+          <a class="selected-email" href="mailto:{{ request.session.reset_email }}">{{ request.session.reset_email }}</a>
+          ünvanına sıfırlama kodu göndərdik – 4 rəqəmli kodu daxil edin
         </p>
 
-        <form>
-          <div class="otp-container">
-            <input type="text" maxlength="1" />
-            <input type="text" maxlength="1" />
-            <input type="text" maxlength="1" />
-            <input type="text" maxlength="1" />
-          </div>
+        {% if messages %}
+          <ul class="form-errors">
+            {% for m in messages %}
+              <li>{{ m }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
 
-          <a href="{% url 'MContact:new-password' %}" class="action-btn" style="margin-top: 20px; width: 300px !important">Şifrənin sıfırlanması</a>
+        <form action="{% url 'MContact:otp' %}" method="post" id="otpForm">
+          {% csrf_token %}
+          <div class="otp-container">
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+          </div>
+          <input type="hidden" name="otp_code" id="otp_code" />
+          <button type="submit" class="action-btn" style="margin-top:20px;width:300px!important">Şifrənin sıfırlanması</button>
         </form>
       </div>
+
       <div class="form-img">
         <img src="{% static 'images/form-default.jpg' %}" alt="" />
         <div class="form-img-content">
@@ -47,4 +57,16 @@
       </div>
     </div>
   </section>
+
+  <script>
+    const inputs = document.querySelectorAll('.otp-input')
+    inputs.forEach((el, idx) => {
+      el.addEventListener('input', () => {
+        if (el.value.length === 1 && idx < 3) inputs[idx + 1].focus()
+        document.getElementById('otp_code').value = Array.from(inputs)
+          .map((i) => i.value)
+          .join('')
+      })
+    })
+  </script>
 {% endblock %}

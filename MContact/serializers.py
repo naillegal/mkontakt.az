@@ -145,3 +145,15 @@ class ChangePasswordSerializer(serializers.Serializer):
     id = serializers.IntegerField(write_only=True)
     old_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(write_only=True)
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=4)
+
+class UpdatePasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    new_password = serializers.CharField()

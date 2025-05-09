@@ -1,3 +1,8 @@
+import random
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from django.core.mail import send_mail
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics, status
@@ -12,12 +17,14 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
-    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem
+    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
     BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductSerializer,
-    CustomerReviewSerializer, BlogSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer
+    CustomerReviewSerializer, BlogSerializer, UserSerializer,
+    UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
+    ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer
 )
 from django.contrib import messages
 
@@ -25,17 +32,93 @@ from django.contrib import messages
 def about_us(request):
     return render(request, 'about-us.html')
 
+
 def rules(request):
     return render(request, 'rules.html')
 
+
 def forget_password(request):
-    return render(request, 'forget-password.html')
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(
+                request, "Bu e-mail ilə istifadəçi qeydiyyatda deyil.")
+            return redirect("MContact:forget-password")
+
+        code = f"{random.randint(0, 9999):04d}"
+        PasswordResetOTP.objects.filter(user=user).delete()
+        PasswordResetOTP.objects.create(user=user, code=code)
+
+        send_mail(
+            subject="MContact – Şifrə yeniləmə kodu",
+            message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
+            from_email=None,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        request.session["reset_email"] = email
+        messages.success(request, "OTP kodu e-poçtunuza göndərildi.")
+        return redirect("MContact:otp")
+
+    return render(request, "forget-password.html")
+
 
 def otp(request):
-    return render(request, 'otp.html')
+    email = request.session.get("reset_email")
+    if not email:
+        return redirect("MContact:forget-password")
+
+    if request.method == "POST":
+        code = request.POST.get("otp_code", "").strip()
+        try:
+            pr = PasswordResetOTP.objects.get(user__email=email, code=code)
+        except PasswordResetOTP.DoesNotExist:
+            messages.error(request, "OTP kodu yanlışdır.")
+            return redirect("MContact:otp")
+
+        if pr.is_expired():
+            pr.delete()
+            messages.error(request, "OTP kodunun vaxtı bitib.")
+            return redirect("MContact:forget-password")
+
+        request.session["otp_verified"] = True
+        pr.delete()
+        return redirect("MContact:new-password")
+
+    return render(request, "otp.html")
+
 
 def new_password(request):
-    return render(request, 'new-password.html')
+    if not request.session.get("otp_verified"):
+        return redirect("MContact:forget-password")
+
+    email = request.session.get("reset_email")
+    user = get_object_or_404(User, email=email)
+
+    if request.method == "POST":
+        pw1 = request.POST.get("password", "").strip()
+        pw2 = request.POST.get("confirm_password", "").strip()
+
+        if pw1 != pw2:
+            messages.error(request, "Şifrələr uyğun gəlmir.")
+            return redirect("MContact:new-password")
+
+        user.password = pw1
+        user.save()
+
+        for k in ("reset_email", "otp_verified"):
+            if k in request.session:
+                del request.session[k]
+
+        messages.success(
+            request, "Parolunuz yeniləndi. Zəhmət olmasa yenidən daxil olun.")
+        return redirect("MContact:login")
+
+    return render(request, "new-password.html")
+
 
 def products(request):
     all_brands = Brand.objects.all().order_by('name')
@@ -324,7 +407,10 @@ def register(request):
             password=password,
             image=image,
         )
-        messages.success(request, "Qeydiyyat uğurla tamamlandı!")
+
+        request.session['user_id'] = user.id
+        messages.success(
+            request, "Qeydiyyat uğurla tamamlandı və sistemə daxil olundu!")
         return redirect('MContact:index')
     return render(request, 'register.html')
 
@@ -627,3 +713,118 @@ class LogoutAPIView(APIView):
     def post(self, request):
         request.session.flush()
         return Response({"detail": "Çıxış etdiniz."}, status=status.HTTP_200_OK)
+
+
+class ForgotPasswordAPIView(APIView):
+    serializer_class = ForgotPasswordSerializer
+
+    @swagger_auto_schema(
+        operation_summary="Şifrə sıfırlama üçün OTP göndər",
+        operation_description="Verilmiş e‑mail ünvanına 4 rəqəmli OTP kodu göndərir.",
+        request_body=ForgotPasswordSerializer,
+        responses={
+            200: openapi.Response(
+                description="OK",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'detail': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            ),
+            400: openapi.Response(description="Bad Request")
+        },
+    )
+    def post(self, request):
+        s = self.serializer_class(data=request.data)
+        s.is_valid(raise_exception=True)
+        email = s.validated_data["email"].lower()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "Bu e-mail mövcud deyil."}, status=400)
+
+        PasswordResetOTP.objects.filter(user=user).delete()
+        code = f"{random.randint(0,9999):04d}"
+        PasswordResetOTP.objects.create(user=user, code=code)
+
+        send_mail(
+            subject="MContact – Şifrə yeniləmə kodu",
+            message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
+            from_email=None,
+            recipient_list=[email],
+        )
+        return Response({"detail": "OTP kodu göndərildi."})
+
+
+class VerifyOtpAPIView(APIView):
+    serializer_class = VerifyOtpSerializer
+
+    @swagger_auto_schema(
+        operation_summary="OTP kodunu yoxla",
+        operation_description="E‑mail və kodu qəbul edib yoxlayır.",
+        request_body=VerifyOtpSerializer,
+        responses={
+            200: openapi.Response(
+                description="OTP təsdiqləndi",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={'detail': openapi.Schema(
+                        type=openapi.TYPE_STRING)}
+                )
+            ),
+            400: openapi.Response(description="Kod yanlışdır və ya vaxtı bitib")
+        },
+    )
+    def post(self, request):
+        s = self.serializer_class(data=request.data)
+        s.is_valid(raise_exception=True)
+        email = s.validated_data["email"].lower()
+        code = s.validated_data["otp_code"]
+
+        try:
+            pr = PasswordResetOTP.objects.get(user__email=email, code=code)
+        except PasswordResetOTP.DoesNotExist:
+            return Response({"detail": "OTP kodu yanlışdır."}, status=400)
+
+        if pr.is_expired():
+            pr.delete()
+            return Response({"detail": "OTP kodunun vaxtı bitib."}, status=400)
+
+        pr.delete()
+        return Response({"detail": "OTP təsdiqləndi."})
+
+
+class UpdatePasswordAPIView(APIView):
+    serializer_class = UpdatePasswordSerializer
+
+    @swagger_auto_schema(
+        operation_summary="Yeni parol təyin et",
+        operation_description="E‑mail ünvanı üçün yeni parol təyin edir.",
+        request_body=UpdatePasswordSerializer,
+        responses={
+            200: openapi.Response(
+                description="Parol yeniləndi",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={'detail': openapi.Schema(
+                        type=openapi.TYPE_STRING)}
+                )
+            ),
+            400: openapi.Response(description="Xəta: istifadəçi tapılmadı")
+        },
+    )
+    def post(self, request):
+        s = self.serializer_class(data=request.data)
+        s.is_valid(raise_exception=True)
+        email = s.validated_data["email"].lower()
+        new_pw = s.validated_data["new_password"]
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "İstifadəçi tapılmadı."}, status=400)
+
+        user.password = new_pw
+        user.save()
+        return Response({"detail": "Parol yeniləndi."})

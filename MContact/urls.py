@@ -71,4 +71,7 @@ urlpatterns = [
     path("order/create/", views.order_create, name="order-create"),
     path('logout/', views.logout_view, name='logout'),
     path('api/logout/', views.LogoutAPIView.as_view(), name='api-logout'),
+    path('api/forgot-password/', views.ForgotPasswordAPIView.as_view(), name='api-forgot-password'),
+    path('api/verify-otp/', views.VerifyOtpAPIView.as_view(), name='api-verify-otp'),
+    path('api/update-password/', views.UpdatePasswordAPIView.as_view(), name='api-update-password'),
 ]

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
-    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order, OrderItem
+    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order, OrderItem, PasswordResetOTP
 )
 
 
@@ -128,3 +128,9 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = ("order", "product", "quantity", "unit_price")
+
+
+@admin.register(PasswordResetOTP)
+class PasswordResetOTPAdmin(admin.ModelAdmin):
+    list_display = ("user", "code", "created_at")
+    readonly_fields = ("code", "created_at")
