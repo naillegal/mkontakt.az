@@ -1,7 +1,12 @@
 import uuid
-from .models import Cart, CartItem
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from django.core.mail import send_mail as django_send_mail
+from django.conf import settings        
+from .models import Cart, CartItem
+
+logger = logging.getLogger(__name__)    
+_executor = ThreadPoolExecutor(max_workers=2)
 
 
 def get_or_create_cart(request):
@@ -40,9 +45,20 @@ def get_or_create_cart(request):
     return cart
 
 
-_executor = ThreadPoolExecutor(max_workers=2)
+def send_mail_async(subject, message, recipient_list, **kwargs):
+    from_email = kwargs.pop("from_email", settings.EMAIL_HOST_USER)
 
+    def _task():
+        try:
+            django_send_mail(
+                subject,
+                message,
+                from_email,
+                recipient_list,
+                **kwargs,
+            )
+            logger.info("Email sent to %s", recipient_list)
+        except Exception:
+            logger.exception("FAILED to send email to %s", recipient_list)
 
-def send_mail_async(subject, message, from_email, recipient_list, **kwargs):
-    _executor.submit(django_send_mail, subject, message,
-                     from_email, recipient_list, **kwargs)
+    _executor.submit(_task)

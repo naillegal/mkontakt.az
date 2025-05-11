@@ -1,4 +1,5 @@
 import random
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .utils import send_mail_async
@@ -53,7 +54,6 @@ def forget_password(request):
         send_mail_async(
             subject="MContact – Şifrə yeniləmə üçün OTP kodu",
             message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
-            from_email=None,
             recipient_list=[email],
             fail_silently=False,
         )
@@ -750,9 +750,10 @@ class ForgotPasswordAPIView(APIView):
         send_mail_async(
             subject="MContact – Şifrə yeniləmə üçün OTP kodu",
             message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
-            from_email=None,
             recipient_list=[email],
+            fail_silently=False,       
         )
+
         return Response({"detail": "OTP kodu göndərildi."})
 
 
