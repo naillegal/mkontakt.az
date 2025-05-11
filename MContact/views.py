@@ -1,8 +1,7 @@
 import random
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from django.core.mail import send_mail
-from datetime import timedelta
+from .utils import send_mail_async
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics, status
@@ -51,8 +50,8 @@ def forget_password(request):
         PasswordResetOTP.objects.filter(user=user).delete()
         PasswordResetOTP.objects.create(user=user, code=code)
 
-        send_mail(
-            subject="MContact – Şifrə yeniləmə kodu",
+        send_mail_async(
+            subject="MContact – Şifrə yeniləmə üçün OTP kodu",
             message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
             from_email=None,
             recipient_list=[email],
@@ -748,8 +747,8 @@ class ForgotPasswordAPIView(APIView):
         code = f"{random.randint(0,9999):04d}"
         PasswordResetOTP.objects.create(user=user, code=code)
 
-        send_mail(
-            subject="MContact – Şifrə yeniləmə kodu",
+        send_mail_async(
+            subject="MContact – Şifrə yeniləmə üçün OTP kodu",
             message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
             from_email=None,
             recipient_list=[email],

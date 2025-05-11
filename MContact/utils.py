@@ -1,5 +1,7 @@
 import uuid
 from .models import Cart, CartItem
+from concurrent.futures import ThreadPoolExecutor
+from django.core.mail import send_mail as django_send_mail
 
 
 def get_or_create_cart(request):
@@ -36,3 +38,11 @@ def get_or_create_cart(request):
 
     cart, _ = Cart.objects.get_or_create(session_key=sess_key)
     return cart
+
+
+_executor = ThreadPoolExecutor(max_workers=2)
+
+
+def send_mail_async(subject, message, from_email, recipient_list, **kwargs):
+    _executor.submit(django_send_mail, subject, message,
+                     from_email, recipient_list, **kwargs)
