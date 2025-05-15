@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
@@ -39,10 +40,23 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'is_main', 'created_at')
+    list_display = ('id', 'product', 'is_main', 'image_preview', 'created_at')
     list_editable = ('is_main',)
     search_fields = ('product__title',)
     list_filter = ('product', 'is_main')
+
+    readonly_fields = ('image_preview', 'created_at')  
+    fields = ('product', 'image_preview', 'image', 'is_main', 'created_at')
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width:120px; height:100px; object-fit:cover; '
+                'border:1px solid #ddd; border-radius:4px; margin-bottom:10px;" />',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Şəkil önizləmə"
 
 
 @admin.register(PartnerSlider)
