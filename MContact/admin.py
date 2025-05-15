@@ -84,26 +84,36 @@ class ContactInfoAdmin(admin.ModelAdmin):
     search_fields = ('technical_email', 'support_email')
 
 
+class WishInline(admin.TabularInline):
+    model = Wish
+    extra = 0
+    can_delete = False
+
+
+class PasswordResetOTPInline(admin.TabularInline):
+    model = PasswordResetOTP
+    extra = 0
+    readonly_fields = ('code', 'created_at')
+    can_delete = False
+
+
+class CartInline(admin.TabularInline):
+    model = Cart
+    extra = 0
+    readonly_fields = ('session_key', 'created_at', 'updated_at')
+    can_delete = False
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('full_name', 'email', 'phone', 'birth_date', 'created_at')
     search_fields = ('full_name', 'email', 'phone')
+    inlines = [WishInline, PasswordResetOTPInline, CartInline]
 
 
-@admin.register(Wish)
-class WishAdmin(admin.ModelAdmin):
-    list_display = ("user", "product", "created_at")
-    search_fields = ("user__full_name", "product__title")
-
-
-@admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "session_key", "created_at", "updated_at")
-
-
-@admin.register(CartItem)
-class CartItemAdmin(admin.ModelAdmin):
-    list_display = ("cart", "product", "quantity")
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0
 
 
 @admin.register(DiscountCode)
@@ -123,14 +133,3 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "full_name", "phone", "total", "created_at")
     inlines = [OrderItemInline]
-
-
-@admin.register(OrderItem)
-class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ("order", "product", "quantity", "unit_price")
-
-
-@admin.register(PasswordResetOTP)
-class PasswordResetOTPAdmin(admin.ModelAdmin):
-    list_display = ("user", "code", "created_at")
-    readonly_fields = ("code", "created_at")
