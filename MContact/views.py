@@ -1,5 +1,4 @@
 import random
-from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .utils import send_mail_async
@@ -7,24 +6,30 @@ from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .utils import get_or_create_cart
 import json
 from django.utils import timezone
+from decimal import Decimal
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db import models as dj_models
+import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
-    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP
+    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
     BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductSerializer,
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
-    ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer
+    ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer, 
+    DiscountCodeSerializer, WishItemSerializer, OrderSerializer
 )
 from django.contrib import messages
 
@@ -200,6 +205,7 @@ class BrandListCreateAPIView(generics.ListCreateAPIView):
 class CategoryListCreateAPIView(generics.ListCreateAPIView):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
+    parser_classes = (MultiPartParser, FormParser)
 
 
 class ProductTypeListCreateAPIView(generics.ListCreateAPIView):
@@ -210,6 +216,11 @@ class ProductTypeListCreateAPIView(generics.ListCreateAPIView):
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
 
 
 def index(request):
@@ -243,9 +254,10 @@ def index(request):
     return render(request, 'index.html', context)
 
 
-class PartnerSliderListAPIView(generics.ListAPIView):
+class PartnerSliderListCreateAPIView(generics.ListCreateAPIView):
     queryset = PartnerSlider.objects.all().order_by('created_at')
     serializer_class = PartnerSliderSerializer
+    parser_classes = (MultiPartParser, FormParser)
 
 
 class AdvertisementSlideListAPIView(generics.ListAPIView):
@@ -751,7 +763,7 @@ class ForgotPasswordAPIView(APIView):
             subject="MContact – Şifrə yeniləmə üçün OTP kodu",
             message=f"Şifrə yeniləmə kodunuz: {code}. Kod 5 dəqiqə qüvvədədir.",
             recipient_list=[email],
-            fail_silently=False,       
+            fail_silently=False,
         )
 
         return Response({"detail": "OTP kodu göndərildi."})
@@ -828,3 +840,490 @@ class UpdatePasswordAPIView(APIView):
         user.password = new_pw
         user.save()
         return Response({"detail": "Parol yeniləndi."})
+
+
+class MobileCartView(APIView):
+    parser_classes = [JSONParser]
+
+    def _get_or_create_cart(self, *, user_id, session_key):
+        cart = None
+        if user_id:
+            cart, _ = Cart.objects.get_or_create(user_id=user_id)
+            if session_key:
+                try:
+                    anon = Cart.objects.get(
+                        session_key=session_key, user__isnull=True)
+                    for it in anon.items.all():
+                        CartItem.objects.update_or_create(
+                            cart=cart,
+                            product=it.product,
+                            defaults={"quantity": dj_models.F(
+                                "quantity") + it.quantity},
+                        )
+                    anon.delete()
+                except Cart.DoesNotExist:
+                    pass
+            return cart, session_key
+        if not session_key:
+            session_key = uuid.uuid4().hex
+        cart, _ = Cart.objects.get_or_create(
+            session_key=session_key, user=None)
+        return cart, session_key
+
+    @swagger_auto_schema(
+        operation_summary="Səbətə məhsul əlavə et",
+        operation_description="product_id göndərərək istifadəçinin səbətinə məhsul əlavə edir və ya mövcuddursa miqdarı artırır.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'user_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='(Optional) Login olmuş istifadəçi ID-si'
+                ),
+                'session_key': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='(Optional) Qonaq istifadəçi üçün session açarı'
+                ),
+                'product_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='(Required) Əlavə ediləcək məhsulun ID-si'
+                ),
+                'quantity': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='(Optional) Əlavə ediləcək miqdar, default 1',
+                    default=1
+                ),
+            },
+            required=['product_id'],
+        ),
+        responses={
+            200: openapi.Response(
+                description="Uğurlu cavab, səbət məlumatı",
+                schema=MobileCartSerializer()
+            ),
+            400: openapi.Response(description="product_id yoxdursa və ya başqa xəta")
+        }
+    )
+    def post(self, request):
+        data = request.data
+        user_id = data.get("user_id")
+        session_key = data.get("session_key")
+        product_id = data.get("product_id")
+        qty = int(data.get("quantity", 1))
+
+        if not product_id:
+            return Response({"detail": "product_id göndərilməlidir."}, status=400)
+
+        product = get_object_or_404(Product, pk=product_id)
+        cart, session_key = self._get_or_create_cart(
+            user_id=user_id, session_key=session_key)
+
+        item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={"quantity": qty},
+        )
+        if not created:
+            item.quantity += qty
+            item.save()
+
+        ser = MobileCartSerializer(cart, context={"request": request})
+        return Response({"session_key": session_key, "cart": ser.data}, status=200)
+
+    @swagger_auto_schema(
+        operation_summary="Səbəti əldə et",
+        manual_parameters=[
+            openapi.Parameter(
+                'user_id', openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                description='Login olmuş istifadəçi ID-si, varsa'
+            ),
+            openapi.Parameter(
+                'session_key', openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description='Qonaq istifadəçi üçün session açarı'
+            ),
+        ],
+        responses={200: openapi.Response(
+            description="Səbət məlumatı",
+            schema=MobileCartSerializer()
+        )}
+    )
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        session_key = request.query_params.get("session_key")
+
+        cart, session_key = self._get_or_create_cart(
+            user_id=user_id, session_key=session_key)
+        ser = MobileCartSerializer(cart, context={"request": request})
+        return Response({"session_key": session_key, "cart": ser.data}, status=200)
+
+    @swagger_auto_schema(
+        operation_summary="Səbətdən məhsul sil",
+        operation_description="`product_id` göndərərək həmin məhsulu cart-dan silir və yenilənmiş cart məlumatını qaytarır.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'user_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='(Optional) Login olmuş istifadəçi ID-si'
+                ),
+                'session_key': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='(Optional) Qonaq istifadəçi üçün session açarı'
+                ),
+                'product_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='(Required) Səbətdən silinəcək məhsulun ID-si'
+                ),
+            },
+            required=['product_id'],
+        ),
+        responses={
+            200: openapi.Response(
+                description="Uğurlu cavab, yenilənmiş cart məlumatı",
+                schema=MobileCartSerializer()
+            ),
+            400: openapi.Response(description="product_id göndərilməyibsə və ya başqa xəta")
+        }
+    )
+    def delete(self, request):
+        data = request.data
+        user_id = data.get("user_id")
+        session_key = data.get("session_key")
+        product_id = data.get("product_id")
+
+        if not product_id:
+            return Response({"detail": "product_id göndərilməlidir."}, status=400)
+
+        cart, session_key = self._get_or_create_cart(
+            user_id=user_id, session_key=session_key
+        )
+
+        CartItem.objects.filter(cart=cart, product_id=product_id).delete()
+
+        ser = MobileCartSerializer(cart, context={"request": request})
+        return Response(
+            {"session_key": session_key, "cart": ser.data},
+            status=200
+        )
+
+
+class DiscountCodeListCreateAPIView(generics.ListCreateAPIView):
+    queryset = DiscountCode.objects.all().order_by('-id')
+    serializer_class = DiscountCodeSerializer
+
+    @swagger_auto_schema(
+        operation_summary="Yenis DiscountCode yarat",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['code', 'percent'],
+            properties={
+                'code': openapi.Schema(type=openapi.TYPE_STRING, example='TEST10'),
+                'percent': openapi.Schema(type=openapi.TYPE_INTEGER, example=10),
+                'active': openapi.Schema(type=openapi.TYPE_BOOLEAN, example=True),
+                'expires_at': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', example='2025-05-18T10:29:09.240Z'),
+            },
+            example={
+                "code": "TEST10",
+                "percent": 10,
+                "active": True,
+                "expires_at": "2025-05-18T10:29:09.240Z"
+            }
+        ),
+        responses={201: openapi.Response(
+            'Yaradıldı', DiscountCodeSerializer())}
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class CalculateDiscountPercentageAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Discount dəyərinin hesablanması",
+        operation_description=(
+            "Bu endpoint `code` və `value` qəbul edir, `percent` faizini, verilən value-ya tətbiq edib "
+            "yenilənmiş dəyəri qaytarır"
+        ),
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["code", "value"],
+            properties={
+                "code": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Discount code (məsələn: TEST10)",
+                    example="TEST10"
+                ),
+                "value": openapi.Schema(
+                    type=openapi.TYPE_NUMBER,
+                    description="Əsas dəyər (məsələn: 5)",
+                    example=5
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Uğurlu, yeni dəyər",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING),
+                        "new_value": openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                ),
+                examples={
+                    "application/json": {
+                        "detail": "Discount applied successfully.",
+                        "new_value": "4.50"
+                    }
+                }
+            ),
+            400: openapi.Response(description="Yanlış sorğu", examples={
+                "application/json": {"detail": "Both code and value are required."}
+            }),
+            404: openapi.Response(description="Kod tapılmadı", examples={
+                "application/json": {"detail": "Discount code not found."}
+            }),
+        }
+    )
+    def post(self, request):
+        code = request.data.get("code")
+        value = request.data.get("value")
+        if not code or value is None:
+            return Response(
+                {"detail": "Both code and value are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            provided = Decimal(str(value))
+        except Exception:
+            return Response(
+                {"detail": "Value must be a number."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            discount = DiscountCode.objects.get(code=code)
+        except DiscountCode.DoesNotExist:
+            return Response(
+                {"detail": "Discount code not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if not discount.active:
+            return Response(
+                {"detail": "Discount code is not active."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        frac = Decimal(discount.percent) / Decimal('100')
+        new_value = provided - (provided * frac)
+        if new_value < 0:
+            new_value = Decimal('0')
+        return Response({
+            "detail": "Discount applied successfully.",
+            "new_value": str(new_value.quantize(Decimal('0.01')))
+        }, status=status.HTTP_200_OK)
+
+
+class WishlistAPIView(APIView):
+    parser_classes = [JSONParser]
+
+    @swagger_auto_schema(
+        operation_summary="Wishlist-i əldə et",
+        manual_parameters=[
+            openapi.Parameter(
+                'user_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                description='(Required) İstifadəçi ID-si'
+            )
+        ],
+        responses={200: openapi.Response(
+            description="Wishlist məlumatı",
+            schema=WishItemSerializer(many=True)
+        ),
+            400: openapi.Response(description="user_id göndərilməlidir")}
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response(
+                {"detail": "user_id göndərilməlidir."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        get_object_or_404(User, pk=user_id)
+        qs = Wish.objects.filter(user_id=user_id).select_related('product')
+        ser = WishItemSerializer(qs, many=True, context={'request': request})
+        return Response(ser.data, status=200)
+
+    @swagger_auto_schema(
+        operation_summary="Wishlist-ə məhsul əlavə et",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['user_id', 'product_id'],
+            properties={
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, example=42),
+            }
+        ),
+        responses={
+            201: openapi.Response(
+                description="Yeni wish yaradıldı",
+                schema=WishItemSerializer()
+            ),
+            400: openapi.Response(description="user_id və product_id mütləqdir"),
+            404: openapi.Response(description="User və ya Product tapılmadı")
+        }
+    )
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        product_id = request.data.get('product_id')
+        if not user_id or not product_id:
+            return Response(
+                {"detail": "user_id və product_id mütləqdir."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Product, pk=product_id)
+
+        wish, created = Wish.objects.get_or_create(user=user, product=product)
+        if not created:
+            return Response(
+                {"detail": "Artıq wishlist-də mövcuddur."},
+                status=status.HTTP_200_OK
+            )
+
+        ser = WishItemSerializer(wish, context={'request': request})
+        return Response(ser.data, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_summary="Wishlist-dən məhsul sil",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['user_id', 'product_id'],
+            properties={
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, example=42),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Yenilənmiş wishlist",
+                schema=WishItemSerializer(many=True)
+            ),
+            400: openapi.Response(description="user_id və product_id mütləqdir"),
+            404: openapi.Response(description="User və ya Product tapılmadı")
+        }
+    )
+    def delete(self, request):
+        user_id = request.data.get('user_id')
+        product_id = request.data.get('product_id')
+        if not user_id or not product_id:
+            return Response(
+                {"detail": "user_id və product_id mütləqdir."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        get_object_or_404(User, pk=user_id)
+        get_object_or_404(Product, pk=product_id)
+
+        Wish.objects.filter(user_id=user_id, product_id=product_id).delete()
+
+        qs = Wish.objects.filter(user_id=user_id).select_related('product')
+        ser = WishItemSerializer(qs, many=True, context={'request': request})
+        return Response(ser.data, status=200)
+
+
+class MobileOrderView(APIView):
+    parser_classes = [JSONParser]
+
+    def _get_cart_by_key(self, user_id, session_key):
+        view = MobileCartView()
+        return view._get_or_create_cart(user_id=user_id, session_key=session_key)
+
+    @swagger_auto_schema(
+        operation_summary="Mobil sifariş yarat",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=[
+                "full_name", "phone", "address",
+                "delivery_date", "delivery_time"
+            ],
+            properties={
+                "user_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="(Optional) Login user"),
+                "session_key": openapi.Schema(type=openapi.TYPE_STRING, description="(Optional) Guest session"),
+                "full_name": openapi.Schema(type=openapi.TYPE_STRING, example="Elvin Məmmədov"),
+                "phone": openapi.Schema(type=openapi.TYPE_STRING, example="+994551234567"),
+                "address": openapi.Schema(type=openapi.TYPE_STRING, example="Bakı, Nərimanov r., …"),
+                "delivery_date": openapi.Schema(type=openapi.TYPE_STRING, format="date", example="2025-05-20"),
+                "delivery_time": openapi.Schema(type=openapi.TYPE_STRING, format="time", example="14:30"),
+            }
+        ),
+        responses={
+            201: openapi.Response("Yaradıldı", OrderSerializer()),
+            400: openapi.Response(description="Cart boşdur və ya payload-da field çatmır")
+        }
+    )
+    def post(self, request):
+        data = request.data
+        user_id = data.get("user_id")
+        session_key = data.get("session_key")
+
+        cart, session_key = self._get_cart_by_key(user_id=user_id, session_key=session_key)
+
+        if not cart.items.exists():
+            return Response({"detail": "Səbət boşdur."}, status=400)
+
+        required = ("full_name", "phone", "address", "delivery_date", "delivery_time")
+        if not all(data.get(f) for f in required):
+            return Response({"detail": "Bütün tələb olunan sahələr göndərilməlidir."}, status=400)
+
+        order = Order.objects.create(
+            user_id=user_id,
+            full_name=data["full_name"],
+            phone=data["phone"],
+            address=data["address"],
+            delivery_date=data["delivery_date"],
+            delivery_time=data["delivery_time"],
+            discount_code=getattr(cart.discountcodeuse, "code", None).code if hasattr(cart, "discountcodeuse") else "",
+            discount_amount=cart.get_discount_code_amount(),
+            product_discount=cart.product_discount,
+            subtotal=cart.raw_total,
+            total=cart.grand_total,
+        )
+
+        for item in cart.items.select_related("product"):
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                unit_price=item.product.price
+            )
+
+        cart.delete()  
+
+        ser = OrderSerializer(order)
+        return Response(ser.data, status=201)
+
+    class _FivePerPage(PageNumberPagination):
+        page_size = 5
+
+    @swagger_auto_schema(
+        operation_summary="Sifarişləri paginate et(5)",
+        manual_parameters=[
+            openapi.Parameter(
+                "user_id", openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                description="(Optional) Yalnız bu istifadəçinin sifarişləri"
+            ),
+            openapi.Parameter(
+                "page", openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                description="Səhifə nömrəsi (default 1)"
+            ),
+        ],
+        responses={200: openapi.Response("OK", OrderSerializer(many=True))}
+    )
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        qs = Order.objects.all().order_by("-created_at")
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+
+        paginator = self._FivePerPage()
+        page = paginator.paginate_queryset(qs, request)
+        ser = OrderSerializer(page, many=True)
+        return paginator.get_paginated_response(ser.data)

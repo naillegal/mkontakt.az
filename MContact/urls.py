@@ -34,7 +34,7 @@ urlpatterns = [
          name='producttype-list-create'),
     path('api/products/', views.ProductListCreateAPIView.as_view(),
          name='product-list-create'),
-    path('api/partners/', views.PartnerSliderListAPIView.as_view(),
+    path('api/partners/', views.PartnerSliderListCreateAPIView.as_view(),
          name='partner-slider-list'),
     path('api/advertisements/', views.AdvertisementSlideListAPIView.as_view(),
          name='advertisement-slide-list'),
@@ -71,7 +71,30 @@ urlpatterns = [
     path("order/create/", views.order_create, name="order-create"),
     path('logout/', views.logout_view, name='logout'),
     path('api/logout/', views.LogoutAPIView.as_view(), name='api-logout'),
-    path('api/forgot-password/', views.ForgotPasswordAPIView.as_view(), name='api-forgot-password'),
+    path('api/forgot-password/', views.ForgotPasswordAPIView.as_view(),
+         name='api-forgot-password'),
     path('api/verify-otp/', views.VerifyOtpAPIView.as_view(), name='api-verify-otp'),
-    path('api/update-password/', views.UpdatePasswordAPIView.as_view(), name='api-update-password'),
+    path('api/update-password/', views.UpdatePasswordAPIView.as_view(),
+         name='api-update-password'),
+    path("api/mobile-cart/", views.MobileCartView.as_view(), name="mobile-cart"),
+    path(
+        'api/discount-codes/',
+        views.DiscountCodeListCreateAPIView.as_view(),
+        name='discountcode-list-create'
+    ),
+    path(
+        'api/calculate-discount/',
+        views.CalculateDiscountPercentageAPIView.as_view(),
+        name='calculate-discount'
+    ),
+    path(
+        'api/wishlist/',
+        views.WishlistAPIView.as_view(),
+        name='api-wishlist'
+    ),
+    path(
+        "api/mobile-orders/",
+        views.MobileOrderView.as_view(),
+        name="mobile-orders"
+    ),
 ]
