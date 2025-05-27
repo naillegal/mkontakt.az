@@ -38,6 +38,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
     images = serializers.SerializerMethodField()
+    formatted_description = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -50,7 +51,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'product_types',
             'title',
             'slug',
-            'description',
+            'formatted_description',
             'price',
             'discount',
             'images',
@@ -74,6 +75,13 @@ class ProductSerializer(serializers.ModelSerializer):
         return [
             (request.build_absolute_uri(img.image.url) if request else img.image.url)
             for img in ordered
+        ]
+
+    def get_formatted_description(self, obj):
+        return [
+            line.strip()
+            for line in obj.description.splitlines()
+            if line.strip()
         ]
 
 
