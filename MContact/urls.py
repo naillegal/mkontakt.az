@@ -97,4 +97,9 @@ urlpatterns = [
         views.MobileOrderView.as_view(),
         name="mobile-orders"
     ),
+    path(
+        'api/category-products/<int:category_id>/',
+        views.CategoryProductsAPIView.as_view(),
+        name='category-products'
+    ),
 ]

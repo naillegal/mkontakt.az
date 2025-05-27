@@ -28,7 +28,7 @@ from .serializers import (
     BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductSerializer,
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
-    ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer, 
+    ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
     DiscountCodeSerializer, WishItemSerializer, OrderSerializer
 )
 from django.contrib import messages
@@ -1264,12 +1264,14 @@ class MobileOrderView(APIView):
         user_id = data.get("user_id")
         session_key = data.get("session_key")
 
-        cart, session_key = self._get_cart_by_key(user_id=user_id, session_key=session_key)
+        cart, session_key = self._get_cart_by_key(
+            user_id=user_id, session_key=session_key)
 
         if not cart.items.exists():
             return Response({"detail": "Səbət boşdur."}, status=400)
 
-        required = ("full_name", "phone", "address", "delivery_date", "delivery_time")
+        required = ("full_name", "phone", "address",
+                    "delivery_date", "delivery_time")
         if not all(data.get(f) for f in required):
             return Response({"detail": "Bütün tələb olunan sahələr göndərilməlidir."}, status=400)
 
@@ -1280,7 +1282,8 @@ class MobileOrderView(APIView):
             address=data["address"],
             delivery_date=data["delivery_date"],
             delivery_time=data["delivery_time"],
-            discount_code=getattr(cart.discountcodeuse, "code", None).code if hasattr(cart, "discountcodeuse") else "",
+            discount_code=getattr(cart.discountcodeuse, "code", None).code if hasattr(
+                cart, "discountcodeuse") else "",
             discount_amount=cart.get_discount_code_amount(),
             product_discount=cart.product_discount,
             subtotal=cart.raw_total,
@@ -1295,7 +1298,7 @@ class MobileOrderView(APIView):
                 unit_price=item.product.price
             )
 
-        cart.delete()  
+        cart.delete()
 
         ser = OrderSerializer(order)
         return Response(ser.data, status=201)
@@ -1327,3 +1330,24 @@ class MobileOrderView(APIView):
         page = paginator.paginate_queryset(qs, request)
         ser = OrderSerializer(page, many=True)
         return paginator.get_paginated_response(ser.data)
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'perpage'
+    max_page_size = 100
+
+
+class CategoryProductsAPIView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        get_object_or_404(Category, pk=category_id)
+        return (
+            Product.objects
+                   .filter(categories__id=category_id)
+                   .distinct()
+                   .order_by('-created_at')
+        )

@@ -35,17 +35,31 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_names = serializers.SerializerMethodField()
+    brand_name = serializers.CharField(source="brand.name", read_only=True)
     images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
-            'id', 'brand', 'categories', 'product_types',
-            'title', 'slug', 'description', 'price', 'discount',
+            'id',
+            'brand',
+            'brand_name',
+            'categories',
+            'category_names',
+            'product_types',
+            'title',
+            'slug',
+            'description',
+            'price',
+            'discount',
             'images',
             'created_at',
         )
         read_only_fields = ('slug', 'created_at')
+
+    def get_category_names(self, obj):
+        return list(obj.categories.values_list("name", flat=True))
 
     def get_images(self, obj):
         qs = obj.images.all()
@@ -58,8 +72,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
         request = self.context.get('request')
         return [
-            (request.build_absolute_uri(img.image.url)
-                if request else img.image.url)
+            (request.build_absolute_uri(img.image.url) if request else img.image.url)
             for img in ordered
         ]
 
