@@ -222,6 +222,16 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
         ctx['request'] = self.request
         return ctx
 
+class ProductRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
+
 
 def index(request):
     partners = PartnerSlider.objects.all().order_by('created_at')

@@ -34,6 +34,8 @@ urlpatterns = [
          name='producttype-list-create'),
     path('api/products/', views.ProductListCreateAPIView.as_view(),
          name='product-list-create'),
+    path('api/products/<int:pk>/', views.ProductRetrieveAPIView.as_view(),
+         name='product-detail-api'),
     path('api/partners/', views.PartnerSliderListCreateAPIView.as_view(),
          name='partner-slider-list'),
     path('api/advertisements/', views.AdvertisementSlideListAPIView.as_view(),
