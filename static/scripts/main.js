@@ -486,7 +486,8 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       if (res.status === 403) {
-        window.location.href = "{% url 'MContact:login' %}?next=" + encodeURIComponent(currentUrl);
+        window.location.href =
+          "{% url 'MContact:login' %}?next=" + encodeURIComponent(currentUrl);
         return;
       }
 
@@ -579,23 +580,33 @@ async function updateCart(payload) {
 document
   .getElementById("apply-discount")
   ?.addEventListener("click", async () => {
-    const code = document.getElementById("discount-code-input").value.trim();
+    const codeInput = document.getElementById("discount-code-input");
+    const code = codeInput.value.trim();
     if (!code) return;
+
     const csrftoken = document.querySelector(
       "[name=csrfmiddlewaretoken]"
     )?.value;
-    const res = await fetch("/cart/apply-discount/", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrftoken,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ code }),
-    });
-    if (res.ok) {
-      location.reload();
-    } else {
-      showToast("Kod tapılmadı");
+
+    try {
+      const res = await fetch("/cart/apply-discount/", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ code }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        location.reload();
+      } else {
+        showToast(data.error || "Endirim tətbiq edilərkən xəta baş verdi.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Şəbəkə xətası, zəhmət olmasa yenidən cəhd edin.");
     }
   });
 

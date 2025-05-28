@@ -17,6 +17,7 @@ from decimal import Decimal
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import models as dj_models
+from django.views.decorators.csrf import ensure_csrf_cookie
 import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
@@ -221,6 +222,7 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
         ctx = super().get_serializer_context()
         ctx['request'] = self.request
         return ctx
+
 
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -435,7 +437,7 @@ def register(request):
         return redirect('MContact:index')
     return render(request, 'register.html')
 
-
+@ensure_csrf_cookie
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip()
@@ -659,17 +661,48 @@ def cart_update(request):
 
 @require_POST
 def apply_discount(request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"error": "Endirim kodunu istifadə etmək üçün əvvəlcə daxil olun."},
+            status=400
+        )
+
     cart = get_or_create_cart(request)
+
     code_txt = request.POST.get("code", "").strip().upper()
+
     try:
         code = DiscountCode.objects.get(code=code_txt, active=True)
         if code.expires_at and code.expires_at < timezone.now():
-            raise ValidationError
-    except (DiscountCode.DoesNotExist, ValidationError):
-        return JsonResponse({"error": "Kod tapılmadı və ya deaktivdir"}, status=400)
+            raise DiscountCode.DoesNotExist
+    except DiscountCode.DoesNotExist:
+        return JsonResponse(
+            {"error": "Kod tapılmadı və ya deaktivdir."},
+            status=400
+        )
+
+    already_used = Order.objects.filter(
+        user_id=user_id,
+        discount_code__iexact=code_txt
+    ).exists()
+
+    if already_used:
+        return JsonResponse(
+            {"error": "Bu endirim kodundan artıq istifadə etmisiniz."},
+            status=400
+        )
+
     DiscountCodeUse.objects.update_or_create(
         cart=cart, defaults={"code": code})
-    return JsonResponse({"ok": True, "percent": code.percent, "amount": cart.get_discount_code_amount()})
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "percent": code.percent,
+            "amount": cart.get_discount_code_amount()
+        }
+    )
 
 
 @require_POST
