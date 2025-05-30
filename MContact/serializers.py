@@ -34,56 +34,63 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'created_at')
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductListSerializer(serializers.ModelSerializer):
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
     images = serializers.SerializerMethodField()
-    formatted_description = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
-            'id',
-            'brand',
-            'brand_name',
-            'categories',
-            'category_names',
-            'product_types',
-            'title',
-            'slug',
-            'formatted_description',
-            'price',
-            'discount',
-            'images',
-            'created_at',
+            "id",
+            "brand",
+            "brand_name",
+            "categories",
+            "category_names",
+            "title",
+            "price",
+            "images",
         )
-        read_only_fields = ('slug', 'created_at')
 
     def get_category_names(self, obj):
         return list(obj.categories.values_list("name", flat=True))
 
     def get_images(self, obj):
         qs = obj.images.all()
-        main = qs.filter(is_main=True).order_by('-created_at').first()
-        if main:
-            others = qs.exclude(pk=main.pk).order_by('-created_at')
-            ordered = [main] + list(others)
-        else:
-            ordered = qs.order_by('-created_at')
+        main = qs.filter(is_main=True).order_by("-created_at").first()
+        ordered = [main] + list(qs.exclude(pk=main.pk).order_by("-created_at")) if main else list(qs.order_by("-created_at"))
+        request = self.context.get("request")
+        return [(request.build_absolute_uri(i.image.url) if request else i.image.url) for i in ordered]
 
-        request = self.context.get('request')
-        return [
-            (request.build_absolute_uri(img.image.url) if request else img.image.url)
-            for img in ordered
-        ]
 
-    def get_formatted_description(self, obj):
-        return [
-            line.strip()
-            for line in obj.description.splitlines()
-            if line.strip()
-        ]
+class ProductDetailSerializer(serializers.ModelSerializer):
+    category_names = serializers.SerializerMethodField()
+    brand_name = serializers.CharField(source="brand.name", read_only=True)
+    images = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Product
+        fields = (
+            "id",
+            "title",
+            "description",
+            "images",
+            "price",
+            "brand",
+            "brand_name",
+            "categories",
+            "category_names",
+        )
+
+    def get_category_names(self, obj):
+        return list(obj.categories.values_list("name", flat=True))
+
+    def get_images(self, obj):
+        qs = obj.images.all()
+        main = qs.filter(is_main=True).order_by("-created_at").first()
+        ordered = [main] + list(qs.exclude(pk=main.pk).order_by("-created_at")) if main else list(qs.order_by("-created_at"))
+        request = self.context.get("request")
+        return [(request.build_absolute_uri(i.image.url) if request else i.image.url) for i in ordered]
 
 class PartnerSliderSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)

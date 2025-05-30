@@ -26,7 +26,7 @@ from .models import (
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
-    BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductSerializer,
+    BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductListSerializer, ProductDetailSerializer,
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
@@ -34,6 +34,10 @@ from .serializers import (
 )
 from django.contrib import messages
 
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'perpage'
+    max_page_size = 100
 
 def about_us(request):
     return render(request, 'about-us.html')
@@ -214,24 +218,25 @@ class ProductTypeListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ProductTypeSerializer
 
 
-class ProductListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Product.objects.all().order_by('-created_at')
-    serializer_class = ProductSerializer
+class ProductListAPIView(generics.ListAPIView):
+    queryset = Product.objects.all().order_by("-created_at")
+    serializer_class = ProductListSerializer
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
-        ctx['request'] = self.request
+        ctx["request"] = self.request
         return ctx
 
 
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    lookup_field = 'pk'
+    serializer_class = ProductDetailSerializer
+    lookup_field = "pk"
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
-        ctx['request'] = self.request
+        ctx["request"] = self.request
         return ctx
 
 
@@ -1375,14 +1380,8 @@ class MobileOrderView(APIView):
         return paginator.get_paginated_response(ser.data)
 
 
-class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'perpage'
-    max_page_size = 100
-
-
 class CategoryProductsAPIView(generics.ListAPIView):
-    serializer_class = ProductSerializer
+    serializer_class = ProductListSerializer
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
