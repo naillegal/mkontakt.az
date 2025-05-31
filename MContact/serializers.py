@@ -1,8 +1,12 @@
 from rest_framework import serializers
-from .models import (PartnerSlider, AdvertisementSlide, Brand, Category, Product,
-                     ProductType, ProductImage, CustomerReview, Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem)
+from .models import (
+    PartnerSlider, AdvertisementSlide, Brand, Category, Product,
+    ProductType, ProductImage, CustomerReview,
+    Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken
+)
 import html
 from django.utils.html import strip_tags
+from decimal import Decimal, ROUND_HALF_UP
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -35,9 +39,10 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
-    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -49,24 +54,33 @@ class ProductListSerializer(serializers.ModelSerializer):
             "category_names",
             "title",
             "price",
-            "images",
+            "image",
         )
+
+    def get_price(self, obj):
+        dec = Decimal(obj.price).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return "{:.2f}".format(dec)
 
     def get_category_names(self, obj):
         return list(obj.categories.values_list("name", flat=True))
 
-    def get_images(self, obj):
+    def get_image(self, obj):
         qs = obj.images.all()
         main = qs.filter(is_main=True).order_by("-created_at").first()
-        ordered = [main] + list(qs.exclude(pk=main.pk).order_by("-created_at")) if main else list(qs.order_by("-created_at"))
+        img = main or qs.order_by("-created_at").first()
+        if not img:
+            return None
         request = self.context.get("request")
-        return [(request.build_absolute_uri(i.image.url) if request else i.image.url) for i in ordered]
+        url = img.image.url
+        return request.build_absolute_uri(url) if request else url
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
-    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -82,15 +96,28 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "category_names",
         )
 
+    def get_price(self, obj):
+        dec = Decimal(obj.price).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return "{:.2f}".format(dec)
+
     def get_category_names(self, obj):
         return list(obj.categories.values_list("name", flat=True))
 
     def get_images(self, obj):
         qs = obj.images.all()
         main = qs.filter(is_main=True).order_by("-created_at").first()
-        ordered = [main] + list(qs.exclude(pk=main.pk).order_by("-created_at")) if main else list(qs.order_by("-created_at"))
+        if main:
+            ordered = [main] + \
+                list(qs.exclude(pk=main.pk).order_by("-created_at"))
+        else:
+            ordered = list(qs.order_by("-created_at"))
+
         request = self.context.get("request")
-        return [(request.build_absolute_uri(i.image.url) if request else i.image.url) for i in ordered]
+        def make_url(i): return request.build_absolute_uri(
+            i.image.url) if request else i.image.url
+        return [make_url(i) for i in ordered]
+
 
 class PartnerSliderSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)
@@ -300,3 +327,9 @@ class OrderSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "subtotal", "product_discount",
                             "discount_amount", "total", "created_at", "items")
+
+
+class DeviceTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDeviceToken
+        fields = ("token", "platform")

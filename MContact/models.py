@@ -436,3 +436,24 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"{self.user.email} – {self.code}"
+
+
+class UserDeviceToken(models.Model):
+    PLATFORM_CHOICES = (
+        ('android', 'Android'),
+        ('ios', 'iOS'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name="device_tokens", null=True, blank=True)
+    token = models.CharField(max_length=255, unique=True)
+    platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Cihaz tokeni"
+        verbose_name_plural = "Cihaz tokenləri"
+
+    def __str__(self):
+        owner = self.user.full_name if self.user else "Anon"
+        return f"{owner} • {self.platform}"

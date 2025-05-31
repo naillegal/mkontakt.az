@@ -22,7 +22,7 @@ import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
-    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart
+    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -30,7 +30,7 @@ from .serializers import (
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
-    DiscountCodeSerializer, WishItemSerializer, OrderSerializer
+    DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer
 )
 from django.contrib import messages
 
@@ -1393,3 +1393,26 @@ class CategoryProductsAPIView(generics.ListAPIView):
                    .distinct()
                    .order_by('-created_at')
         )
+
+
+class RegisterDeviceTokenAPIView(APIView):
+    def post(self, request):
+        ser = DeviceTokenSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        token = ser.validated_data["token"]
+        platform = ser.validated_data["platform"]
+
+        UserDeviceToken.objects.filter(token=token).exclude(user=request.user).delete()
+
+        UserDeviceToken.objects.update_or_create(
+            token=token,
+            defaults={"user": request.user, "platform": platform},
+        )
+        return Response({"detail": "Token qeyd edildi."}, status=201)
+
+    def delete(self, request):
+        token = request.data.get("token")
+        if not token:
+            return Response({"detail": "token göndərilməlidir."}, status=400)
+        UserDeviceToken.objects.filter(user=request.user, token=token).delete()
+        return Response({"detail": "Token silindi."}, status=200)

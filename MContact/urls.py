@@ -103,4 +103,9 @@ urlpatterns = [
         views.CategoryProductsAPIView.as_view(),
         name='category-products'
     ),
+    path(
+        'api/device-token/',
+        views.RegisterDeviceTokenAPIView.as_view(),
+        name='device-token'
+    ),
 ]
