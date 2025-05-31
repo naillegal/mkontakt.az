@@ -34,10 +34,12 @@ from .serializers import (
 )
 from django.contrib import messages
 
+
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'perpage'
     max_page_size = 100
+
 
 def about_us(request):
     return render(request, 'about-us.html')
@@ -441,6 +443,7 @@ def register(request):
             request, "Qeydiyyat uğurla tamamlandı və sistemə daxil olundu!")
         return redirect('MContact:index')
     return render(request, 'register.html')
+
 
 @ensure_csrf_cookie
 def login_view(request):
@@ -1396,23 +1399,83 @@ class CategoryProductsAPIView(generics.ListAPIView):
 
 
 class RegisterDeviceTokenAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Cihaz tokenini qeyd et / yenilə",
+        operation_description=(
+            "Mobil tərəfdən gələn FCM registration token-i və platform (android/ios) "
+            "bu endpoint-ə POST edilməlidir. "
+            "Əgər token artıq mövcuddursa, yalnız user və platform yenilənəcək."
+        ),
+        request_body=DeviceTokenSerializer,
+        responses={
+            201: openapi.Response(
+                description="Token uğurla yadda saxlanıldı",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                ),
+                examples={
+                    "application/json": {"detail": "Token qeyd edildi."}
+                }
+            ),
+            400: openapi.Response(description="Yanlış sorğu"),
+            401: openapi.Response(description="Authentication tələb olunur"),
+        },
+    )
     def post(self, request):
-        ser = DeviceTokenSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        token = ser.validated_data["token"]
-        platform = ser.validated_data["platform"]
+        serializer = DeviceTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data["token"]
+        platform = serializer.validated_data["platform"]
 
-        UserDeviceToken.objects.filter(token=token).exclude(user=request.user).delete()
+        UserDeviceToken.objects.filter(
+            token=token).exclude(user=request.user).delete()
 
         UserDeviceToken.objects.update_or_create(
             token=token,
             defaults={"user": request.user, "platform": platform},
         )
-        return Response({"detail": "Token qeyd edildi."}, status=201)
+        return Response({"detail": "Token qeyd edildi."}, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_summary="Cihaz tokenini sil",
+        operation_description=(
+            "Token-i DELETE edərək silmək üçündür. "
+            "Body-ə yalnız token string göndərin."
+        ),
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["token"],
+            properties={
+                "token": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Silinəcək FCM registration token"
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Token uğurla silindi",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                ),
+                examples={
+                    "application/json": {"detail": "Token silindi."}
+                }
+            ),
+            400: openapi.Response(description="token göndərilməyib"),
+            401: openapi.Response(description="Authentication tələb olunur"),
+        },
+    )
     def delete(self, request):
         token = request.data.get("token")
         if not token:
-            return Response({"detail": "token göndərilməlidir."}, status=400)
+            return Response({"detail": "token göndərilməlidir."}, status=status.HTTP_400_BAD_REQUEST)
+
         UserDeviceToken.objects.filter(user=request.user, token=token).delete()
-        return Response({"detail": "Token silindi."}, status=200)
+        return Response({"detail": "Token silindi."}, status=status.HTTP_200_OK)
