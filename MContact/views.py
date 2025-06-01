@@ -574,40 +574,52 @@ class ChangePasswordAPIView(generics.GenericAPIView):
 def toggle_wishlist(request, product_id):
     session_user_id = request.session.get("user_id")
     if not session_user_id:
-        return redirect(f"/login/?next={request.path}")
+        return redirect(f"/giriş/?next={request.path}")
+
+    try:
+        user = User.objects.get(pk=session_user_id)
+    except User.DoesNotExist:
+        del request.session["user_id"]
+        return redirect(f"/giriş/?next={request.path}")
 
     product = get_object_or_404(Product, pk=product_id)
-    wish_qs = Wish.objects.filter(user_id=session_user_id, product=product)
+    wish_qs = Wish.objects.filter(user=user, product=product)
 
     if wish_qs.exists():
         wish_qs.delete()
         in_wishlist = False
     else:
-        Wish.objects.create(user_id=session_user_id, product=product)
+        Wish.objects.create(user=user, product=product)
         in_wishlist = True
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({"in_wishlist": in_wishlist})
-    return redirect(request.META.get("HTTP_REFERER", "/products/"))
+    return redirect(request.META.get("HTTP_REFERER", "/məhsullar/"))
 
 
 def wishlist_view(request):
     session_user_id = request.session.get("user_id")
     if not session_user_id:
-        return redirect(f"/login/?next=/wishlist/")
+        return redirect(f"/giriş/?next=/istək-siyahısı/")
+
+    try:
+        user = User.objects.get(pk=session_user_id)
+    except User.DoesNotExist:
+        del request.session["user_id"]
+        return redirect(f"/giriş/?next=/istək-siyahısı/")
 
     wishes = (
         Wish.objects
-            .filter(user_id=session_user_id)
+            .filter(user=user)
             .select_related("product")
             .order_by("-created_at")
     )
     wish_ids = set(wishes.values_list("product_id", flat=True))
+
     return render(request, "wishlist.html", {
         "wishes": wishes,
         "wish_ids": wish_ids,
     })
-
 
 @require_POST
 def cart_add(request, product_id):
@@ -633,10 +645,16 @@ def cart_add(request, product_id):
 
 
 def cart_view(request):
+    session_user_id = request.session.get("user_id")
+    if session_user_id:
+        if not User.objects.filter(pk=session_user_id).exists():
+            del request.session["user_id"]
+            session_user_id = None
+
     cart = get_or_create_cart(request)
-    paginator = Paginator(cart.items.select_related(
-        "product"), 3)
+    paginator = Paginator(cart.items.select_related("product"), 3)
     page_obj = paginator.get_page(request.GET.get("page"))
+
     context = {
         "cart": cart,
         "page_obj": page_obj,
