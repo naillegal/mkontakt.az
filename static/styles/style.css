@@ -931,7 +931,7 @@ footer .footer-copyright {
 }
 @media (max-width: 768px) {
   #partners-slider-section .swiper {
-    padding: 0px;
+    padding: 0px 20px;
   }
 }
 #partners-slider-section .swiper .swiper-wrapper {

@@ -450,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!isAuthenticated) {
         const currentUrl = window.location.pathname + window.location.search;
-        window.location.href = `/login/?next=${encodeURIComponent(currentUrl)}`;
+        window.location.href = `/giriş/?next=${encodeURIComponent(currentUrl)}`;
         return;
       }
 
@@ -504,11 +504,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ============ ADD TO CART ==================
-function getCookie(name) {
-  let v = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
-  return v ? v.pop() : "";
-}
-
 document.body.addEventListener("click", async (e) => {
   const addBtn = e.target.closest(".product-add-to-cart");
   if (!addBtn) return;

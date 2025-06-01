@@ -25,6 +25,23 @@ class ProductTypeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    readonly_fields = ('image_preview',)
+    fields = ('image', 'is_main', 'image_preview')
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width:100px; height:80px; object-fit:cover; '
+                'border:1px solid #ddd; border-radius:4px; margin:5px 0;" />',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Şəkil önizləmə"
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('title', 'brand', 'get_categories',
@@ -32,31 +49,11 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('title', 'brand__name')
     list_filter = ('brand', 'categories', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
+    inlines = [ProductImageInline]
 
     def get_categories(self, obj):
         return ", ".join([cat.name for cat in obj.categories.all()])
     get_categories.short_description = "Kateqoriyalar"
-
-
-@admin.register(ProductImage)
-class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'is_main', 'image_preview', 'created_at')
-    list_editable = ('is_main',)
-    search_fields = ('product__title',)
-    list_filter = ('product', 'is_main')
-
-    readonly_fields = ('image_preview', 'created_at')  
-    fields = ('product', 'image_preview', 'image', 'is_main', 'created_at')
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" style="width:120px; height:100px; object-fit:cover; '
-                'border:1px solid #ddd; border-radius:4px; margin-bottom:10px;" />',
-                obj.image.url
-            )
-        return "-"
-    image_preview.short_description = "Şəkil önizləmə"
 
 
 @admin.register(PartnerSlider)
@@ -104,13 +101,6 @@ class WishInline(admin.TabularInline):
     can_delete = False
 
 
-class PasswordResetOTPInline(admin.TabularInline):
-    model = PasswordResetOTP
-    extra = 0
-    readonly_fields = ('code', 'created_at')
-    can_delete = False
-
-
 class CartInline(admin.TabularInline):
     model = Cart
     extra = 0
@@ -122,7 +112,7 @@ class CartInline(admin.TabularInline):
 class UserAdmin(admin.ModelAdmin):
     list_display = ('full_name', 'email', 'phone', 'birth_date', 'created_at')
     search_fields = ('full_name', 'email', 'phone')
-    inlines = [WishInline, PasswordResetOTPInline, CartInline]
+    inlines = [WishInline, CartInline]
 
 
 class CartItemInline(admin.TabularInline):

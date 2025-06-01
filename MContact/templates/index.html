@@ -49,8 +49,7 @@
                 <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
               </div>
               <div class="user-menu">
-                <span class="user-toggle"
-                data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
+                <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                   <i class="fa-solid fa-user"></i>
                 </span>
 
@@ -58,8 +57,8 @@
                   <li class="user-info">
                     <img src="{% static 'images/user-default.png' %}" alt="" />
                     <div>
-                      <div class="user-fullname">{{ user.full_name|default:"Qonaq istifadəçi"|truncatechars:25 }}</div>
-                      <div class="user-email">{{ user.email|default:"guest@gmail.com"|truncatechars:25 }}</div>
+                      <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+                      <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
                     </div>
                   </li>
                   <li>
@@ -84,17 +83,16 @@
           <div class="header-icons">
             <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
             <div class="user-menu">
-              <span class="user-toggle"
-              data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
-                <i class="fa-solid fa-user"></i>
-              </span>
+              <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
+                  <i class="fa-solid fa-user"></i>
+                </span>
 
               <ul class="user-dropdown-menu">
                 <li class="user-info">
                   <img src="{% static 'images/user-default.png' %}" alt="" />
                   <div>
-                    <div class="user-fullname">{{ user.full_name|default:"Qonaq istifadəçi"|truncatechars:25 }}</div>
-                    <div class="user-email">{{ user.email|default:"guest@gmail.com"|truncatechars:25 }}</div>
+                    <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+                    <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
                   </div>
                 </li>
                 <li>
@@ -246,7 +244,7 @@
             <div class="col-lg-2 col-md-3 col-sm-4 col-6">
               <div class="product-box">
                 <div class="product-img">
-                  <img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" />
+                  <a href="{{ product.get_absolute_url }}"><img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" /></a>
                   {% if product.discount %}
                     <div class="product-discount-percent">-{{ product.discount }}%</div>
                   {% endif %}
@@ -332,7 +330,7 @@
             <div class="col-lg-2 col-md-3 col-sm-4 col-6">
               <div class="product-box">
                 <div class="product-img">
-                  <img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" />
+                  <a href="{{ product.get_absolute_url }}"><img src="{{ product.get_main_image_url }}" alt="{{ product.title }}" /></a>
                   {% if product.discount %}
                     <div class="product-discount-percent">-{{ product.discount }}%</div>
                   {% endif %}

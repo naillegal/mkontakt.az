@@ -130,7 +130,7 @@ def new_password(request):
 
     return render(request, "new-password.html")
 
-
+@ensure_csrf_cookie
 def products(request):
     all_brands = Brand.objects.all().order_by('name')
     all_categories = Category.objects.all().order_by('name')
@@ -181,7 +181,7 @@ def products(request):
     }
     return render(request, 'products.html', context)
 
-
+@ensure_csrf_cookie
 def product_detail(request, slug):
     product_item = get_object_or_404(Product, slug=slug)
     other_products = Product.objects.exclude(
@@ -241,7 +241,7 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
         ctx["request"] = self.request
         return ctx
 
-
+@ensure_csrf_cookie
 def index(request):
     partners = PartnerSlider.objects.all().order_by('created_at')
     advertisement_slides = AdvertisementSlide.objects.all().order_by('created_at')
