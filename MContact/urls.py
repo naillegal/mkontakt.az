@@ -52,6 +52,8 @@ urlpatterns = [
     path('api/register/', views.UserRegisterAPIView.as_view(), name='user-register'),
     path('api/login/', views.UserLoginAPIView.as_view(), name='user-login'),
     path('api/users/', views.UserListAPIView.as_view(), name='user-list'),
+    path('api/users/<int:pk>/',
+         views.UserRetrieveAPIView.as_view(), name='user-detail'),
     path('qeydiyyat/', views.register, name='register'),
     path('giriş/', views.login_view, name='login'),
     path('profil-düzəlişi/', views.edit_profile, name='edit_profile'),

@@ -392,6 +392,11 @@ class UserListAPIView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+class UserRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'pk'
+
 
 def register(request):
     if request.method == "POST":
