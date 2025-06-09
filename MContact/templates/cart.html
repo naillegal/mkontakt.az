@@ -39,13 +39,15 @@
                 <div class="left-under cart-item" data-id="{{ item.id }}">
                   <div class="cart-product-box">
                     <div class="cart-product-img">
-                      <img src="{{ item.product.get_main_image_url }}" alt="{{ item.product.title }}" />
+                      <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.get_main_image_url }}" alt="{{ item.product.title }}" /></a>
                     </div>
                     <div class="cart-product-general-actions">
                       <div class="cart-product-content-and-delete">
                         <div class="cart-product-content">
                           <div class="cart-product-title">
-                            <div>{{ item.product.title }}</div>
+                            <div>
+                              <a href="{{ item.product.get_absolute_url }}">{{ item.product.title }}</a>
+                            </div>
                             <input type="checkbox" id="checkbox-{{ item.id }}" class="select-one" />
                             <label for="checkbox-{{ item.id }}"><span class="custom-checkbox"></span></label>
                           </div>
@@ -118,6 +120,12 @@
                   <div>Məhsul endirimi</div>
                   <div>-₼{{ cart.product_discount|floatformat:2 }}</div>
                 </div>
+                {% if cart.category_discount %}
+                  <div class="product-discount">
+                    <div>Kateqoriya endirimi</div>
+                    <div>-₼{{ cart.category_discount|floatformat:2 }}</div>
+                  </div>
+                {% endif %}
                 <div class="discount-code">
                   <div>Endirim kodu</div>
                   <div>-₼{{ discount_amount|floatformat:2 }}</div>

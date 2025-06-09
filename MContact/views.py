@@ -17,6 +17,7 @@ from decimal import Decimal
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import models as dj_models
+from django.db.models import Case, When, Value, IntegerField
 from django.views.decorators.csrf import ensure_csrf_cookie
 import uuid
 from .models import (
@@ -130,78 +131,83 @@ def new_password(request):
 
     return render(request, "new-password.html")
 
+
 @ensure_csrf_cookie
 def products(request):
     all_brands = Brand.objects.all().order_by('name')
     all_categories = Category.objects.all().order_by('name')
 
-    brand_ids = request.GET.getlist('brand')
-    category_ids = request.GET.getlist('category')
+    brand_ids = [int(x) for x in request.GET.getlist('brand')]
+    category_ids = [int(x) for x in request.GET.getlist('category')]
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     ordering = request.GET.get('ordering')
 
-    product_qs = Product.objects.all()
+    qs = Product.objects.all()
 
     if brand_ids:
-        product_qs = product_qs.filter(brand__id__in=brand_ids)
-
+        qs = qs.filter(brand_id__in=brand_ids)
     if category_ids:
-        product_qs = product_qs.filter(
-            categories__id__in=category_ids).distinct()
-
+        qs = qs.filter(categories__id__in=category_ids).distinct()
     if min_price:
-        product_qs = product_qs.filter(price__gte=min_price)
+        qs = qs.filter(price__gte=min_price)
     if max_price:
-        product_qs = product_qs.filter(price__lte=max_price)
+        qs = qs.filter(price__lte=max_price)
+
+    qs = qs.annotate(
+        _prio=Case(
+            When(priority__isnull=False, then='priority'),
+            default=Value(999999), output_field=IntegerField()
+        )
+    )
 
     if ordering == 'price_asc':
-        product_qs = product_qs.order_by('price')
+        qs = qs.order_by('_prio', 'price')
     elif ordering == 'price_desc':
-        product_qs = product_qs.order_by('-price')
+        qs = qs.order_by('_prio', '-price')
+    else:
+        qs = qs.order_by('_prio', '-created_at')
 
-    paginator = Paginator(product_qs, 8)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    paginator = Paginator(qs, 8)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     session_user_id = request.session.get("user_id")
-    if session_user_id:
-        wish_ids = set(
-            Wish.objects.filter(user_id=session_user_id)
-                        .values_list("product_id", flat=True)
-        )
-    else:
-        wish_ids = set()
+    wish_ids = set(Wish.objects.filter(user_id=session_user_id)
+                   .values_list("product_id", flat=True)) if session_user_id else set()
 
-    context = {
+    return render(request, 'products.html', {
         'page_obj': page_obj,
         'brands': all_brands,
         'categories': all_categories,
-        "wish_ids": wish_ids,
-    }
-    return render(request, 'products.html', context)
+        'wish_ids': wish_ids,
+        'selected_brands': brand_ids,
+        'selected_categories': category_ids,
+    })
+
 
 @ensure_csrf_cookie
 def product_detail(request, slug):
     product_item = get_object_or_404(Product, slug=slug)
-    other_products = Product.objects.exclude(
-        id=product_item.id).order_by('-created_at')[:3]
+
+    prio = list(Product.objects
+                .exclude(id=product_item.id)
+                .filter(priority__isnull=False)
+                .order_by('priority'))
+    others = list(Product.objects
+                  .exclude(id=product_item.id)
+                  .filter(priority__isnull=True)
+                  .order_by('?'))
+    other_products = (prio + others)[:3]
 
     session_user_id = request.session.get("user_id")
-    if session_user_id:
-        wish_ids = set(
-            Wish.objects.filter(user_id=session_user_id)
-                        .values_list("product_id", flat=True)
-        )
-    else:
-        wish_ids = set()
+    wish_ids = set(Wish.objects.filter(user_id=session_user_id)
+                   .values_list("product_id", flat=True)) if session_user_id else set()
 
-    context = {
+    return render(request, 'products-detail.html', {
         'product': product_item,
         'other_products': other_products,
-        "wish_ids": wish_ids,
-    }
-    return render(request, 'products-detail.html', context)
+        'wish_ids': wish_ids,
+    })
 
 
 class BrandListCreateAPIView(generics.ListCreateAPIView):
@@ -241,24 +247,29 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
         ctx["request"] = self.request
         return ctx
 
-@ensure_csrf_cookie
+
 def index(request):
     partners = PartnerSlider.objects.all().order_by('created_at')
     advertisement_slides = AdvertisementSlide.objects.all().order_by('created_at')
-    recent_products = Product.objects.all().order_by('-created_at')[:6]
+
+    prio = list(Product.objects.filter(priority__isnull=False)
+                .order_by('priority')[:6])
+    rest = list(Product.objects.filter(priority__isnull=True)
+                .order_by('-created_at')[:6 - len(prio)])
+    recent_products = prio + rest
+
+    prio_all = list(Product.objects.filter(priority__isnull=False)
+                    .order_by('priority'))
+    others = list(Product.objects.filter(priority__isnull=True)
+                  .order_by('?'))
+    random_products = (prio_all + others)[:6]
+
     recent_categories = Category.objects.all().order_by('-created_at')[:3]
-    random_products = Product.objects.order_by('?')[:6]
     customer_reviews = CustomerReview.objects.all()
 
     session_user_id = request.session.get("user_id")
-    if session_user_id:
-        wish_ids = set(
-            Wish.objects
-                .filter(user_id=session_user_id)
-                .values_list("product_id", flat=True)
-        )
-    else:
-        wish_ids = set()
+    wish_ids = set(Wish.objects.filter(user_id=session_user_id)
+                   .values_list("product_id", flat=True)) if session_user_id else set()
 
     context = {
         'partners': partners,
@@ -391,6 +402,7 @@ class UserLoginAPIView(generics.GenericAPIView):
 class UserListAPIView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 class UserRetrieveAPIView(generics.RetrieveAPIView):
     queryset = User.objects.all()
@@ -626,6 +638,7 @@ def wishlist_view(request):
         "wish_ids": wish_ids,
     })
 
+
 @require_POST
 def cart_add(request, product_id):
     data = json.loads(request.body or '{}')
@@ -760,6 +773,7 @@ def order_create(request):
             cart, "discountcodeuse") else "",
         discount_amount=cart.get_discount_code_amount(),
         product_discount=cart.product_discount,
+        category_discount=cart.category_discount,
         subtotal=cart.raw_total,
         total=cart.grand_total,
     )

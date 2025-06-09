@@ -75,14 +75,14 @@
                 <div class="counter-value">1</div>
                 <button class="counter-btn plus">+</button>
               </div>
-              <div class="type">
+              {% comment %} <div class="type">
                 <select>
                   <option disabled selected hidden>Məhsulun növü</option>
                   {% for pt in product.product_types.all %}
                     <option value="{{ pt.id }}">{{ pt.name }}</option>
                   {% endfor %}
                 </select>
-              </div>
+              </div> {% endcomment %}
             </div>
             <div class="add-to-cart-btn">
               <button class="add-to-cart-btn__button" data-product="{{ product.id }}">Səbətə əlavə et</button>
@@ -103,19 +103,21 @@
           <div class="col-lg-2 col-md-3 col-sm-4 col-6">
             <div class="product-box">
               <div class="product-img">
-                <img src="{{ other.get_main_image_url }}" alt="{{ other.title }}" />
+                <a href="{{ other.get_absolute_url }}"><img src="{{ other.get_main_image_url }}" alt="{{ other.title }}" /></a>
                 {% if other.discount %}
                   <div class="product-discount-percent">-{{ other.discount }}%</div>
                 {% endif %}
                 <a href="{% url 'MContact:wishlist-toggle' other.id %}" class="product-add-to-favourites {% if other.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
               </div>
               <div class="product-content">
-                <a href="{{ other.get_absolute_url }}"><div class="title">{{ other.title }}</div></a>
-                <div class="description">
-                  {% for cat in other.categories.all %}
-                    {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
-                </div>
+                <a href="{{ other.get_absolute_url }}">
+                  <div class="title">{{ other.title }}</div>
+                  <div class="description">
+                    {% for cat in other.categories.all %}
+                      {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </div>
+                </a>
                 <div class="product-price-and-cart">
                   <div class="product-price">₼{{ other.price }}</div>
                   <div class="product-add-to-cart" data-product="{{ product.id }}">

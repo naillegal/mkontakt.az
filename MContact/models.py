@@ -5,6 +5,7 @@ from django.templatetags.static import static
 from ckeditor.fields import RichTextField
 from datetime import timedelta
 from django.utils import timezone
+from decimal import Decimal
 
 
 class Brand(models.Model):
@@ -23,6 +24,12 @@ class Brand(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name="Kateqoriya adı")
+    discount = models.PositiveIntegerField(
+        verbose_name="Endirim faizi",
+        blank=True,
+        null=True,
+        help_text="(İstəyə bağlı, faizlə verilir)"
+    )
     image = models.ImageField(
         upload_to='categories/',
         verbose_name="Kateqoriya şəkli",
@@ -30,7 +37,8 @@ class Category(models.Model):
         null=True
     )
     created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name="Yaradılma tarixi")
+        auto_now_add=True, verbose_name="Yaradılma tarixi"
+    )
 
     class Meta:
         verbose_name = "Kateqoriya"
@@ -65,6 +73,11 @@ class Product(models.Model):
         ProductType, blank=True, related_name='products', verbose_name="Məhsulun növləri"
     )
 
+    priority = models.PositiveIntegerField(
+        blank=True, null=True,
+        verbose_name="Sıra nömrəsi"
+    )
+
     title = models.CharField(max_length=255, verbose_name="Məhsul adı")
     slug = models.SlugField(max_length=255, unique=True,
                             verbose_name="Slug", blank=True)
@@ -82,7 +95,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = "Məhsul"
         verbose_name_plural = "Məhsullar"
-        ordering = ['-created_at']
+        ordering = ['priority', '-created_at']
 
     def __str__(self):
         return self.title
@@ -200,8 +213,6 @@ class Blog(models.Model):
     slug = models.SlugField(max_length=255, unique=True,
                             blank=True, verbose_name="Slug")
     description = RichTextField(verbose_name="Məzmun")
-    image = models.ImageField(
-        upload_to='blogs/', blank=True, null=True, verbose_name="Şəkil")
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Yaradılma tarixi")
 
@@ -223,9 +234,48 @@ class Blog(models.Model):
         return reverse('MContact:blog-detail', kwargs={'slug': self.slug})
 
     def get_default_image(self):
+        main = self.images.filter(is_main=True).first()
+        if main:
+            return main.image.url
+        elif self.images.exists():
+            return self.images.first().image.url
         if self.image:
             return self.image.url
         return static('images/blog.png')
+
+    @property
+    def ordered_images(self):
+        return self.images.order_by('-is_main', '-created_at')
+
+
+class BlogImage(models.Model):
+    blog = models.ForeignKey(
+        Blog, on_delete=models.CASCADE,
+        related_name='images', verbose_name="Blog"
+    )
+    image = models.ImageField(
+        upload_to='blogs/', verbose_name="Blog şəkli"
+    )
+    is_main = models.BooleanField(
+        default=False, verbose_name="Əsas şəkil"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Yüklənmə tarixi"
+    )
+
+    class Meta:
+        verbose_name = "Blog Şəkli"
+        verbose_name_plural = "Blog Şəkilləri"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.blog.title} – Şəkil {self.pk}"
+
+    def save(self, *args, **kwargs):
+        if self.is_main:
+            BlogImage.objects.filter(
+                blog=self.blog, is_main=True).update(is_main=False)
+        super().save(*args, **kwargs)
 
 
 class ContactMessage(models.Model):
@@ -249,6 +299,36 @@ class ContactMessage(models.Model):
 
 
 class ContactInfo(models.Model):
+    technical_label = models.CharField(
+        max_length=100,
+        default="Texniki sorğular",
+        verbose_name="Texniki bölmə başlığı"
+    )
+    technical_email_label = models.CharField(
+        max_length=50,
+        default="E-mail",
+        verbose_name="Texniki bölmə E-mail etiket"
+    )
+    technical_mobile_label = models.CharField(
+        max_length=50,
+        default="Mobil",
+        verbose_name="Texniki bölmə Mobil etiket"
+    )
+    support_label = models.CharField(
+        max_length=100,
+        default="Dəstək xidməti",
+        verbose_name="Dəstək bölməsi başlığı"
+    )
+    support_email_label = models.CharField(
+        max_length=50,
+        default="E-mail",
+        verbose_name="Dəstək bölməsi E-mail etiketi"
+    )
+    support_mobile_label = models.CharField(
+        max_length=50,
+        default="Mobil",
+        verbose_name="Dəstək bölməsi Mobil etiketi"
+    )
     technical_email = models.EmailField(verbose_name="Texniki Email")
     technical_mobile = models.CharField(
         max_length=50, verbose_name="Texniki Mobil")
@@ -326,10 +406,30 @@ class Cart(models.Model):
 
     @property
     def product_discount(self):
-        return sum(
-            i.product.price * i.product.discount / 100 * i.quantity
-            for i in self.items.select_related("product") if i.product.discount
-        )
+        total = Decimal('0')
+        seen = set()
+        for item in self.items.select_related("product").all():
+            p = item.product
+            if p.discount and p.id not in seen:
+                frac = Decimal(p.discount) / Decimal('100')
+                total += p.price * frac
+                seen.add(p.id)
+        return total
+
+    @property
+    def category_discount(self):
+        total = Decimal('0')
+        cat_products: dict[Category, set[Product]] = {}
+        for item in self.items.select_related("product").all():
+            p = item.product
+            for cat in p.categories.all():
+                if cat.discount:
+                    cat_products.setdefault(cat, set()).add(p)
+        for cat, products in cat_products.items():
+            frac = Decimal(cat.discount) / Decimal('100')
+            subtotal = sum(p.price for p in products)
+            total += subtotal * frac
+        return total
 
     def get_discount_code_amount(self):
         if not hasattr(self, "discountcodeuse"):
@@ -338,7 +438,12 @@ class Cart(models.Model):
 
     @property
     def grand_total(self):
-        return self.raw_total - self.product_discount - self.get_discount_code_amount()
+        return (
+            self.raw_total
+            - self.product_discount
+            - self.category_discount
+            - self.get_discount_code_amount()
+        )
 
 
 class CartItem(models.Model):
@@ -384,20 +489,65 @@ class DiscountCodeUse(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
-    full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=50)
-    address = models.TextField()
-    delivery_date = models.DateField()
-    delivery_time = models.TimeField()
-    discount_code = models.CharField(max_length=50, blank=True)
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="İstifadəçi"
+    )
+    full_name = models.CharField(
+        max_length=255,
+        verbose_name="Tam Ad"
+    )
+    phone = models.CharField(
+        max_length=50,
+        verbose_name="Telefon"
+    )
+    address = models.TextField(
+        verbose_name="Ünvan"
+    )
+    delivery_date = models.DateField(
+        verbose_name="Çatdırılma Tarixi"
+    )
+    delivery_time = models.TimeField(
+        verbose_name="Çatdırılma Vaxtı"
+    )
+    discount_code = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Endirim Kodu"
+    )
     discount_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0)
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Endirim Məbləği"
+    )
     product_discount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Məhsul Endirimi"
+    )
+    category_discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2, default=0,
+        verbose_name="Kateqoriya Endirimi"
+    )
+    subtotal = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Ara Cəm"
+    )
+    total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Ümumi Məbləğ"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yaradılma Tarixi"
+    )
 
     class Meta:
         verbose_name = "Sifariş"
@@ -409,14 +559,28 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(
-        Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField()
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items",
+        verbose_name="Sifariş"
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        verbose_name="Məhsul"
+    )
+    quantity = models.PositiveIntegerField(
+        verbose_name="Miqdar"
+    )
+    unit_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Vahid Qiymət"
+    )
 
     class Meta:
-        verbose_name = "Sifariş məhsulu"
-        verbose_name_plural = "Sifariş məhsulları"
+        verbose_name = "Sifariş Məhsulu"
+        verbose_name_plural = "Sifariş Məhsulları"
 
     def __str__(self):
         return f"{self.order} • {self.product.title}"

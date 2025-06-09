@@ -49,7 +49,12 @@
                 <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
               </div>
               <div class="user-menu">
-                <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
+                <span class="user-toggle"
+                  data-authenticated="{% if user and user.id %}
+                    1
+                  {% else %}
+                    0
+                  {% endif %}">
                   <i class="fa-solid fa-user"></i>
                 </span>
 
@@ -83,9 +88,14 @@
           <div class="header-icons">
             <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
             <div class="user-menu">
-              <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
-                  <i class="fa-solid fa-user"></i>
-                </span>
+              <span class="user-toggle"
+                data-authenticated="{% if user and user.id %}
+                  1
+                {% else %}
+                  0
+                {% endif %}">
+                <i class="fa-solid fa-user"></i>
+              </span>
 
               <ul class="user-dropdown-menu">
                 <li class="user-info">
@@ -251,8 +261,8 @@
                   <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
                 </div>
                 <div class="product-content">
-                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
-                  <div class="description">{{ product.description|truncatewords:10 }}</div>
+                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
+                  <div class="description">{{ product.description|truncatewords:10 }}</div></a>
                   <div class="product-price-and-cart">
                     <div class="product-price">₼{{ product.price }}</div>
                     <div class="product-add-to-cart" data-product="{{ product.id }}">
@@ -337,8 +347,8 @@
                   <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
                 </div>
                 <div class="product-content">
-                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
-                  <div class="description">{{ product.description|truncatewords:10 }}</div>
+                  <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
+                  <div class="description">{{ product.description|truncatewords:10 }}</div></a>
                   <div class="product-price-and-cart">
                     <div class="product-price">₼{{ product.price }}</div>
                     <div class="product-add-to-cart" data-product="{{ product.id }}">
@@ -501,24 +511,24 @@
         <div class="footer-column footer-contact">
           <h6>Əlaqə</h6>
           <div class="footer-contact-box">
-            <p>Texniki sorğular</p>
+            <p>{{ contact_info.technical_label }}</p>
             <p>
-              E-mail:
+              {{ contact_info.technical_mobile_label }}:
               <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
             </p>
             <p>
-              Mobil:
+              {{ contact_info.technical_mobile_label }}:
               <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
             </p>
           </div>
           <div class="footer-contact-box">
-            <p>Dəstək xidməti</p>
+            <p>{{ contact_info.support_label }}</p>
             <p>
-              E-mail:
+              {{ contact_info.support_email_label }}:
               <a href="mailto:{{ contact_info.support_email }}"><span>{{ contact_info.support_email }}</span></a>
             </p>
             <p>
-              Mobil:
+              {{ contact_info.support_mobile_label }}:
               <a href="tel:{{ contact_info.support_mobile }}"><span>{{ contact_info.support_mobile }}</span></a>
             </p>
           </div>

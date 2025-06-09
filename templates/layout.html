@@ -252,24 +252,24 @@
         <div class="footer-column footer-contact">
           <h6>Əlaqə</h6>
           <div class="footer-contact-box">
-            <p>Texniki sorğular</p>
+            <p>{{ contact_info.technical_label }}</p>
             <p>
-              E-mail:
+              {{ contact_info.technical_mobile_label }}:
               <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
             </p>
             <p>
-              Mobil:
+              {{ contact_info.technical_mobile_label }}:
               <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
             </p>
           </div>
           <div class="footer-contact-box">
-            <p>Dəstək xidməti</p>
+            <p>{{ contact_info.support_label }}</p>
             <p>
-              E-mail:
+              {{ contact_info.support_email_label }}:
               <a href="mailto:{{ contact_info.support_email }}"><span>{{ contact_info.support_email }}</span></a>
             </p>
             <p>
-              Mobil:
+              {{ contact_info.support_mobile_label }}:
               <a href="tel:{{ contact_info.support_mobile }}"><span>{{ contact_info.support_mobile }}</span></a>
             </p>
           </div>

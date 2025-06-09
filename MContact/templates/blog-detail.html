@@ -38,13 +38,24 @@
     <div class="blog-detail-container">
       <div class="blog-detail-box">
         <div class="blog-detail-img">
-          <a href="#">
-            {% if blog.image %}
-              <img src="{{ blog.image.url }}" alt="{{ blog.title }}" />
-            {% else %}
-              <img src="{% static 'images/blog.png' %}" alt="{{ blog.title }}" />
-            {% endif %}
-          </a>
+          <div class="swiper blogDetailSwiper">
+            <div class="swiper-wrapper">
+              {% if blog.images.all %}
+                {% for img in blog.ordered_images %}
+                  <div class="swiper-slide">
+                    <img src="{{ img.image.url }}" alt="{{ blog.title }}" />
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="swiper-slide">
+                  <img src="{% static 'images/blog.png' %}" alt="{{ blog.title }}" />
+                </div>
+              {% endif %}
+            </div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
+          </div>
         </div>
         <div class="blog-detail-content">
           <div class="description">{{ blog.description|safe }}</div>

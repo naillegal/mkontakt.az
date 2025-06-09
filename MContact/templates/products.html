@@ -82,6 +82,9 @@
                   <label>
                     <input type="checkbox" name="category" value="{{ category.id }}" />
                     {{ category.name }}
+                    {% if category.discount %}
+                      ({{ category.discount }}% endirim)
+                    {% endif %}
                   </label>
                 </li>
               {% endfor %}
@@ -128,14 +131,16 @@
                       <a href="{% url 'MContact:wishlist-toggle' product.id %}" class="product-add-to-favourites {% if product.id in wish_ids %}active{% endif %}"><i class="fa-solid fa-heart"></i></a>
                     </div>
                     <div class="product-content">
-                      <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
-                      <div class="description">
-                        {% if product.categories.all %}
-                          {% for cat in product.categories.all %}
-                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                          {% endfor %}
-                        {% endif %}
-                      </div>
+                      <a href="{{ product.get_absolute_url }}">
+                        <div class="title">{{ product.title }}</div>
+                        <div class="description">
+                          {% if product.categories.all %}
+                            {% for cat in product.categories.all %}
+                              {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                          {% endif %}
+                        </div>
+                      </a>
                       <div class="product-price-and-cart">
                         <div class="product-price">₼{{ product.price }}</div>
                         <div class="product-add-to-cart" data-product="{{ product.id }}">

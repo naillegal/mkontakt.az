@@ -312,6 +312,29 @@ function moveRegulationProducts() {
 window.addEventListener("resize", moveRegulationProducts);
 document.addEventListener("DOMContentLoaded", moveRegulationProducts);
 
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+
+  params.getAll("brand").forEach((id) => {
+    const cb = document.querySelector(`input[name="brand"][value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
+  params.getAll("category").forEach((id) => {
+    const cb = document.querySelector(`input[name="category"][value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
+
+  document.querySelectorAll(".filter-by").forEach((group) => {
+    const hasChecked =
+      group.querySelector('input[name="brand"]:checked') ||
+      group.querySelector('input[name="category"]:checked');
+
+    if (hasChecked) {
+      group.classList.add("active");
+    }
+  });
+});
+
 // products detail scripts
 var adSwiper = new Swiper(".productDetailSwiper", {
   slidesPerView: 1,
@@ -638,4 +661,22 @@ document.addEventListener("click", async (e) => {
     console.error(err);
     showToast("Xəta baş verdi");
   }
+});
+
+// blog detail scripts
+var blogSwiper = new Swiper(".blogDetailSwiper", {
+  slidesPerView: 1,
+  loop: true,
+  navigation: {
+    nextEl: ".blogDetailSwiper .swiper-button-next",
+    prevEl: ".blogDetailSwiper .swiper-button-prev",
+  },
+  autoplay: {
+    delay: 3000,
+    disableOnInteraction: false,
+  },
+  pagination: {
+    el: ".blogDetailSwiper .swiper-pagination",
+    clickable: true,
+  },
 });
