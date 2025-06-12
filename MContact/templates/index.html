@@ -49,12 +49,7 @@
                 <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
               </div>
               <div class="user-menu">
-                <span class="user-toggle"
-                  data-authenticated="{% if user and user.id %}
-                    1
-                  {% else %}
-                    0
-                  {% endif %}">
+                <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                   <i class="fa-solid fa-user"></i>
                 </span>
 
@@ -88,12 +83,7 @@
           <div class="header-icons">
             <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
             <div class="user-menu">
-              <span class="user-toggle"
-                data-authenticated="{% if user and user.id %}
-                  1
-                {% else %}
-                  0
-                {% endif %}">
+              <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                 <i class="fa-solid fa-user"></i>
               </span>
 
