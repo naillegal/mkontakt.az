@@ -1,6 +1,9 @@
 import random
+import datetime
 from drf_yasg.utils import swagger_auto_schema
+from django.utils.decorators import method_decorator
 from drf_yasg import openapi
+from django.conf import settings
 from .utils import send_mail_async
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.response import Response
@@ -372,9 +375,153 @@ def contact_submit(request):
     return redirect('MContact:contact')
 
 
-class UserRegisterAPIView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserRegisterSerializer
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class RegisterAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Qeydiyyat üçün OTP kodu göndər",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=[
+                "full_name", "email", "phone", "birth_date", "password"
+            ],
+            properties={
+                "full_name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Ad Soyad"
+                ),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL,
+                    description="E-poçt ünvanı"
+                ),
+                "phone": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Telefon nömrəsi"
+                ),
+                "birth_date": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_DATE,
+                    description="Doğum tarixi (YYYY-MM-DD)"
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format="password",
+                    description="Parol"
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="OTP kodu göndərildi",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            ),
+            400: openapi.Response(description="Validation Error")
+        },
+    )
+    def post(self, request):
+        data = request.data
+        full_name = data.get("full_name", "").strip()
+        email = data.get("email", "").strip().lower()
+        phone = data.get("phone", "").strip()
+        birth_date = data.get("birth_date", "").strip()
+        password = data.get("password", "").strip()
+
+        errors = {}
+        if not full_name:
+            errors["full_name"] = "Ad Soyad mütləqdir."
+        if not email:
+            errors["email"] = "E-poçt mütləqdir."
+        if not phone:
+            errors["phone"] = "Telefon mütləqdir."
+        if not birth_date:
+            errors["birth_date"] = "Doğum tarixi mütləqdir."
+        if not password:
+            errors["password"] = "Parol mütləqdir."
+        if User.objects.filter(email=email).exists():
+            errors["email"] = "Bu e-poçt artıq istifadə olunub."
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        code = f"{random.randint(0, 9999):04d}"
+        request.session['reg_full_name'] = full_name
+        request.session['reg_email'] = email
+        request.session['reg_phone'] = phone
+        request.session['reg_birth_date'] = birth_date
+        request.session['reg_password'] = password
+        request.session['reg_otp_expected'] = code
+        request.session['reg_otp_sent'] = True
+
+        send_mail_async(
+            subject="MContact – Qeydiyyat OTP kodu",
+            message=f"Sizin Qeydiyyat OTP kodunuz: {code}",
+            recipient_list=[email],
+            fail_silently=False
+        )
+
+        return Response({"detail": "OTP kod email-ə göndərildi."}, status=status.HTTP_200_OK)
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class RegisterOTPAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Qeydiyyatı tamamlamaq üçün OTP kodunu yoxla",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["email", "otp_code"],
+            properties={
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL,
+                    description="E-poçt ünvanı"
+                ),
+                "otp_code": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="4 rəqəmli OTP kodu"
+                ),
+            },
+        ),
+        responses={
+            201: openapi.Response(
+                description="User yaradıldı",
+                schema=UserSerializer()
+            ),
+            400: openapi.Response(description="Validation Error")
+        },
+    )
+    def post(self, request):
+        data = request.data
+        email = data.get("email", "").strip().lower()
+        otp_input = data.get("otp_code", "").strip()
+
+        expected = request.session.get('reg_otp_expected')
+        sess_email = request.session.get('reg_email')
+        if not expected or email != sess_email:
+            return Response(
+                {"detail": "Bu emaildə qeydiyyat mərhələsi başlamayıb."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if otp_input != expected:
+            return Response(
+                {"otp_code": "Yanlış OTP kodu."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.create(
+            full_name=request.session.pop('reg_full_name'),
+            email=request.session.pop('reg_email'),
+            phone=request.session.pop('reg_phone'),
+            birth_date=request.session.pop('reg_birth_date'),
+            password=request.session.pop('reg_password'),
+        )
+        for k in ('reg_otp_expected', 'reg_otp_sent'):
+            request.session.pop(k, None)
+
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
 class UserLoginAPIView(generics.GenericAPIView):
@@ -410,56 +557,114 @@ class UserRetrieveAPIView(generics.RetrieveAPIView):
     lookup_field = 'pk'
 
 
+@ensure_csrf_cookie
 def register(request):
     if request.method == "POST":
-        full_name = request.POST.get("full_name", "").strip()
-        email = request.POST.get("email", "").strip()
-        phone = request.POST.get("phone", "").strip()
-        birth_date = request.POST.get("birth_date", "").strip()
-        password = request.POST.get("password", "").strip()
-        confirm_password = request.POST.get("confirm_password", "").strip()
-        terms = request.POST.get("terms")
-        image = request.FILES.get("image")
+        if not request.session.get('otp_sent'):
+            full_name = request.POST.get("full_name", "").strip()
+            email = request.POST.get("email", "").strip().lower()
+            phone = request.POST.get("phone", "").strip()
+            birth_date = request.POST.get("birth_date", "").strip()
+            password = request.POST.get("password", "").strip()
+            confirm = request.POST.get("confirm_password", "").strip()
+            terms = request.POST.get("terms")
 
-        errors = {}
-        if not full_name:
-            errors["full_name"] = "Ad soyad daxil etmək mütləqdir."
-        if not email:
-            errors["email"] = "E-poçt daxil etmək mütləqdir."
-        if not phone:
-            errors["phone"] = "Telefon nömrəsi daxil etmək mütləqdir."
-        if not birth_date:
-            errors["birth_date"] = "Doğum tarixi daxil etmək mütləqdir."
-        if not password:
-            errors["password"] = "Parol daxil etmək mütləqdir."
-        if password != confirm_password:
-            errors["confirm_password"] = "Parollar uyğunsuzdur."
-        if not terms:
-            errors["terms"] = "İstifadə qaydalarını qəbul etmək vacibdir."
+            errors = {}
+            if not full_name:
+                errors["full_name"] = "Ad soyad mütləqdir."
+            if not email:
+                errors["email"] = "E-poçt mütləqdir."
+            if not phone:
+                errors["phone"] = "Telefon mütləqdir."
+            if not birth_date:
+                errors["birth_date"] = "Doğum tarixi mütləqdir."
+            if not password:
+                errors["password"] = "Parol mütləqdir."
+            if password != confirm:
+                errors["confirm_password"] = "Şifrələr uyğun deyil."
+            if not terms:
+                errors["terms"] = "Qaydaları qəbul etməlisiniz."
+            if User.objects.filter(email=email).exists():
+                errors["email_exists"] = "Bu e-poçt artıq qeydiyyatdan keçib."
 
-        if errors:
-            for error in errors.values():
-                messages.error(request, error)
-            return redirect('MContact:register')
+            if errors:
+                for e in errors.values():
+                    messages.error(request, e)
+                return redirect('MContact:register')
 
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Bu email artıq istifadə olunur.")
-            return redirect('MContact:register')
+            code = f"{random.randint(0,9999):04d}"
+            request.session['register_full_name'] = full_name
+            request.session['register_email'] = email
+            request.session['register_phone'] = phone
+            request.session['register_birth_date'] = birth_date
+            request.session['register_password'] = password
+            request.session['otp_code_expected'] = code
+            request.session['otp_sent'] = True
+
+            send_mail_async(
+                subject="MContact – Qeydiyyat üçün OTP",
+                message=f"Sizin Qeydiyyat OTP kodunuz: {code}",
+                from_email=None,
+                recipient_list=[email],
+                fail_silently=False
+            )
+
+            messages.success(request, "E-poçtunuza 4 rəqəmli kod göndərildi.")
+            return redirect('MContact:register-otp')
+
+        otp_received = request.POST.get("otp_code", "").strip()
+        expected = request.session.get('otp_code_expected')
+
+        if otp_received != expected:
+            messages.error(request, "OTP kodu yanlışdır.")
+            return redirect('MContact:register-otp')
 
         user = User.objects.create(
-            full_name=full_name,
-            email=email,
-            phone=phone,
-            birth_date=birth_date,
-            password=password,
-            image=image,
+            full_name=request.session.pop('register_full_name'),
+            email=request.session.pop('register_email'),
+            phone=request.session.pop('register_phone'),
+            birth_date=request.session.pop('register_birth_date'),
+            password=request.session.pop('register_password'),
         )
+        for k in ('otp_code_expected', 'otp_sent'):
+            request.session.pop(k, None)
 
         request.session['user_id'] = user.id
         messages.success(
-            request, "Qeydiyyat uğurla tamamlandı və sistemə daxil olundu!")
+            request, "Qeydiyyat uğurla tamamlandı və daxil oldunuz.")
         return redirect('MContact:index')
+
     return render(request, 'register.html')
+
+
+@ensure_csrf_cookie
+def register_otp(request):
+    if not request.session.get('otp_sent') or not request.session.get('register_email'):
+        return redirect('MContact:register')
+
+    if request.method == "POST":
+        otp_received = request.POST.get("otp_code", "").strip()
+        expected = request.session.get('otp_code_expected')
+
+        if otp_received != expected:
+            messages.error(request, "OTP kodu yanlışdır.")
+            return redirect('MContact:register-otp')
+
+        user = User.objects.create(
+            full_name=request.session.pop('register_full_name'),
+            email=request.session.pop('register_email'),
+            phone=request.session.pop('register_phone'),
+            birth_date=request.session.pop('register_birth_date'),
+            password=request.session.pop('register_password'),
+        )
+        for k in ('otp_code_expected', 'otp_sent'):
+            request.session.pop(k, None)
+
+        request.session['user_id'] = user.id
+        messages.success(request, "Qeydiyyat tamamlandı və daxil oldunuz.")
+        return redirect('MContact:index')
+
+    return render(request, 'register-otp.html')
 
 
 @ensure_csrf_cookie
@@ -756,21 +961,40 @@ def order_create(request):
         messages.error(request, "Səbət boşdur")
         return redirect("MContact:cart")
 
-    full_name = request.POST["full_name"].strip()
-    phone = request.POST["phone"].strip()
-    address = request.POST["address"].strip()
-    date = request.POST["delivery_date"]
-    time = request.POST["delivery_time"]
+    full_name = request.POST.get("full_name", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    address = request.POST.get("address", "").strip()
+    date_str = request.POST.get("delivery_date", "").strip()
+    time_str = request.POST.get("delivery_time", "").strip()
+
+    try:
+        dt_naive = datetime.datetime.strptime(
+            f"{date_str} {time_str}", "%Y-%m-%d %H:%M"
+        )
+    except ValueError:
+        messages.error(request, "Tarix və ya vaxt formatı yanlışdır.")
+        return redirect("MContact:order")
+
+    tz = timezone.get_current_timezone()
+    dt_aware = timezone.make_aware(dt_naive, tz)
+
+    now = timezone.now()
+    if dt_aware < now:
+        messages.error(
+            request,
+            "Çatdırılma tarixi və vaxtı keçmiş ola bilməz."
+        )
+        return redirect("MContact:order")
 
     order = Order.objects.create(
         user_id=request.session.get("user_id"),
         full_name=full_name,
         phone=phone,
         address=address,
-        delivery_date=date,
-        delivery_time=time,
-        discount_code=getattr(cart.discountcodeuse, "code", None).code if hasattr(
-            cart, "discountcodeuse") else "",
+        delivery_date=date_str,
+        delivery_time=time_str,
+        discount_code=getattr(cart, "discountcodeuse",
+                              None) and cart.discountcodeuse.code or "",
         discount_amount=cart.get_discount_code_amount(),
         product_discount=cart.product_discount,
         category_discount=cart.category_discount,
@@ -785,6 +1009,17 @@ def order_create(request):
             unit_price=item.product.price,
         )
     cart.delete()
+
+    send_mail_async(
+        subject="MContact – Yeni sifariş var",
+        message=(
+            f"Yeni sifariş #{order.pk} alındı.\n\n"
+            "Sifariş detalları üçün admin panelə daxil olun."
+        ),
+        recipient_list=[settings.DEFAULT_FROM_EMAIL],
+        fail_silently=False
+    )
+
     messages.success(request, "Sifarişiniz qeydə alındı!")
     return redirect("MContact:index")
 

@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block title %}
+  <title>MContact – Qeydiyyat OTP</title>
+{% endblock %}
+{% block meta_tags %}
+  <meta name="description" content="MContact – Qeydiyyat OTP" />
+  <meta property="og:title" content="MContact – Qeydiyyat OTP" />
+  <meta property="og:description" content="MContact – Qeydiyyat OTP" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+  <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
+{% endblock %}
+{% block main %}
+  <section id="form-main">
+    <div class="form-container">
+      <div class="form">
+        <h1>Qeydiyyat üçün OTP</h1>
+        <p>
+          Biz daxil etdiyiniz
+          <strong>{{ request.session.register_email }}</strong>
+          ünvanına 4 rəqəmli kod göndərdik. Zəhmət olmasa kodu daxil edin.
+        </p>
+
+        {% if messages %}
+          <ul class="form-errors">
+            {% for m in messages %}
+              <li>{{ m }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <form action="{% url 'MContact:register-otp' %}" method="post" id="otpForm">
+          {% csrf_token %}
+          <div class="otp-container">
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+            <input type="text" maxlength="1" class="otp-input" />
+          </div>
+          <input type="hidden" name="otp_code" id="otp_code" />
+          <button type="submit" class="action-btn" style="margin-top:20px;width:300px!important">Qeydiyyatı Tamamla</button>
+        </form>
+      </div>
+
+      <div class="form-img">
+        <img src="{% static 'images/form-default.jpg' %}" alt="" />
+        <div class="form-img-content">
+          <h2>Həyatınıza Keyfiyyət və Stil Qatın!</h2>
+          <p>
+            Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br />
+            keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br />
+            mükəmməl seçimlər yaratmaq bizim işimizdir.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const inputs = document.querySelectorAll('.otp-input')
+    inputs.forEach((el, idx) => {
+      el.addEventListener('input', () => {
+        if (el.value.length === 1 && idx < inputs.length - 1) {
+          inputs[idx + 1].focus()
+        }
+        document.getElementById('otp_code').value = Array.from(inputs)
+          .map((i) => i.value)
+          .join('')
+      })
+    })
+  </script>
+{% endblock %}

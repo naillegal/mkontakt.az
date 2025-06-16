@@ -17,6 +17,15 @@
     <div class="form-container">
       <div style="width: 100% !important" class="form">
         <h1 class="text-center">Sifariş</h1>
+
+        {% if messages %}
+          <ul class="form-errors">
+            {% for m in messages %}
+              <li class="alert alert-{{ m.tags }}">{{ m }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
         <form method="post" action="{% url 'MContact:order-create' %}">
           {% csrf_token %}
 
@@ -43,4 +52,28 @@
       </div>
     </div>
   </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dateInput = document.querySelector('input[name="delivery_date"]')
+      const timeInput = document.querySelector('input[name="delivery_time"]')
+      const now = new Date()
+    
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const dd = String(now.getDate()).padStart(2, '0')
+      const today = `${yyyy}-${mm}-${dd}`
+      dateInput.min = today
+    
+      dateInput.addEventListener('change', () => {
+        if (dateInput.value === today) {
+          const hh = String(now.getHours()).padStart(2, '0')
+          const mi = String(now.getMinutes()).padStart(2, '0')
+          timeInput.min = `${hh}:${mi}`
+        } else {
+          timeInput.min = '00:00'
+        }
+      })
+    })
+  </script>
 {% endblock %}

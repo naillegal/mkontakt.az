@@ -55,7 +55,7 @@
 
                 <ul class="user-dropdown-menu">
                   <li class="user-info">
-                    <img src="{% static 'images/user-default.png' %}" alt="" />
+                    <img src="{% static 'images/user-default-blue.png' %}" alt="" />
                     <div>
                       <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
                       <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
@@ -89,7 +89,7 @@
 
               <ul class="user-dropdown-menu">
                 <li class="user-info">
-                  <img src="{% static 'images/user-default.png' %}" alt="" />
+                  <img src="{% static 'images/user-default-blue.png' %}" alt="" />
                   <div>
                     <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
                     <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
@@ -408,7 +408,7 @@
       </div>
     </section>
 
-    <section id="customer-review">
+    {% comment %} <section id="customer-review">
       <div class="customer-review-content">
         <h3>Müştərilər rəyləri</h3>
       </div>
@@ -437,7 +437,7 @@
           {% endfor %}
         </div>
       </div>
-    </section>
+    </section> {% endcomment %}
 
     <footer>
       <div class="footer-container">

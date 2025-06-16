@@ -21,7 +21,7 @@
       {% if user.image %}
         <img src="{{ user.image.url }}" alt="{{ user.full_name }}" />
       {% else %}
-        <img src="{% static 'images/edit-profile-img.jpg' %}" alt="{{ user.full_name }}" />
+        <img src="{% static 'images/user-default-blue.png' %}" alt="{{ user.full_name }}" />
       {% endif %}
       <div class="profile-info-name">{{ user.full_name }}</div>
       <div class="profile-info-email">{{ user.email }}</div>
