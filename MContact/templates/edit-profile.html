@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - Profil məlumatlarının yenilənməsi</title>
+  <title>{% trans "Mkontakt - Profil məlumatlarının yenilənməsi" %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="MContact - Profil məlumatlarının yenilənməsi" />
-  <meta property="og:title" content="MContact - Profil məlumatlarının yenilənməsi" />
-  <meta property="og:description" content="MContact - Profil məlumatlarının yenilənməsi" />
+  <meta name="description" content="{% trans "Mkontakt - Profil məlumatlarının yenilənməsi" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt - Profil məlumatlarının yenilənməsi" %}" />
+  <meta property="og:description" content="{% trans "Mkontakt - Profil məlumatlarının yenilənməsi" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -15,7 +15,7 @@
 {% block main %}
   <section id="edit-profile">
     <div class="profile-title">
-      <h1>Şəxsi məlumatlar</h1>
+      <h1>{% trans "Şəxsi məlumatlar" %}</h1>
     </div>
     <div class="profile-info-container">
       {% if user.image %}
@@ -29,7 +29,7 @@
         <a href="tel:{{ user.phone }}">{{ user.phone }}</a>
       </div>
       <div class="profile-info-change-password">
-        <a href="{% url 'MContact:change_password' %}">Parolun dəyişilməsi</a>
+        <a href="{% url 'MContact:change_password' %}">{% trans "Parolun dəyişilməsi" %}</a>
       </div>
     </div>
   </section>
@@ -38,32 +38,32 @@
     <form action="{% url 'MContact:edit_profile' %}" method="post" enctype="multipart/form-data">
       {% csrf_token %}
 
-      <label>Ad soyad</label>
+      <label>{% trans "Ad soyad" %}</label>
       <div class="input-container">
         <input name="full_name" type="text" value="{{ user.full_name }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
 
-      <label>E‑poçt ünvanı</label>
+      <label>{% trans "E‑poçt ünvanı" %}</label>
       <div class="input-container">
         <input name="email" type="email" value="{{ user.email }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
 
-      <label>Telefon nömrəsi</label>
+      <label>{% trans "Telefon nömrəsi" %}</label>
       <div class="input-container phone-input">
         <img src="{% static 'images/az-flag.png' %}" alt="Azerbaijan Flag" />
         <input name="phone" type="tel" value="{{ user.phone }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
 
-      <label>Doğum tarixi</label>
+      <label>{% trans "Doğum tarixi" %}</label>
       <div class="input-container">
         <input name="birth_date" type="date" value="{{ user.birth_date|date:'Y-m-d' }}" readonly />
         <i class="fa-solid fa-pen-to-square"></i>
       </div>
 
-      <button type="submit" class="action-btn">Təsdiq</button>
+      <button type="submit" class="action-btn">{% trans "Təsdiq" %}</button>
     </form>
   </section>
 {% endblock %}

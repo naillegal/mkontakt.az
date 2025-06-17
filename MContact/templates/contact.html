@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - Əlaqə</title>
+  <title>{% trans "Mkontakt - Əlaqə" %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="MContact - Əlaqə" />
-  <meta property="og:title" content="MContact - Əlaqə" />
-  <meta property="og:description" content="MContact - Əlaqə" />
+  <meta name="description" content="{% trans "Mkontakt - Əlaqə" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt - Əlaqə" %}" />
+  <meta property="og:description" content="{% trans "Mkontakt - Əlaqə" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -15,28 +15,28 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:contact' %}" class="route active">Əlaqə</a>
+      <a href="{% url 'MContact:contact' %}" class="route active">{% trans "Əlaqə" %}</a>
     </div>
   </section>
 
   <section id="contact-main">
     <div class="contact-title">
-      <h1>Əlaqə</h1>
+      <h1>{% trans "Əlaqə" %}</h1>
     </div>
     <div class="contact-container">
       <div class="row row-gap-5">
         <div class="col-lg-6 col-12">
-          <h2>Əlaqə vasitələri</h2>
+          <h2>{% trans "Əlaqə vasitələri" %}</h2>
           <p class="upper-content">
-            Sizin rahatlığınız və məmnuniyyətiniz bizim üçün önəmlidir! 😊
+            {% trans "Sizin rahatlığınız və məmnuniyyətiniz bizim üçün önəmlidir!" %} 😊
             <br />
-            Hər hansı sualınız, sifarişiniz və ya əlavə məlumat üçün bizimlə
+            {% trans "Hər hansı sualınız, sifarişiniz və ya əlavə məlumat üçün bizimlə" %}
             <br />
-            istənilən vaxt əlaqə saxlaya bilərsiniz.
+            {% trans "istənilən vaxt əlaqə saxlaya bilərsiniz." %}
           </p>
           <div class="contact-container-content">
             <p>{{ contact_info.technical_label }}</p>
@@ -61,7 +61,7 @@
             </p>
           </div>
           <div class="social">
-            <p>Sosial şəbəkələrdə bizi izləyin</p>
+            <p>{% trans "Sosial şəbəkələrdə bizi izləyin" %}</p>
             <ul class="social-icons">
               <li>
                 <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
@@ -91,31 +91,31 @@
               {% csrf_token %}
               <div class="form-row">
                 <div class="form-group">
-                  <label for="ad">Ad</label>
-                  <input type="text" id="ad" name="name" placeholder="Adınızı daxil edin" required />
+                  <label for="ad">{% trans "Ad" %}</label>
+                  <input type="text" id="ad" name="name" placeholder="{% trans "Adınızı daxil edin" %}" required />
                 </div>
                 <div class="form-group">
-                  <label for="shirket">Şirkət</label>
-                  <input type="text" id="shirket" name="company" placeholder="Şirkət adını daxil edin" />
+                  <label for="shirket">{% trans "Şirkət" %}</label>
+                  <input type="text" id="shirket" name="company" placeholder="{% trans "Şirkət adını daxil edin" %}" />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="email">Email</label>
-                  <input type="email" id="email" name="email" placeholder="Email daxil edin" />
+                  <label for="email">{% trans "Email" %}</label>
+                  <input type="email" id="email" name="email" placeholder="{% trans "Email daxil edin" %}" />
                 </div>
                 <div class="form-group">
-                  <label for="telefon">Telefon</label>
-                  <input type="tel" id="telefon" name="phone" placeholder="Nömrənizi daxil edin" required />
+                  <label for="telefon">{% trans "Telefon" %}</label>
+                  <input type="tel" id="telefon" name="phone" placeholder="{% trans "Nömrənizi daxil edin" %}" required />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="message">İsmarıc</label>
-                  <textarea id="message" name="message" placeholder="İsmarıc yazın" rows="4" required></textarea>
+                  <label for="message">{% trans "İsmarıc" %}</label>
+                  <textarea id="message" name="message" placeholder="{% trans "İsmarıc yazın" %}" rows="4" required></textarea>
                 </div>
               </div>
-              <button type="submit">Göndər</button>
+              <button type="submit">{% trans "Göndər" %}</button>
             </form>
           </div>
         </div>

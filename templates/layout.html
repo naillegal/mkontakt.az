@@ -28,19 +28,19 @@
           <nav class="navbar">
             <ul>
               <li>
-                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+                <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
               </li>
               <li>
-                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+                <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
               </li>
               <li>
-                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+                <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
               </li>
               <li>
-                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+                <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
               </li>
               <li>
-                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+                <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
               </li>
             </ul>
           </nav>
@@ -70,16 +70,16 @@
                     </div>
                   </li>
                   <li>
-                    <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                    <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a>
                   </li>
                   <li>
-                    <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                    <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a>
                   </li>
                   <li>
-                    <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                    <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a>
                   </li>
                   <li>
-                    <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                    <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a>
                   </li>
                 </ul>
               </div>
@@ -114,16 +114,16 @@
                   </div>
                 </li>
                 <li>
-                  <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> Şəxsi məlumatlar</a>
+                  <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a>
                 </li>
                 <li>
-                  <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> Parolun yenilənməsi</a>
+                  <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a>
                 </li>
                 <li>
-                  <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> İstək siyahısı</a>
+                  <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a>
                 </li>
                 <li>
-                  <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Çıxış</a>
+                  <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a>
                 </li>
               </ul>
             </div>
@@ -142,31 +142,31 @@
           <ul class="list-unstyled outside-ul">
             <li>
               <div>
-                <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+                <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
               </div>
             </li>
             <li>
               <div class="openmenu-divider-outside"></div>
               <div>
-                <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+                <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
               </div>
             </li>
             <li>
               <div class="openmenu-divider-outside"></div>
               <div>
-                <a href="{% url 'MContact:products' %}">Məhsullar</a>
+                <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
               </div>
             </li>
             <li>
               <div class="openmenu-divider-outside"></div>
               <div>
-                <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+                <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
               </div>
             </li>
             <li>
               <div class="openmenu-divider-outside"></div>
               <div>
-                <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+                <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
               </div>
               <div class="openmenu-divider-outside"></div>
             </li>
@@ -219,7 +219,7 @@
           <div class="footer-logo">
             <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="M-Kontakt" />
           </div>
-          <p class="logo-content">M-Kontakt şirkəti Azərbaycan məkanında 2003-cü ildən bu günümüzə qədər hər növ mebellərin istehsalı, mebel aksesuarlarının satışı ilə məşğuldur.</p>
+          <p class="logo-content">{% blocktrans %}M-Kontakt şirkəti Azərbaycan məkanında 2003-cü ildən bu günümüzə qədər hər növ mebellərin istehsalı, mebel aksesuarlarının satışı ilə məşğuldur.{% endblocktrans %}</p>
           <ul class="social-icons">
             <li>
               <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
@@ -235,32 +235,32 @@
             </li>
           </ul>
 
-          <span class="footer-copyright">&copy; 2025 Mkontakt</span>
+          <span class="footer-copyright">&copy; {% trans "2025 Mkontakt" %}</span>
         </div>
 
         <div class="footer-column">
-          <h6>Səhifələr</h6>
+          <h6>{% trans "Səhifələr" %}</h6>
           <ul>
             <li>
-              <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+              <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
             </li>
             <li>
-              <a href="{% url 'MContact:about_us' %}">Haqqımızda</a>
+              <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
             </li>
             <li>
-              <a href="{% url 'MContact:products' %}">Məhsullar</a>
+              <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
             </li>
             <li>
-              <a href="{% url 'MContact:blog_list' %}">Bloq</a>
+              <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
             </li>
             <li>
-              <a href="{% url 'MContact:contact' %}">Əlaqə</a>
+              <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
             </li>
           </ul>
         </div>
 
         <div class="footer-column">
-          <h6>Brendlər</h6>
+          <h6>{% trans "Brendlər" %}</h6>
           <ul>
             {% for brand in footer_brands %}
               <li>
@@ -273,7 +273,7 @@
         </div>
 
         <div class="footer-column footer-contact">
-          <h6>Əlaqə</h6>
+          <h6>{% trans "Əlaqə" %}</h6>
           <div class="footer-contact-box">
             <p>{{ contact_info.technical_label }}</p>
             <p>

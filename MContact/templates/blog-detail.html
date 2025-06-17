@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - {{ blog.title }}</title>
+  <title>{% trans "Mkontakt" %} - {{ blog.title }}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="{{ blog.title }} - MContact Blog" />
-  <meta property="og:title" content="MContact - {{ blog.title }}" />
-  <meta property="og:description" content="{{ blog.title }} - MContact Blog" />
+  <meta name="description" content="{{ blog.title }} - {% trans "Mkontakt Blog" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt" %} - {{ blog.title }}" />
+  <meta property="og:description" content="{{ blog.title }} - {% trans "Mkontakt Blog" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   {% if blog.image %}
@@ -19,11 +19,11 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:blog_list' %}" class="route">Bloq</a>
+      <a href="{% url 'MContact:blog_list' %}" class="route">{% trans "Bloq" %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>

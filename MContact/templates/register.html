@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - Qeydiyyat</title>
+  <title>{% trans "Mkontakt - Qeydiyyat" %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="MContact - Qeydiyyat" />
-  <meta property="og:title" content="MContact - Qeydiyyat" />
-  <meta property="og:description" content="MContact - Qeydiyyat" />
+  <meta name="description" content="{% trans "Mkontakt - Qeydiyyat" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt - Qeydiyyat" %}" />
+  <meta property="og:description" content="{% trans "Mkontakt - Qeydiyyat" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -23,33 +23,33 @@
             {% endfor %}
           </div>
         {% endif %}
-        <h1>Qeydiyyat</h1>
-        <p>Daha çox imkanlar üçün hesab yaradın</p>
+        <h1>{% trans "Qeydiyyat" %}</h1>
+        <p>{% trans "Daha çox imkanlar üçün hesab yaradın" %}</p>
 
         <form action="{% url 'MContact:register' %}" method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          <label>Ad soyad</label>
+          <label>{% trans "Ad soyad" %}</label>
           <input type="text" name="full_name" placeholder="Ad soyadınızı daxil edin" required />
 
-          <label>E-poçt ünvanı</label>
+          <label>{% trans "E-poçt ünvanı" %}</label>
           <input type="email" name="email" placeholder="E-poçt ünvanınızı daxil edin" required />
 
-          <label>Telefon nömrəsi</label>
+          <label>{% trans "Telefon nömrəsi" %}</label>
           <div class="phone-input">
             <img src="{% static 'images/az-flag.png' %}" alt="Azerbaijan Flag" />
             <input type="tel" name="phone" placeholder="00 000 00 00" required />
           </div>
 
-          <label>Doğum tarixini daxil edin</label>
+          <label>{% trans "Doğum tarixini daxil edin" %}</label>
           <input type="date" name="birth_date" placeholder="Doğum tarixini daxil edin" required />
 
-          <label>Parol</label>
+          <label>{% trans "Parol" %}</label>
           <div class="password-input">
             <input type="password" name="password" id="password" placeholder="Parol" required />
             <i class="fa-solid fa-eye"></i>
           </div>
 
-          <label>Təkrar parol</label>
+          <label>{% trans "Təkrar parol" %}</label>
           <div class="password-input">
             <input type="password" name="confirm_password" id="confirm-password" placeholder="Təkrar parol" required />
             <i class="fa-solid fa-eye"></i>
@@ -59,24 +59,24 @@
             <input type="checkbox" id="terms" name="terms" hidden />
             <label for="terms">
               <span class="custom-checkbox"></span>
-              <a href="{% url 'MContact:rules' %}">İstifadə qaydalarını</a> oxudum və razıyam
+              <a href="{% url 'MContact:rules' %}">{% trans "İstifadə qaydalarını" %}</a> {% trans "oxudum və razıyam" %}
             </label>
           </div>
 
-          <button type="submit" class="action-btn">Qeydiyyat</button>
+          <button type="submit" class="action-btn">{% trans "Qeydiyyat" %}</button>
           <p class="existing-account">
-            Hesabınız var? <a href="{% url 'MContact:login' %}">Giriş edin</a>
+            {% trans "Hesabınız var?" %} <a href="{% url 'MContact:login' %}">{% trans "Giriş edin" %}</a>
           </p>
         </form>
       </div>
       <div class="form-img">
         <img src="{% static 'images/form-default.jpg' %}" alt="" />
         <div class="form-img-content">
-          <h2>Həyatınıza Keyfiyyət və Stil Qatın!</h2>
+          <h2>{% trans "Həyatınıza Keyfiyyət və Stil Qatın!" %}</h2>
           <p>
-            Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br />
-            keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br />
-            mükəmməl seçimlər yaratmaq bizim işimizdir.
+            {% trans "Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək" %}<br />
+            {% trans "keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün" %}<br />
+            {% trans "mükəmməl seçimlər yaratmaq bizim işimizdir." %}
           </p>
         </div>
       </div>

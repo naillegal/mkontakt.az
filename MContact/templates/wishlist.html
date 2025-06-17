@@ -1,12 +1,12 @@
 {% extends 'layout.html' %}
 {% load static %}
 {% block title %}
-  <title>MContact – İstək siyahısı</title>
+  <title>{% trans "Mkontakt – İstək siyahısı" %}</title>
 {% endblock %}
 {% block main %}
   <section id="wishlist-main">
     <div class="wishlist-title">
-      <h1>İstək siyahısı</h1>
+      <h1>{% trans "İstək siyahısı" %}</h1>
     </div>
 
     {% if wishes %}
@@ -51,9 +51,9 @@
         <div class="img-container">
           <img src="{% static 'images/if-wishlist-doesnt-exists-img.png' %}" alt="" />
           <div class="img-container-content">
-            <h6>İstək siyahısı boşdur</h6>
-            <p>İstək siyahısına məhsul əlavə et.</p>
-            <a href="{% url 'MContact:index' %}">Əsas səhifə</a>
+            <h6>{% trans "İstək siyahısı boşdur" %}</h6>
+            <p>{% trans "İstək siyahısına məhsul əlavə et." %}</p>
+            <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
           </div>
         </div>
       </div>

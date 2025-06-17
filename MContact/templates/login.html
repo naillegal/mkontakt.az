@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - Login</title>
+  <title>{% trans "Mkontakt - Login" %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="MContact - Login" />
-  <meta property="og:title" content="MContact - Login" />
-  <meta property="og:description" content="MContact - Login" />
+  <meta name="description" content="{% trans "Mkontakt - Login" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt - Login" %}" />
+  <meta property="og:description" content="{% trans "Mkontakt - Login" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -23,15 +23,15 @@
             {% endfor %}
           </div>
         {% endif %}
-        <h1>Giriş</h1>
-        <p>Hesabınıza daxil olun</p>
+        <h1>{% trans "Giriş" %}</h1>
+        <p>{% trans "Hesabınıza daxil olun" %}</p>
 
         <form action="{% url 'MContact:login' %}" method="post">
           {% csrf_token %}
-          <label>E-poçt</label>
+          <label>{% trans "E-poçt" %}</label>
           <input type="email" name="email" placeholder="E-poçt ünvanınızı daxil edin" required />
 
-          <label>Parol</label>
+          <label>{% trans "Parol" %}</label>
           <div class="password-input">
             <input type="password" name="password" id="password" placeholder="Parol" required />
             <i class="fa-solid fa-eye"></i>
@@ -41,25 +41,27 @@
             <input type="checkbox" id="remember-me" />
             <label for="remember-me">
               <span class="custom-checkbox"></span>
-              Məni xatırla
+              {% trans "Məni xatırla" %}
             </label>
-            <a class="forget-password" href="{% url 'MContact:forget-password' %}">Şifrəmi unutdum</a>
+            <a class="forget-password" href="{% url 'MContact:forget-password' %}">{% trans "Şifrəmi unutdum" %}</a>
           </div>
 
-          <button type="submit" class="action-btn">Giriş</button>
+          <button type="submit" class="action-btn">{% trans "Giriş" %}</button>
           <p class="existing-account">
-            Hesabınız yoxdur? <a href="{% url 'MContact:register' %}">Qeydiyyatdan keçin</a>
+            {% trans "Hesabınız yoxdur?" %} <a href="{% url 'MContact:register' %}">{% trans "Qeydiyyatdan keçin" %}</a>
           </p>
         </form>
       </div>
       <div class="form-img">
         <img src="{% static 'images/form-default.jpg' %}" alt="" />
         <div class="form-img-content">
-          <h2>Həyatınıza Keyfiyyət və Stil Qatın!</h2>
+          <h2>{% trans "Həyatınıza Keyfiyyət və Stil Qatın!" %}</h2>
           <p>
+            {% blocktrans %}
             Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br />
             keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br />
             mükəmməl seçimlər yaratmaq bizim işimizdir.
+            {% endblocktrans %}
           </p>
         </div>
       </div>
