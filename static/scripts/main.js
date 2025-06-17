@@ -601,6 +601,23 @@ function updateCartCount(count) {
   });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const langMenus = document.querySelectorAll(".lang-menu");
+  langMenus.forEach((menu) => {
+    const toggle = menu.querySelector(".lang-toggle");
+    if (!toggle) return;
+
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target)) menu.classList.remove("active");
+    });
+  });
+});
+
 // ============ CART ACTIONS =================
 document.addEventListener("click", async (e) => {
   const target = e.target;

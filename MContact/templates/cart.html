@@ -1,15 +1,14 @@
 {% extends 'layout.html' %}
 {% load static %}
 {% load i18n %}
-
 {% block title %}
-  <title>{% trans "MKontakt - Səbət" %}</title>
+  <title>{% trans 'MKontakt - Səbət' %}</title>
 {% endblock %}
 
 {% block meta_tags %}
-  <meta name="description" content="{% trans "MKontakt - Səbət" %}" />
-  <meta property="og:title" content="{% trans "MKontakt - Səbət" %}" />
-  <meta property="og:description" content="{% trans "MKontakt - Səbət" %}" />
+  <meta name="description" content="{% trans 'MKontakt - Səbət' %}" />
+  <meta property="og:title" content="{% trans 'MKontakt - Səbət' %}" />
+  <meta property="og:description" content="{% trans 'MKontakt - Səbət' %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
