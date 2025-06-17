@@ -87,7 +87,11 @@ class Product(models.Model):
     discount = models.PositiveIntegerField(
         verbose_name="Endirim faizi", blank=True, null=True
     )
-
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Aktiv",
+        help_text="Deaktiv edilsə, məhsul səbətə əlavə oluna bilməyəcək."
+    )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Yaradılma tarixi"
     )
@@ -621,3 +625,26 @@ class UserDeviceToken(models.Model):
     def __str__(self):
         owner = self.user.full_name if self.user else "Anon"
         return f"{owner} • {self.platform}"
+
+
+class SiteConfiguration(models.Model):
+    navbar_logo = models.ImageField(
+        upload_to="logos/",
+        verbose_name="Navbar Logo",
+        blank=True,
+        null=True,
+        help_text="Yuxarıdakı navbar-da göstəriləcək logo"
+    )
+
+    class Meta:
+        verbose_name = "Sayt Konfiqurasiyası"
+        verbose_name_plural = "Sayt Konfiqurasiyaları"
+
+    def __str__(self):
+        return "Sayt Konfiqurasiyası"
+
+    @property
+    def navbar_logo_url(self):
+        if self.navbar_logo:
+            return self.navbar_logo.url
+        return static("images/mcontact-blue-logo.png")

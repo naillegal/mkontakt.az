@@ -3,28 +3,43 @@ from django.utils.html import format_html
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
-    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order, OrderItem, BlogImage
+    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order, OrderItem, BlogImage, SiteConfiguration
 )
 from django.http import HttpResponse
 import openpyxl
+from modeltranslation.admin import TranslationAdmin
+
+
+class CustomTranslationAdmin(TranslationAdmin):
+    group_fieldsets = True
+
+    class Media:
+        js = (
+            'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
+            'https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js',
+            'modeltranslation/js/tabbed_translation_fields.js',
+        )
+        css = {
+            'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
+        }
 
 
 @admin.register(Brand)
-class BrandAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at')
-    search_fields = ('name',)
+class BrandAdmin(CustomTranslationAdmin):
+    list_display = ('name', 'name_en', 'name_ru', 'created_at')
+    search_fields = ('name', 'name_en', 'name_ru')
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'discount', 'created_at')
-    search_fields = ('name',)
+class CategoryAdmin(CustomTranslationAdmin):
+    list_display = ('name', 'name_en', 'name_ru', 'discount', 'created_at')
+    search_fields = ('name', 'name_en', 'name_ru')
 
 
 # @admin.register(ProductType)
-# class ProductTypeAdmin(admin.ModelAdmin):
-#     list_display = ('name',)
-#     search_fields = ('name',)
+# class ProductTypeAdmin(CustomTranslationAdmin):
+#     list_display = ('name', 'name_en', 'name_ru')
+#     search_fields = ('name', 'name_en', 'name_ru')
 
 
 class ProductImageInline(admin.TabularInline):
@@ -45,7 +60,7 @@ class ProductImageInline(admin.TabularInline):
 
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(CustomTranslationAdmin):
     exclude = ('product_types',)
     list_display = (
         'main_image_preview',
@@ -55,10 +70,11 @@ class ProductAdmin(admin.ModelAdmin):
         'get_categories',
         'price',
         'discount',
+        'is_active',
         'created_at',
     )
     list_editable = ('priority',)
-    search_fields = ('title', 'brand__name')
+    search_fields = ('title', 'title_en', 'title_ru', 'brand__name')
     list_filter = ('brand', 'categories', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     inlines = [ProductImageInline]
@@ -81,20 +97,22 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(PartnerSlider)
 class PartnerSliderAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at')
-    search_fields = ('title',)
+    list_display = ('title', 'title_en', 'title_ru', 'created_at')
+    search_fields = ('title', 'title_en', 'title_ru')
 
 
 @admin.register(AdvertisementSlide)
 class AdvertisementSlideAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at')
-    search_fields = ('title', 'description')
+    list_display = ('title', 'title_en', 'title_ru', 'created_at')
+    search_fields = ('title', 'title_en', 'title_ru',
+                     'description', 'description_en', 'description_ru')
 
 
 @admin.register(CustomerReview)
 class CustomerReviewAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'created_at')
-    search_fields = ('full_name', 'review')
+    list_display = ('full_name', 'full_name_en', 'full_name_ru', 'created_at')
+    search_fields = ('full_name', 'full_name_en', 'full_name_ru',
+                     'review', 'review_en', 'review_ru')
 
 
 class BlogImageInline(admin.TabularInline):
@@ -116,9 +134,10 @@ class BlogImageInline(admin.TabularInline):
 
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at')
+    list_display = ('title', 'title_en', 'title_ru', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
-    search_fields = ('title', 'description')
+    search_fields = ('title', 'title_en', 'title_ru',
+                     'description', 'description_en', 'description_ru')
     inlines = [BlogImageInline]
 
 
@@ -132,14 +151,15 @@ class ContactMessageAdmin(admin.ModelAdmin):
 @admin.register(ContactInfo)
 class ContactInfoAdmin(admin.ModelAdmin):
     list_display = (
-        'technical_label',
-        'technical_email_label', 'technical_email',
-        'technical_mobile_label', 'technical_mobile',
-        'support_label',
-        'support_email_label', 'support_email',
-        'support_mobile_label', 'support_mobile',
+        'technical_label', 'technical_label_en', 'technical_label_ru',
+        'technical_email_label', 'technical_email_label_en', 'technical_email_label_ru',
+        'support_label', 'support_label_en', 'support_label_ru',
+        'support_email_label', 'support_email_label_en', 'support_email_label_ru',
     )
-    search_fields = ('technical_email', 'support_email')
+    search_fields = (
+        'technical_label', 'technical_label_en', 'technical_label_ru',
+        'support_label', 'support_label_en', 'support_label_ru',
+    )
 
 
 class WishInline(admin.TabularInline):
@@ -250,3 +270,8 @@ class OrderAdmin(admin.ModelAdmin):
         }),
     )
     inlines = [OrderItemInline]
+
+
+@admin.register(SiteConfiguration)
+class SiteConfigurationAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "navbar_logo")

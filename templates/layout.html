@@ -23,9 +23,7 @@
       <div class="header-bg">
         <div class="header-container">
           <div class="logo">
-            <a href="{% url 'MContact:index' %}">
-              <img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" />
-            </a>
+            <a href="{% url 'MContact:index' %}"><img src="{{ site_config.navbar_logo_url }}" alt="MContact Logo" /></a>
           </div>
           <nav class="navbar">
             <ul>
@@ -48,20 +46,27 @@
           </nav>
           <div class="responsive-navbar">
             <div class="d-flex">
-              <div>
-                <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+              <div class="search-icon-wrapper search-toggle">
+                <i class="fa fa-search"></i>
+              </div>
+              <div class="cart-icon-wrapper">
+                <a href="{% url 'MContact:cart_view' %}">
+                  <i class="fa fa-shopping-cart"></i>
+                  {% if cart_count %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                  {% endif %}
+                </a>
               </div>
               <div class="user-menu">
                 <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
-                  <i class="fa-solid fa-user"></i>
-                </span>
-
-                <ul class="user-dropdown-menu">
+                <i class="fa-solid fa-user"></i>
+               </span>
+                 <ul class="user-dropdown-menu">
                   <li class="user-info">
                     <img src="{% static 'images/user-default-blue.png' %}" alt="" />
                     <div>
-                      <div class="user-fullname">{{ user.full_name|default:"Qonaq istifadəçi"|truncatechars:25 }}</div>
-                      <div class="user-email">{{ user.email|default:"guest@gmail.com"|truncatechars:25 }}</div>
+                      <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+                      <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
                     </div>
                   </li>
                   <li>
@@ -84,7 +89,17 @@
             </div>
           </div>
           <div class="header-icons">
-            <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+            <div class="search-icon-wrapper search-toggle">
+              <i class="fa fa-search"></i>
+            </div>
+            <div class="cart-icon-wrapper">
+              <a href="{% url 'MContact:cart_view' %}">
+                <i class="fa fa-shopping-cart"></i>
+                {% if cart_count %}
+                  <span class="cart-badge">{{ cart_count }}</span>
+                {% endif %}
+              </a>
+            </div>
             <div class="user-menu">
               <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                 <i class="fa-solid fa-user"></i>
@@ -94,8 +109,8 @@
                 <li class="user-info">
                   <img src="{% static 'images/user-default-blue.png' %}" alt="" />
                   <div>
-                    <div class="user-fullname">{{ user.full_name|default:"Qonaq istifadəçi"|truncatechars:25 }}</div>
-                    <div class="user-email">{{ user.email|default:"guest@gmail.com"|truncatechars:25 }}</div>
+                    <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+                    <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
                   </div>
                 </li>
                 <li>
@@ -182,6 +197,14 @@
               </li>
             </ul>
           </div>
+        </div>
+
+        <div id="header-search" class="header-search">
+          <form action="{% url 'MContact:products' %}" method="get">
+            <input type="text" name="q" placeholder="Axtar..." autocomplete="off" />
+            <button type="submit"><i class="fa fa-search"></i></button>
+          </form>
+          <span class="close-search">&times;</span>
         </div>
       </div>
     </header>

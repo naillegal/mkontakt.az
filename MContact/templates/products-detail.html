@@ -119,10 +119,14 @@
                   </div>
                 </a>
                 <div class="product-price-and-cart">
-                  <div class="product-price">₼{{ other.price }}</div>
-                  <div class="product-add-to-cart" data-product="{{ product.id }}">
-                    <i class="fa-solid fa-plus"></i>
-                  </div>
+                  <div class="product-price">₼{{ product.price }}</div>
+                  {% if product.is_active %}
+                    <div class="product-add-to-cart" data-product="{{ product.id }}">
+                      <i class="fa-solid fa-plus"></i>
+                    </div>
+                  {% else %}
+                    <div class="out-of-stock-label">Stokda yoxdur</div>
+                  {% endif %}
                 </div>
               </div>
             </div>

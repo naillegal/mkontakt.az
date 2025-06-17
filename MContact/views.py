@@ -875,6 +875,7 @@ def cart_view(request):
             session_user_id = None
 
     cart = get_or_create_cart(request)
+    cart.items.filter(product__is_active=False).delete()
     paginator = Paginator(cart.items.select_related("product"), 3)
     page_obj = paginator.get_page(request.GET.get("page"))
 
@@ -895,6 +896,7 @@ def cart_update(request):
     ids = data.get("ids", [])
 
     cart = get_or_create_cart(request)
+    cart.items.filter(product__is_active=False).delete()
 
     if action == "delete_selected":
         cart.items.filter(id__in=ids).delete()

@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>MContact - Haqqımızda</title>
+  <title>{% trans "Mkontakt - Haqqımızda" %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="MContact - Haqqımızda" />
-  <meta property="og:title" content="MContact - Haqqımızda" />
-  <meta property="og:description" content="MContact - Haqqımızda" />
+  <meta name="description" content="{% trans "Mkontakt - Haqqımızda" %}" />
+  <meta property="og:title" content="{% trans "Mkontakt - Haqqımızda" %}" />
+  <meta property="og:description" content="{% trans "Mkontakt - Haqqımızda" %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -15,23 +15,23 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">Əsas səhifə</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:about_us' %}" class="route active">Haqqımızda</a>
+      <a href="{% url 'MContact:about_us' %}" class="route active">{% trans "Haqqımızda" %}</a>
     </div>
   </section>
 
   <section id="about-us-content-main">
     <div class="title">
-      <h1>Haqqımızda</h1>
+      <h1>{% trans "Haqqımızda" %}</h1>
     </div>
     <div class="about-us-content">
-      <p>M-Kontakt şirkəti Azərbaycan məkanında 2003 cü ildən bu günümüzə qədər hər növ mebellərin istehsalı,mebel aksesuarlarının satışı ilə məşğuldur. Şirkətimiz fəaliyyətə başladığı andan etibarən xüsusi layihələr əsasında mebel istehsalı ilə məşğul olmağa başladı. İlk növbədə mebel fabrikində yüksək səviyyəli texnoloji avadanlıqlar quraşdırıldı ki, bu da istehsal olunan malların keyfiyyətcə daha mükəmməl olmasına təsir etməyə bilməzdi.İstehsal olunan mallar keyfiyyətlə yanaşı estetik gözəlliyi, həmçinin dünya standartlarına uyğunluğu ilə fərqlənir. Məkanın xüsusiyyətləri nəzərə alınaraq hazırlanan məhsullar konseptual bütünlük yaratmaqla bərabər zərifliyi ilə evlərə ofislərə canlılıq qazandırır.</p>
-      <p>Şirkətimiz mebel aksesuarları sahəsində dünyaca məşhur və tanınmış markaların idxalı və satışı ilə də məşğul olur.Respublika ərazisində bir çox şirkətlərlə əməkdaşlıq edirik.</p>
-      <p>Müəssisənin inkişafı üçün şirkət olaraq ölkə rəhbərliyinin biz sahibkarlara yaratdığı əlverişli şəraitdən yararlanmağa çalışırıq. Burada çalışan ustaların hər biri peşəkarcasına seçilmişdir.</p>
-      <p>Bundan əlavə şirkətimizin Bakıda və Gəncə şəhərində filialları mövcuddur.</p>
+      <p>{% blocktrans %}M-Kontakt şirkəti Azərbaycan məkanında 2003 cü ildən bu günümüzə qədər hər növ mebellərin istehsalı,mebel aksesuarlarının satışı ilə məşğuldur. Şirkətimiz fəaliyyətə başladığı andan etibarən xüsusi layihələr əsasında mebel istehsalı ilə məşğul olmağa başladı. İlk növbədə mebel fabrikində yüksək səviyyəli texnoloji avadanlıqlar quraşdırıldı ki, bu da istehsal olunan malların keyfiyyətcə daha mükəmməl olmasına təsir etməyə bilməzdi.İstehsal olunan mallar keyfiyyətlə yanaşı estetik gözəlliyi, həmçinin dünya standartlarına uyğunluğu ilə fərqlənir. Məkanın xüsusiyyətləri nəzərə alınaraq hazırlanan məhsullar konseptual bütünlük yaratmaqla bərabər zərifliyi ilə evlərə ofislərə canlılıq qazandırır.{% endblocktrans %}</p>
+      <p>{% blocktrans %}Şirkətimiz mebel aksesuarları sahəsində dünyaca məşhur və tanınmış markaların idxalı və satışı ilə də məşğul olur.Respublika ərazisində bir çox şirkətlərlə əməkdaşlıq edirik.{% endblocktrans %}</p>
+      <p>{% blocktrans %}Müəssisənin inkişafı üçün şirkət olaraq ölkə rəhbərliyinin biz sahibkarlara yaratdığı əlverişli şəraitdən yararlanmağa çalışırıq. Burada çalışan ustaların hər biri peşəkarcasına seçilmişdir.{% endblocktrans %}</p>
+      <p>{% blocktrans %}Bundan əlavə şirkətimizin Bakıda və Gəncə şəhərində filialları mövcuddur.{% endblocktrans %}</p>
     </div>
   </section>
 {% endblock %}

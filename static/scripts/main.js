@@ -108,6 +108,40 @@ var adSwiper = new Swiper(".adSwiper", {
   },
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const searchBar = document.getElementById("header-search");
+  const searchInput = searchBar?.querySelector("input");
+  const openBtns = document.querySelectorAll(".search-toggle");
+  const closeBtn = searchBar?.querySelector(".close-search");
+
+  openBtns.forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      searchBar.classList.add("active");
+      searchInput?.focus();
+    })
+  );
+
+  function closeSearch() {
+    searchBar.classList.remove("active");
+    searchInput.value = "";
+  }
+  closeBtn?.addEventListener("click", closeSearch);
+
+  document.addEventListener("click", (e) => {
+    if (
+      searchBar.classList.contains("active") &&
+      !searchBar.contains(e.target)
+    ) {
+      closeSearch();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSearch();
+  });
+});
+
 // products scripts
 document.addEventListener("DOMContentLoaded", function () {
   const filterByElements = document.querySelectorAll(".filter-by");
@@ -547,8 +581,25 @@ document.body.addEventListener("click", async (e) => {
   });
 
   const json = await res.json();
+  updateCartCount(json.count);
   showToast("Məhsul səbətə əlavə edildi!");
 });
+
+function updateCartCount(count) {
+  document.querySelectorAll(".cart-icon-wrapper").forEach((wrapper) => {
+    let badge = wrapper.querySelector(".cart-badge");
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "cart-badge";
+        wrapper.querySelector("a").appendChild(badge);
+      }
+      badge.textContent = count;
+    } else {
+      if (badge) badge.remove();
+    }
+  });
+}
 
 // ============ CART ACTIONS =================
 document.addEventListener("click", async (e) => {

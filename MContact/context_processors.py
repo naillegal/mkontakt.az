@@ -1,5 +1,5 @@
-from .models import ContactInfo, Brand, User
-
+from .models import ContactInfo, Brand, User, SiteConfiguration
+from .utils import get_or_create_cart
 
 def contact_info_processor(request):
     return {
@@ -23,3 +23,17 @@ def user_context(request):
     return {
         "user": custom_user
     }
+
+
+def site_config(request):
+    config = SiteConfiguration.objects.first()
+    return {
+        "site_config": config
+    }
+
+def cart_item_count(request):
+    try:
+        cart = get_or_create_cart(request)
+        return {"cart_count": cart.items.count()}
+    except Exception:
+        return {"cart_count": 0}

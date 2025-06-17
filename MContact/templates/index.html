@@ -22,7 +22,7 @@
 
         <div class="header-container">
           <div class="logo">
-            <a href="{% url 'MContact:index' %}"><img src="{% static 'images/mcontact-blue-logo.png' %}" alt="MContact Logo" /></a>
+            <a href="{% url 'MContact:index' %}"><img src="{{ site_config.navbar_logo_url }}" alt="MContact Logo"/></a>
           </div>
           <nav class="navbar">
             <ul>
@@ -45,9 +45,17 @@
           </nav>
           <div class="responsive-navbar">
             <div class="d-flex">
-              <div>
-                <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+              <div class="search-icon-wrapper search-toggle">
+                <i class="fa fa-search"></i>
               </div>
+              <div class="cart-icon-wrapper">
+                  <a href="{% url 'MContact:cart_view' %}">
+                    <i class="fa fa-shopping-cart"></i>
+                    {% if cart_count %}
+                      <span class="cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                  </a>
+                </div>
               <div class="user-menu">
                 <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                   <i class="fa-solid fa-user"></i>
@@ -81,7 +89,17 @@
             </div>
           </div>
           <div class="header-icons">
-            <a href="{% url 'MContact:cart_view' %}"><i class="fa fa-shopping-cart"></i></a>
+            <div class="search-icon-wrapper search-toggle">
+              <i class="fa fa-search"></i>
+            </div>
+            <div class="cart-icon-wrapper">
+                  <a href="{% url 'MContact:cart_view' %}">
+                    <i class="fa fa-shopping-cart"></i>
+                    {% if cart_count %}
+                      <span class="cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                  </a>
+            </div>
             <div class="user-menu">
               <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
                 <i class="fa-solid fa-user"></i>
@@ -181,6 +199,14 @@
           </div>
         </div>
 
+        <div id="header-search" class="header-search">
+          <form action="{% url 'MContact:products' %}" method="get">
+            <input type="text" name="q" placeholder="Axtar..." autocomplete="off" />
+            <button type="submit"><i class="fa fa-search"></i></button>
+          </form>
+          <span class="close-search">&times;</span>
+        </div>
+
         <div class="main-banner-content">
           <h1>Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq</h1>
           <p>AVENTOS HF qaldırmalı mexanizmi sayəsində ikiqat qapılar yuxarıya doğru rahat və səssiz açılır. Mətbəx və yaşayış sahələrində geniş istifadə olunan bu sistem, optimal hərəkət erqonomikası və istənilən mövqedə sabit dayanma imkanı ilə fərqlənir.</p>
@@ -254,11 +280,15 @@
                   <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
                   <div class="description">{{ product.description|truncatewords:10 }}</div></a>
                   <div class="product-price-and-cart">
-                    <div class="product-price">₼{{ product.price }}</div>
-                    <div class="product-add-to-cart" data-product="{{ product.id }}">
-                      <i class="fa-solid fa-plus"></i>
-                    </div>
-                  </div>
+                        <div class="product-price">₼{{ product.price }}</div>
+                        {% if product.is_active %}
+                          <div class="product-add-to-cart" data-product="{{ product.id }}">
+                            <i class="fa-solid fa-plus"></i>
+                          </div>
+                        {% else %}
+                          <div class="out-of-stock-label">Stokda yoxdur</div>
+                        {% endif %}
+                      </div>
                 </div>
               </div>
             </div>
@@ -340,11 +370,15 @@
                   <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
                   <div class="description">{{ product.description|truncatewords:10 }}</div></a>
                   <div class="product-price-and-cart">
-                    <div class="product-price">₼{{ product.price }}</div>
-                    <div class="product-add-to-cart" data-product="{{ product.id }}">
-                      <i class="fa-solid fa-plus"></i>
-                    </div>
-                  </div>
+                        <div class="product-price">₼{{ product.price }}</div>
+                        {% if product.is_active %}
+                          <div class="product-add-to-cart" data-product="{{ product.id }}">
+                            <i class="fa-solid fa-plus"></i>
+                          </div>
+                        {% else %}
+                          <div class="out-of-stock-label">Stokda yoxdur</div>
+                        {% endif %}
+                      </div>
                 </div>
               </div>
             </div>

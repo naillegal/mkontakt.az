@@ -10,12 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from MContact.firebase_config import firebase_admin
 from pathlib import Path
 from os import getenv
 import os
 from dotenv import load_dotenv
 load_dotenv()
-from MContact.firebase_config import firebase_admin
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +36,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +79,8 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'MContact.context_processors.contact_info_processor',
                 "MContact.context_processors.user_context",
+                "MContact.context_processors.site_config",
+                "MContact.context_processors.cart_item_count",
             ],
         },
     },
@@ -121,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'az'
 
 TIME_ZONE = 'Asia/Baku'
 
@@ -156,3 +160,14 @@ EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
+
+
+LANGUAGES = [
+    ('az', 'Azərbaycan'),
+    ('en', 'English'),
+    ('ru', 'Русский'),
+]
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'az'
+MODELTRANSLATION_LANGUAGES = ('az', 'en', 'ru')
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('az',)
