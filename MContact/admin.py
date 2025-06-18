@@ -4,7 +4,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
     ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order,
-    OrderItem, BlogImage, SiteConfiguration, HomePageBanner
+    OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue, ProductVariant
 )
 from django.http import HttpResponse
 import openpyxl
@@ -23,6 +23,26 @@ class CustomTranslationAdmin(TranslationAdmin):
         css = {
             'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
         }
+
+
+
+class ProductAttributeValueInline(admin.TabularInline):
+    model = ProductAttributeValue
+    extra = 1
+
+
+@admin.register(ProductAttribute)
+class ProductAttributeAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at")
+    inlines = [ProductAttributeValueInline]
+    search_fields = ("name",)
+
+
+class ProductVariantInline(admin.StackedInline):
+    model = ProductVariant
+    extra = 0
+    filter_horizontal = ("attribute_values",)
+    fields = ("code", "attribute_values", "price_override", "is_active")
 
 
 @admin.register(Brand)
@@ -67,6 +87,7 @@ class ProductAdmin(CustomTranslationAdmin):
         'main_image_preview',
         'title',
         'priority',
+        'code',
         'brand',
         'get_categories',
         'price',
@@ -78,7 +99,7 @@ class ProductAdmin(CustomTranslationAdmin):
     search_fields = ('title', 'title_en', 'title_ru', 'brand__name')
     list_filter = ('brand', 'categories', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
-    inlines = [ProductImageInline]
+    inlines = [ProductImageInline, ProductVariantInline]
 
     def get_categories(self, obj):
         return ", ".join(cat.name for cat in obj.categories.all())
@@ -280,5 +301,7 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(HomePageBanner)
 class HomePageBannerAdmin(CustomTranslationAdmin):
-    list_display    = ('title', 'title_en', 'title_ru', 'created_at')
+    list_display = ('title', 'title_en', 'title_ru', 'created_at')
     readonly_fields = ('created_at',)
+
+

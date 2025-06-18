@@ -8,6 +8,77 @@ from django.utils import timezone
 from decimal import Decimal
 
 
+class ProductAttribute(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Xüsusiyyət adı")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Məhsul Xüsusiyyəti"
+        verbose_name_plural = "Məhsul Xüsusiyyətləri"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ProductAttributeValue(models.Model):
+    attribute = models.ForeignKey(
+        ProductAttribute,
+        on_delete=models.CASCADE,
+        related_name="values",
+        verbose_name="Xüsusiyyət"
+    )
+    value = models.CharField(max_length=100, verbose_name="Dəyər")
+
+    class Meta:
+        verbose_name = "Xüsusiyyət Dəyəri"
+        verbose_name_plural = "Xüsusiyyət Dəyərləri"
+        unique_together = [("attribute", "value")]
+        ordering = ["attribute__name", "value"]
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(
+        "Product",
+        on_delete=models.CASCADE,
+        related_name="variants",
+        verbose_name="Məhsul"
+    )
+    code = models.CharField(
+        max_length=50,
+        verbose_name="Versiya kodu",
+        blank=True,
+        help_text="Əl ilə daxil olunur; təkrarlanma qadağası yoxdur"
+    )
+    attribute_values = models.ManyToManyField(
+        ProductAttributeValue,
+        related_name="product_variants",
+        verbose_name="Xüsusiyyət dəyərləri"
+    )
+    price_override = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Alternativ qiymət",
+        help_text="Boş saxlasanız əsas məhsul qiyməti qəbul edilir"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Aktiv")
+
+    class Meta:
+        verbose_name = "Məhsul Versiyası"
+        verbose_name_plural = "Məhsul Versiyaları"
+        ordering = ["product", "id"]
+
+    def __str__(self):
+        attrs = ", ".join(
+            self.attribute_values.values_list("value", flat=True))
+        return f"{self.product.title} • {attrs or 'Varsiya'}"
+
+
 class Brand(models.Model):
     name = models.CharField(max_length=255, verbose_name="Brend adı")
     created_at = models.DateTimeField(
@@ -76,6 +147,13 @@ class Product(models.Model):
     priority = models.PositiveIntegerField(
         blank=True, null=True,
         verbose_name="Sıra nömrəsi"
+    )
+
+    code = models.CharField(
+        max_length=50,
+        verbose_name="Məhsul kodu",
+        blank=True,
+        help_text="Əl ilə daxil edilir; təkrarlanma məhdudiyyəti yoxdur"
     )
 
     title = models.CharField(max_length=255, verbose_name="Məhsul adı")

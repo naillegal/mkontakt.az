@@ -2,11 +2,29 @@ from rest_framework import serializers
 from .models import (
     PartnerSlider, AdvertisementSlide, Brand, Category, Product,
     ProductType, ProductImage, CustomerReview,
-    Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken
+    Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken, ProductVariant, ProductAttributeValue
 )
 import html
 from django.utils.html import strip_tags
 from decimal import Decimal, ROUND_HALF_UP
+
+
+class AttributeValueMiniSerializer(serializers.ModelSerializer):
+    attribute_name = serializers.CharField(
+        source="attribute.name", read_only=True)
+
+    class Meta:
+        model = ProductAttributeValue
+        fields = ("id", "attribute_name", "value")
+
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    attribute_values = AttributeValueMiniSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ProductVariant
+        fields = ("id", "code", "price_override",
+                  "is_active", "attribute_values")
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -55,6 +73,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "title",
             "price",
             "image",
+            "code",
         )
 
     def get_price(self, obj):
@@ -87,6 +106,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
+            "code",
             "description",
             "images",
             "price",
