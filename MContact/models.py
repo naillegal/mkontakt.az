@@ -648,3 +648,33 @@ class SiteConfiguration(models.Model):
         if self.navbar_logo:
             return self.navbar_logo.url
         return static("images/mcontact-blue-logo.png")
+
+
+class HomePageBanner(models.Model):
+    title = models.CharField(
+        max_length=255,
+        verbose_name="Banner başlığı"
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name="Banner təsviri"
+    )
+    image = models.ImageField(
+        upload_to='home_banners/',
+        verbose_name="Banner şəkli"
+    )
+    link = models.URLField(
+        blank=True,
+        verbose_name="Ətraflı keçid URL-i"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yaradılma tarixi"
+    )
+
+    class Meta:
+        verbose_name = "Əsas səhifə – İlk reklam"
+        verbose_name_plural = "Əsas səhifə – İlk reklam"
+
+    def __str__(self):
+        return self.title

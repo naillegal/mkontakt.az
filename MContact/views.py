@@ -26,7 +26,7 @@ import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
-    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken
+    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -273,6 +273,8 @@ def index(request):
     session_user_id = request.session.get("user_id")
     wish_ids = set(Wish.objects.filter(user_id=session_user_id)
                    .values_list("product_id", flat=True)) if session_user_id else set()
+    
+    banner = HomePageBanner.objects.order_by('-created_at').first()
 
     context = {
         'partners': partners,
@@ -283,6 +285,7 @@ def index(request):
         'random_products': random_products,
         'customer_reviews': customer_reviews,
         'wish_ids': wish_ids,
+        'banner': banner,
     }
     return render(request, 'index.html', context)
 

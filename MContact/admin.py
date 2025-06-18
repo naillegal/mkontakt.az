@@ -3,7 +3,8 @@ from django.utils.html import format_html
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
-    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order, OrderItem, BlogImage, SiteConfiguration
+    ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order,
+    OrderItem, BlogImage, SiteConfiguration, HomePageBanner
 )
 from django.http import HttpResponse
 import openpyxl
@@ -133,7 +134,7 @@ class BlogImageInline(admin.TabularInline):
 
 
 @admin.register(Blog)
-class BlogAdmin(admin.ModelAdmin):
+class BlogAdmin(CustomTranslationAdmin):
     list_display = ('title', 'title_en', 'title_ru', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title', 'title_en', 'title_ru',
@@ -275,3 +276,9 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "navbar_logo")
+
+
+@admin.register(HomePageBanner)
+class HomePageBannerAdmin(CustomTranslationAdmin):
+    list_display    = ('title', 'title_en', 'title_ru', 'created_at')
+    readonly_fields = ('created_at',)

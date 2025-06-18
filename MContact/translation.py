@@ -2,7 +2,7 @@ from modeltranslation.translator import register, TranslationOptions
 from .models import (
     Brand, Category, ProductType, Product,
     PartnerSlider, AdvertisementSlide,
-    CustomerReview, Blog, ContactInfo,
+    CustomerReview, Blog, ContactInfo, HomePageBanner
 )
 
 
@@ -75,4 +75,11 @@ class ContactInfoTranslationOptions(TranslationOptions):
         'support_label',
         'support_email_label',
         'support_mobile_label',
+    )
+
+@register(HomePageBanner)
+class HomePageBannerTranslationOptions(TranslationOptions):
+    fields = (
+        'title',        
+        'description', 
     )

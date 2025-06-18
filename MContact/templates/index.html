@@ -20,7 +20,11 @@
 
     <header id="home-header">
       <div class="header-bg">
-        <img src="{% static 'images/home-main-banner.png' %}" alt="Banner" />
+        {% if banner %}
+          <img src="{{ banner.image.url }}" alt="{{ banner.title }}" />
+        {% else %}
+          <img src="{% static 'images/home-main-banner.png' %}" alt="Banner" />
+        {% endif %}
 
         <div class="header-container">
           <div class="logo">
@@ -302,9 +306,19 @@
         </div>
 
         <div class="main-banner-content">
-          <h1>{% trans "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq" %}</h1>
-          <p>{% blocktrans %}AVENTOS HF qaldırmalı mexanizmi sayəsində ikiqat qapılar yuxarıya doğru rahat və səssiz açılır. Mətbəx və yaşayış sahələrində geniş istifadə olunan bu sistem, optimal hərəkət erqonomikası və istənilən mövqedə sabit dayanma imkanı ilə fərqlənir.{% endblocktrans %}</p>
-          <a href="{% url 'MContact:products' %}" class="main-banner-content-btn">{% trans "Ətraflı" %}</a>
+            {% if banner %}
+              <h1>{{ banner.title }}</h1>
+              <p>{{ banner.description }}</p>
+              <a href="{{ banner.link }}" class="main-banner-content-btn">
+                {% trans "Ətraflı" %}
+              </a>
+            {% else %}
+              <h1>{% trans "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq" %}</h1>
+              <p>{% blocktrans %}AVENTOS HF qaldırmalı mexanizmi…{% endblocktrans %}</p>
+              <a href="{% url 'MContact:products' %}" class="main-banner-content-btn">
+                {% trans "Ətraflı" %}
+              </a>
+            {% endif %}
         </div>
       </div>
     </header>
