@@ -284,7 +284,7 @@ class OrderAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             "fields": (
-                "user",
+                "viewed", "user",
                 "full_name", "phone", "address",
                 "delivery_date", "delivery_time",
             )

@@ -203,28 +203,22 @@ document.addEventListener("DOMContentLoaded", function () {
       const url = new URL(window.location.href);
       url.search = "";
 
-      const brandCheckboxes = document.querySelectorAll(
-        "input[name='brand']:checked"
-      );
-      brandCheckboxes.forEach((cb) => {
-        url.searchParams.append("brand", cb.value);
-      });
+      document
+        .querySelectorAll("input[name='brand']:checked")
+        .forEach((cb) => url.searchParams.append("brand", cb.value));
 
-      const catCheckboxes = document.querySelectorAll(
-        "input[name='category']:checked"
-      );
-      catCheckboxes.forEach((cb) => {
-        url.searchParams.append("category", cb.value);
-      });
+      document
+        .querySelectorAll("input[name='category']:checked")
+        .forEach((cb) => url.searchParams.append("category", cb.value));
 
-      const minPriceInput = document.querySelector("input[name='min_price']");
-      const maxPriceInput = document.querySelector("input[name='max_price']");
-      if (minPriceInput && minPriceInput.value) {
-        url.searchParams.set("min_price", minPriceInput.value);
-      }
-      if (maxPriceInput && maxPriceInput.value) {
-        url.searchParams.set("max_price", maxPriceInput.value);
-      }
+      document
+        .querySelectorAll("input[name^='attr_']:checked")
+        .forEach((cb) => url.searchParams.append(cb.name, cb.value));
+
+      const min = document.querySelector("input[name='min_price']");
+      const max = document.querySelector("input[name='max_price']");
+      if (min?.value) url.searchParams.set("min_price", min.value);
+      if (max?.value) url.searchParams.set("max_price", max.value);
 
       url.searchParams.delete("page");
       window.location.href = url.toString();
@@ -234,20 +228,15 @@ document.addEventListener("DOMContentLoaded", function () {
   if (resetBtn) {
     resetBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      const brandCheckboxes = document.querySelectorAll("input[name='brand']");
-      brandCheckboxes.forEach((cb) => {
-        cb.checked = false;
-      });
+      document
+        .querySelectorAll(
+          "input[name='brand'], input[name='category'], input[name^='attr_']"
+        )
+        .forEach((cb) => (cb.checked = false));
 
-      const catCheckboxes = document.querySelectorAll("input[name='category']");
-      catCheckboxes.forEach((cb) => {
-        cb.checked = false;
-      });
-
-      const minPriceInput = document.querySelector("input[name='min_price']");
-      const maxPriceInput = document.querySelector("input[name='max_price']");
-      if (minPriceInput) minPriceInput.value = "";
-      if (maxPriceInput) maxPriceInput.value = "";
+      document
+        .querySelectorAll("input[name='min_price'], input[name='max_price']")
+        .forEach((inp) => (inp.value = ""));
 
       const url = new URL(window.location.href);
       url.search = "";
@@ -361,7 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".filter-by").forEach((group) => {
     const hasChecked =
       group.querySelector('input[name="brand"]:checked') ||
-      group.querySelector('input[name="category"]:checked');
+      group.querySelector('input[name="category"]:checked') ||
+      group.querySelector('input[name^="attr_"]:checked');
 
     if (hasChecked) {
       group.classList.add("active");
@@ -605,7 +595,6 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-
 function updateCartCount(count) {
   document.querySelectorAll(".cart-icon-wrapper").forEach((wrapper) => {
     let badge = wrapper.querySelector(".cart-badge");
@@ -718,19 +707,17 @@ document
   });
 
 // blog detail scripts
-var blogSwiper = new Swiper(".blogDetailSwiper", {
-  slidesPerView: 1,
-  loop: true,
-  navigation: {
-    nextEl: ".blogDetailSwiper .swiper-button-next",
-    prevEl: ".blogDetailSwiper .swiper-button-prev",
-  },
-  autoplay: {
-    delay: 3000,
-    disableOnInteraction: false,
-  },
-  pagination: {
-    el: ".blogDetailSwiper .swiper-pagination",
-    clickable: true,
-  },
+document.addEventListener("DOMContentLoaded", function () {
+  const mainImg = document.getElementById("main-blog-image");
+  const thumbs = document.querySelectorAll(".blog-thumbnails .thumbnail img");
+
+  thumbs.forEach((thumb) => {
+    thumb.addEventListener("click", function () {
+      mainImg.src = this.dataset.full;
+      document
+        .querySelectorAll(".blog-thumbnails .thumbnail")
+        .forEach((div) => div.classList.remove("active"));
+      this.parentElement.classList.add("active");
+    });
+  });
 });

@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>{% trans "Mkontakt" %} - {{ blog.title }}</title>
+  <title>{% trans 'Mkontakt' %}- {{ blog.title }}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="{{ blog.title }} - {% trans "Mkontakt Blog" %}" />
-  <meta property="og:title" content="{% trans "Mkontakt" %} - {{ blog.title }}" />
-  <meta property="og:description" content="{{ blog.title }} - {% trans "Mkontakt Blog" %}" />
+  <meta name="description" content="{{ blog.title }} - {% trans 'Mkontakt Blog' %}" />
+  <meta property="og:title" content="{% trans 'Mkontakt' %} - {{ blog.title }}" />
+  <meta property="og:description" content="{{ blog.title }} - {% trans 'Mkontakt Blog' %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   {% if blog.image %}
@@ -19,11 +19,11 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans 'Əsas səhifə' %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:blog_list' %}" class="route">{% trans "Bloq" %}</a>
+      <a href="{% url 'MContact:blog_list' %}" class="route">{% trans 'Bloq' %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
@@ -37,28 +37,25 @@
     </div>
     <div class="blog-detail-container">
       <div class="blog-detail-box">
-        <div class="blog-detail-img">
-          <div class="swiper blogDetailSwiper">
-            <div class="swiper-wrapper">
-              {% if blog.images.all %}
-                {% for img in blog.ordered_images %}
-                  <div class="swiper-slide">
-                    <img src="{{ img.image.url }}" alt="{{ blog.title }}" />
-                  </div>
-                {% endfor %}
-              {% else %}
-                <div class="swiper-slide">
-                  <img src="{% static 'images/blog.png' %}" alt="{{ blog.title }}" />
-                </div>
-              {% endif %}
-            </div>
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-pagination"></div>
-          </div>
-        </div>
         <div class="blog-detail-content">
           <div class="description">{{ blog.description|safe }}</div>
+        </div>
+        <div class="blog-detail-img">
+          <img id="main-blog-image"
+            src="{% if blog.ordered_images %}
+              {{ blog.ordered_images.0.image.url }}
+            {% else %}
+              {% static 'images/blog.png' %}
+            {% endif %}"
+            alt="{{ blog.title }}" />
+        </div>
+
+        <div class="blog-thumbnails">
+          {% for img in blog.ordered_images %}
+            <div class="thumbnail{% if forloop.first %} active{% endif %}">
+              <img src="{{ img.image.url }}" data-full="{{ img.image.url }}" alt="{{ blog.title }}" />
+            </div>
+          {% endfor %}
         </div>
       </div>
     </div>

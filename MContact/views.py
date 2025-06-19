@@ -32,7 +32,7 @@ from .models import (
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
-    BrandSerializer, CategorySerializer, ProductTypeSerializer, ProductListSerializer, ProductDetailSerializer,
+    BrandSerializer, CategorySerializer, ProductListSerializer, ProductDetailSerializer,
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
@@ -137,56 +137,78 @@ def new_password(request):
     return render(request, "new-password.html")
 
 
+
 @ensure_csrf_cookie
 def products(request):
-    all_brands = Brand.objects.all().order_by('name')
-    all_categories = Category.objects.all().order_by('name')
+    all_brands      = Brand.objects.all().order_by("name")
+    all_categories  = Category.objects.all().order_by("name")
+    all_attributes  = (ProductAttribute.objects
+                       .prefetch_related("values")
+                       .order_by("name"))
 
-    brand_ids = [int(x) for x in request.GET.getlist('brand')]
-    category_ids = [int(x) for x in request.GET.getlist('category')]
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    ordering = request.GET.get('ordering')
+    brand_ids     = [int(x) for x in request.GET.getlist("brand")]
+    category_ids  = [int(x) for x in request.GET.getlist("category")]
+    min_price     = request.GET.get("min_price")
+    max_price     = request.GET.get("max_price")
+    ordering      = request.GET.get("ordering")
+
+    attr_filters = {}
+    for key, vals in request.GET.lists():
+        if key.startswith("attr_"):
+            try:
+                attr_id = int(key.split("_", 1)[1])
+                attr_filters[attr_id] = [int(v) for v in vals]
+            except ValueError:
+                continue
 
     qs = Product.objects.all()
 
     if brand_ids:
         qs = qs.filter(brand_id__in=brand_ids)
+
     if category_ids:
         qs = qs.filter(categories__id__in=category_ids).distinct()
+
     if min_price:
         qs = qs.filter(price__gte=min_price)
     if max_price:
         qs = qs.filter(price__lte=max_price)
 
-    qs = qs.annotate(
+    for value_ids in attr_filters.values():
+        qs = qs.filter(variants__attribute_values__id__in=value_ids)
+
+    qs = qs.distinct().annotate(
         _prio=Case(
-            When(priority__isnull=False, then='priority'),
+            When(priority__isnull=False, then="priority"),
             default=Value(999999), output_field=IntegerField()
         )
     )
 
-    if ordering == 'price_asc':
-        qs = qs.order_by('_prio', 'price')
-    elif ordering == 'price_desc':
-        qs = qs.order_by('_prio', '-price')
+    if ordering == "price_asc":
+        qs = qs.order_by("_prio", "price")
+    elif ordering == "price_desc":
+        qs = qs.order_by("_prio", "-price")
     else:
-        qs = qs.order_by('_prio', '-created_at')
+        qs = qs.order_by("_prio", "-created_at")
 
     paginator = Paginator(qs, 8)
-    page_obj = paginator.get_page(request.GET.get('page'))
+    page_obj  = paginator.get_page(request.GET.get("page"))
 
     session_user_id = request.session.get("user_id")
-    wish_ids = set(Wish.objects.filter(user_id=session_user_id)
-                   .values_list("product_id", flat=True)) if session_user_id else set()
+    wish_ids = (set(Wish.objects
+                    .filter(user_id=session_user_id)
+                    .values_list("product_id", flat=True))
+                if session_user_id else set())
 
-    return render(request, 'products.html', {
-        'page_obj': page_obj,
-        'brands': all_brands,
-        'categories': all_categories,
-        'wish_ids': wish_ids,
-        'selected_brands': brand_ids,
-        'selected_categories': category_ids,
+    return render(request, "products.html", {
+        "page_obj": page_obj,
+        "brands": all_brands,
+        "categories": all_categories,
+        "attributes": all_attributes,
+        "wish_ids": wish_ids,
+        "selected_brands":    brand_ids,
+        "selected_categories": category_ids,
+        "selected_attr_vals": sum(attr_filters.values(), []),
     })
 
 
@@ -233,9 +255,9 @@ class CategoryListCreateAPIView(generics.ListCreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
 
 
-class ProductTypeListCreateAPIView(generics.ListCreateAPIView):
-    queryset = ProductType.objects.all().order_by('id')
-    serializer_class = ProductTypeSerializer
+# class ProductTypeListCreateAPIView(generics.ListCreateAPIView):
+#     queryset = ProductType.objects.all().order_by('id')
+#     serializer_class = ProductTypeSerializer
 
 
 class ProductListAPIView(generics.ListAPIView):

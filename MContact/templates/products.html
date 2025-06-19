@@ -2,12 +2,12 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>{% trans "Mkontakt - Məhsullar" %}</title>
+  <title>{% trans 'Mkontakt - Məhsullar' %}</title>
 {% endblock %}
 {% block meta_tags %}
-  <meta name="description" content="{% trans "Mkontakt - Məhsullar" %}" />
-  <meta property="og:title" content="{% trans "Mkontakt - Məhsullar" %}" />
-  <meta property="og:description" content="{% trans "Mkontakt - Məhsullar" %}" />
+  <meta name="description" content="{% trans 'Mkontakt - Məhsullar' %}" />
+  <meta property="og:title" content="{% trans 'Mkontakt - Məhsullar' %}" />
+  <meta property="og:description" content="{% trans 'Mkontakt - Məhsullar' %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.build_absolute_uri }}" />
   <meta property="og:image" content="{% static 'images/mcontact-blue-logo.png' %}" />
@@ -15,17 +15,17 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans 'Əsas səhifə' %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:products' %}" class="route active">{% trans "Məhsullar" %}</a>
+      <a href="{% url 'MContact:products' %}" class="route active">{% trans 'Məhsullar' %}</a>
     </div>
   </section>
 
   <section id="products-container">
     <div class="products-container-content">
-      <h3>{% trans "Məhsullar" %}</h3>
+      <h3>{% trans 'Məhsullar' %}</h3>
     </div>
 
     <div class="regulation-products">
@@ -34,22 +34,32 @@
           <div>
             <i class="fa-brands fa-elementor"></i>
           </div>
-          <div>{% trans "Tənzimləmə" %}</div>
+          <div>
+            {% trans 'Tənzimləmə' %}
+          </div>
         </div>
         <div class="regulation-products-dropdown">
-          <div class="cheapest" data-ordering="price_asc">{% trans "Əvvəlcə ucuz" %}</div>
-          <div class="expensive" data-ordering="price_desc">{% trans "Əvvəlcə baha" %}</div>
+          <div class="cheapest" data-ordering="price_asc">
+            {% trans 'Əvvəlcə ucuz' %}
+          </div>
+          <div class="expensive" data-ordering="price_desc">
+            {% trans 'Əvvəlcə baha' %}
+          </div>
         </div>
       </div>
     </div>
 
     <div class="filter-and-products">
       <div class="filter">
-        <div class="filter-title">{% trans "Filter" %}</div>
+        <div class="filter-title">
+          {% trans 'Filter' %}
+        </div>
 
         <div class="filter-by">
           <div class="toggle-filter">
-            <div class="filter-by-name">{% trans "Brendlər" %}</div>
+            <div class="filter-by-name">
+              {% trans 'Brendlər' %}
+            </div>
             <div class="filter-by-icon">
               <i class="fa-solid fa-chevron-down"></i>
             </div>
@@ -70,7 +80,9 @@
 
         <div class="filter-by">
           <div class="toggle-filter">
-            <div class="filter-by-name">{% trans "Kateqoriyalar" %}</div>
+            <div class="filter-by-name">
+              {% trans 'Kateqoriyalar' %}
+            </div>
             <div class="filter-by-icon">
               <i class="fa-solid fa-chevron-down"></i>
             </div>
@@ -83,7 +95,7 @@
                     <input type="checkbox" name="category" value="{{ category.id }}" />
                     {{ category.name }}
                     {% if category.discount %}
-                      ({{ category.discount }}% {% trans "endirim" %})
+                      ({{ category.discount }}%{% trans 'endirim' %})
                     {% endif %}
                   </label>
                 </li>
@@ -94,7 +106,9 @@
 
         <div class="filter-by">
           <div class="toggle-filter">
-            <div class="filter-by-name">{% trans "Qiymət" %}</div>
+            <div class="filter-by-name">
+              {% trans 'Qiymət' %}
+            </div>
             <div class="filter-by-icon">
               <i class="fa-solid fa-chevron-down"></i>
             </div>
@@ -111,9 +125,35 @@
           </div>
         </div>
 
+        {% for attr in attributes %}
+            <div class="filter-by">
+              <div class="toggle-filter">
+                <div class="filter-by-name">{{ attr.name }}</div>
+                <div class="filter-by-icon"><i class="fa-solid fa-chevron-down"></i></div>
+              </div>
+              <div class="filter-dropdown">
+                <ul>
+                  {% for val in attr.values.all %}
+                    <li>
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="attr_{{ attr.id }}"
+                          value="{{ val.id }}"
+                          {% if val.id in selected_attr_vals %}checked{% endif %}
+                        />
+                        {{ val.value }}
+                      </label>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+        {% endfor %}
+
         <div class="filter-btns">
-          <button class="apply-btn">{% trans "Təsdiq et" %}</button>
-          <button class="reset-btn">{% trans "Sıfırla" %}</button>
+          <button class="apply-btn">{% trans 'Təsdiq et' %}</button>
+          <button class="reset-btn">{% trans 'Sıfırla' %}</button>
         </div>
       </div>
       <div class="if-products-exists">
@@ -133,13 +173,7 @@
                     <div class="product-content">
                       <a href="{{ product.get_absolute_url }}">
                         <div class="title">{{ product.title }}</div>
-                        <div class="description">
-                          {% if product.categories.all %}
-                            {% for cat in product.categories.all %}
-                              {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                          {% endif %}
-                        </div>
+                        <div class="description">{{ product.description|truncatechars:20 }}</div>
                       </a>
                       <div class="product-price-and-cart">
                         <div class="product-price">₼{{ product.price }}</div>
@@ -148,7 +182,9 @@
                             <i class="fa-solid fa-plus"></i>
                           </div>
                         {% else %}
-                          <div class="out-of-stock-label">{% trans "Stokda yoxdur" %}</div>
+                          <div class="out-of-stock-label">
+                            {% trans 'Stokda yoxdur' %}
+                          </div>
                         {% endif %}
                       </div>
                     </div>
@@ -171,8 +207,10 @@
         <div class="img-container">
           <img src="{% static 'images/if-products-doesnt-exists-img.png' %}" alt="" />
           <div class="img-container-content">
-            <h6>{% trans "Məhsul tapılmadı" %}</h6>
-            <p>{% trans "Seçdiyiniz filtirə əsasən məhsul tapılmadı" %}</p>
+            <h6>{% trans 'Məhsul tapılmadı' %}</h6>
+            <p>
+              {% trans 'Seçdiyiniz filtirə əsasən məhsul tapılmadı' %}
+            </p>
           </div>
         </div>
       </div>

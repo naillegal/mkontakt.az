@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     PartnerSlider, AdvertisementSlide, Brand, Category, Product,
     ProductType, ProductImage, CustomerReview,
-    Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken, ProductVariant, ProductAttributeValue
+    Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken,
+    ProductAttribute, ProductVariant, ProductAttributeValue
 )
 import html
 from django.utils.html import strip_tags
@@ -11,11 +12,20 @@ from decimal import Decimal, ROUND_HALF_UP
 
 class AttributeValueMiniSerializer(serializers.ModelSerializer):
     attribute_name = serializers.CharField(
-        source="attribute.name", read_only=True)
+        source="attribute.name", read_only=True
+    )
 
     class Meta:
         model = ProductAttributeValue
         fields = ("id", "attribute_name", "value")
+
+
+class ProductAttributeSerializer(serializers.ModelSerializer):
+    values = AttributeValueMiniSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ProductAttribute
+        fields = ("id", "name", "values")
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
@@ -42,10 +52,10 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at',)
 
 
-class ProductTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductType
-        fields = ('id', 'name')
+# class ProductTypeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ProductType
+#         fields = ('id', 'name')
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -62,18 +72,17 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
 
+    has_variants = serializers.BooleanField(
+        source="variants.exists", read_only=True
+    )
+
     class Meta:
         model = Product
         fields = (
-            "id",
-            "brand",
-            "brand_name",
-            "categories",
-            "category_names",
-            "title",
-            "price",
-            "image",
-            "code",
+            "id", "brand", "brand_name",
+            "categories", "category_names",
+            "title", "price", "image",
+            "code", "has_variants",
         )
 
     def get_price(self, obj):
@@ -90,9 +99,8 @@ class ProductListSerializer(serializers.ModelSerializer):
         img = main or qs.order_by("-created_at").first()
         if not img:
             return None
-        request = self.context.get("request")
-        url = img.image.url
-        return request.build_absolute_uri(url) if request else url
+        req = self.context.get("request")
+        return req.build_absolute_uri(img.image.url) if req else img.image.url
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -101,19 +109,17 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
 
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    attributes = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = (
-            "id",
-            "title",
-            "code",
-            "description",
-            "images",
-            "price",
-            "brand",
-            "brand_name",
-            "categories",
-            "category_names",
+            "id", "title", "code", "description",
+            "images", "price",
+            "brand", "brand_name",
+            "categories", "category_names",
+            "variants", "attributes",
         )
 
     def get_price(self, obj):
@@ -133,10 +139,17 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         else:
             ordered = list(qs.order_by("-created_at"))
 
-        request = self.context.get("request")
-        def make_url(i): return request.build_absolute_uri(
-            i.image.url) if request else i.image.url
-        return [make_url(i) for i in ordered]
+        req = self.context.get("request")
+        def make(i): return req.build_absolute_uri(
+            i.image.url) if req else i.image.url
+        return [make(i) for i in ordered]
+
+    def get_attributes(self, obj):
+        qs = (ProductAttribute.objects
+              .filter(values__product_variants__product=obj)
+              .distinct()
+              .prefetch_related("values"))
+        return ProductAttributeSerializer(qs, many=True).data
 
 
 class PartnerSliderSerializer(serializers.ModelSerializer):
@@ -256,12 +269,15 @@ class CartItemSerializer(serializers.ModelSerializer):
     )
     line_total = serializers.SerializerMethodField()
 
+    variant_id = serializers.IntegerField(source="variant.id", read_only=True)
+    selected_attrs = serializers.SerializerMethodField()
+
     class Meta:
         model = CartItem
         fields = (
             "id", "product_id", "product_title",
-            "product_image", "quantity",
-            "unit_price", "line_total",
+            "product_image", "quantity", "unit_price",
+            "line_total", "variant_id", "selected_attrs",
         )
 
     def get_product_image(self, obj):
@@ -271,6 +287,9 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def get_line_total(self, obj):
         return obj.product.price * obj.quantity
+
+    def get_selected_attrs(self, obj):
+        return obj.selected_attrs
 
 
 class MobileCartSerializer(serializers.ModelSerializer):
@@ -328,10 +347,22 @@ class WishItemSerializer(serializers.ModelSerializer):
 class OrderItemMiniSerializer(serializers.ModelSerializer):
     product_title = serializers.CharField(
         source="product.title", read_only=True)
+    variant_id = serializers.IntegerField(source="variant.id", read_only=True)
+    selected_attrs = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
-        fields = ("product_id", "product_title", "quantity", "unit_price")
+        fields = (
+            "product_id", "product_title",
+            "quantity", "unit_price",
+            "variant_id", "selected_attrs",
+        )
+
+    def get_selected_attrs(self, obj):
+        return obj.variant and [
+            {"name": v.attribute.name, "value": v.value}
+            for v in obj.variant.attribute_values.all()
+        ] or []
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -345,8 +376,10 @@ class OrderSerializer(serializers.ModelSerializer):
             "subtotal", "product_discount", "discount_amount", "total",
             "created_at", "items"
         )
-        read_only_fields = ("id", "subtotal", "product_discount",
-                            "discount_amount", "total", "created_at", "items")
+        read_only_fields = (
+            "id", "subtotal", "product_discount",
+            "discount_amount", "total", "created_at", "items"
+        )
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):
