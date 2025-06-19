@@ -90,7 +90,6 @@
                   .cart-product-content {
                     .cart-product-title {
                       display: flex;
-                      justify-content: space-between;
                       a {
                         font-size: 24px;
                         font-weight: 500;
@@ -159,6 +158,21 @@
                       font-weight: 400;
                       @media (max-width: 991px) {
                         font-size: 14px;
+                      }
+                      .cart-product-attributes {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-top: 6px;
+
+                        .cart-product-attr {
+                          font-size: 14px;
+                          strong {
+                            color: rgba(20, 48, 130, 1);
+                            margin-right: 4px;
+                            font-weight: 600;
+                          }
+                        }
                       }
                     }
                     .cart-product-size {

@@ -65,6 +65,13 @@
                             {% for c in item.product.categories.all %}
                               {{ c.name }}{% if not forloop.last %}, {% endif %}
                             {% endfor %}
+                            <div class="cart-product-attributes">
+                              {% if item.variant %}
+                                {% for v in item.variant.attribute_values.all %}
+                                  {{ v.value }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                              {% endif %}
+                            </div>
                           </div>
                         </div>
 

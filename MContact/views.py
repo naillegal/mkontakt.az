@@ -13,6 +13,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Count
 from .utils import get_or_create_cart
 import json
 from django.utils import timezone
@@ -26,7 +27,8 @@ import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
-    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner
+    CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner,
+    ProductAttribute, ProductVariant, ProductAttributeValue
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -206,10 +208,17 @@ def product_detail(request, slug):
     wish_ids = set(Wish.objects.filter(user_id=session_user_id)
                    .values_list("product_id", flat=True)) if session_user_id else set()
 
+    attributes = ProductAttribute.objects.filter(
+        values__product_variants__product=product_item
+    ).distinct().prefetch_related(
+        'values'
+    )
+
     return render(request, 'products-detail.html', {
         'product': product_item,
         'other_products': other_products,
         'wish_ids': wish_ids,
+        'attributes': attributes,
     })
 
 
@@ -273,7 +282,7 @@ def index(request):
     session_user_id = request.session.get("user_id")
     wish_ids = set(Wish.objects.filter(user_id=session_user_id)
                    .values_list("product_id", flat=True)) if session_user_id else set()
-    
+
     banner = HomePageBanner.objects.order_by('-created_at').first()
 
     context = {
@@ -595,7 +604,7 @@ def register(request):
                     messages.error(request, e)
                 return redirect('MContact:register')
 
-            code = f"{random.randint(0,9999):04d}"
+            code = f"{random.randint(0, 9999):04d}"
             request.session['register_full_name'] = full_name
             request.session['register_email'] = email
             request.session['register_phone'] = phone
@@ -849,37 +858,56 @@ def wishlist_view(request):
 
 @require_POST
 def cart_add(request, product_id):
-    data = json.loads(request.body or '{}')
-    qty = int(data.get('quantity', 1))
+    data = json.loads(request.body.decode() or "{}")
+    quantity = int(data.get("quantity", 1))
+    attr_values = data.get("attr_values", {})
+    selected_ids = [int(v) for v in attr_values.values()]
+
     product = get_object_or_404(Product, pk=product_id)
+
+    variant = None
+    if selected_ids:
+        wanted = set(selected_ids)
+        for v in (ProductVariant.objects
+                  .filter(product=product, is_active=True)
+                  .prefetch_related("attribute_values")):
+            vals = set(v.attribute_values.values_list("id", flat=True))
+            if vals == wanted:
+                variant = v
+                break
+    if variant is None and selected_ids:
+        variant = ProductVariant.objects.create(product=product)
+        variant.attribute_values.set(selected_ids)
+
     cart = get_or_create_cart(request)
 
     item, created = CartItem.objects.get_or_create(
         cart=cart,
         product=product,
-        defaults={'quantity': qty}
+        variant=variant,
+        defaults={"quantity": quantity},
     )
     if not created:
-        item.quantity += qty
+        item.quantity += quantity
         item.save()
 
     return JsonResponse({
-        'ok': True,
-        'count': cart.items.count(),
-        'item_quantity': item.quantity
+        "ok": True,
+        "count": cart.items.count(),
+        "item_quantity": item.quantity
     })
 
 
 def cart_view(request):
-    session_user_id = request.session.get("user_id")
-    if session_user_id:
-        if not User.objects.filter(pk=session_user_id).exists():
-            del request.session["user_id"]
-            session_user_id = None
-
     cart = get_or_create_cart(request)
     cart.items.filter(product__is_active=False).delete()
-    paginator = Paginator(cart.items.select_related("product"), 3)
+
+    paginator = Paginator(
+        cart.items.select_related("product", "variant").prefetch_related(
+            "variant__attribute_values__attribute"
+        ),
+        3
+    )
     page_obj = paginator.get_page(request.GET.get("page"))
 
     context = {
@@ -1006,10 +1034,11 @@ def order_create(request):
         subtotal=cart.raw_total,
         total=cart.grand_total,
     )
-    for item in cart.items.select_related("product"):
+    for item in cart.items.select_related("product", "variant"):
         OrderItem.objects.create(
             order=order,
             product=item.product,
+            variant=item.variant,
             quantity=item.quantity,
             unit_price=item.product.price,
         )
@@ -1084,7 +1113,7 @@ class ForgotPasswordAPIView(APIView):
             return Response({"detail": "Bu e-mail mövcud deyil."}, status=400)
 
         PasswordResetOTP.objects.filter(user=user).delete()
-        code = f"{random.randint(0,9999):04d}"
+        code = f"{random.randint(0, 9999):04d}"
         PasswordResetOTP.objects.create(user=user, code=code)
 
         send_mail_async(

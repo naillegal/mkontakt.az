@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  <title>{% trans "Mkontakt - Məhsul detalları" %}</title>
+  <title>{% trans 'Mkontakt - Məhsul detalları' %}</title>
 {% endblock %}
 {% block meta_tags %}
   <meta name="description" content="{{ product.title }} - Məhsul detalları" />
@@ -19,11 +19,11 @@
 {% block main %}
   <section id="mini-routes">
     <div class="routes">
-      <a href="{% url 'MContact:index' %}" class="route">{% trans "Əsas səhifə" %}</a>
+      <a href="{% url 'MContact:index' %}" class="route">{% trans 'Əsas səhifə' %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
-      <a href="{% url 'MContact:products' %}" class="route">{% trans "Məhsullar" %}</a>
+      <a href="{% url 'MContact:products' %}" class="route">{% trans 'Məhsullar' %}</a>
       <div>
         <i class="fa-solid fa-chevron-right"></i>
       </div>
@@ -68,6 +68,24 @@
             </span>
             <p>{{ product.description }}</p>
 
+            <div class="product-features">
+              {% for attribute in attributes %}
+                <div class="feature">
+                  <div class="feature-title">{{ attribute.name }}</div>
+                  <div class="feature-options">
+                    {% for val in attribute.values.all %}
+                      <label>
+                        <input type="radio" name="attr_{{ attribute.id }}" value="{{ val.id }}" />
+                        {{ val.value }}
+                      </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% empty %}
+                <p>Bu məhsul üçün xüsusiyyət seçimi yoxdur.</p>
+              {% endfor %}
+            </div>
+
             <span class="price">₼{{ product.price }}</span>
             <div class="count-and-type">
               <div class="counter">
@@ -84,9 +102,15 @@
                 </select>
               </div> {% endcomment %}
             </div>
-            <div class="add-to-cart-btn">
-              <button class="add-to-cart-btn__button" data-product="{{ product.id }}">{% trans "Səbətə əlavə et" %}</button>
-            </div>
+            {% if product.is_active %}
+              <div class="add-to-cart-btn">
+                <button class="product-add-to-cart" data-product="{{ product.id }}">{% trans 'Səbətə əlavə et' %}</button>
+              </div>
+            {% else %}
+              <div class="out-of-stock-label">
+                {% trans 'Stokda yoxdur' %}
+              </div>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -95,7 +119,7 @@
 
   <section id="product-detail-other-products">
     <div class="other-products-content">
-      <h3>{% trans "Digər məhsullar" %}</h3>
+      <h3>{% trans 'Digər məhsullar' %}</h3>
     </div>
     <div class="other-products-container">
       <div class="row row-gap-4">
@@ -125,7 +149,9 @@
                       <i class="fa-solid fa-plus"></i>
                     </div>
                   {% else %}
-                    <div class="out-of-stock-label">{% trans "Stokda yoxdur" %}</div>
+                    <div class="out-of-stock-label">
+                      {% trans 'Stokda yoxdur' %}
+                    </div>
                   {% endif %}
                 </div>
               </div>
@@ -136,7 +162,7 @@
     </div>
 
     <div class="see-all-products-btn">
-      <a href="{% url 'MContact:products' %}"><span>{% trans "Hamısı" %}</span> <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="{% url 'MContact:products' %}"><span>{% trans 'Hamısı' %}</span> <i class="fa-solid fa-arrow-right"></i></a>
     </div>
   </section>
 {% endblock %}

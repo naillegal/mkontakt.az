@@ -532,12 +532,26 @@ class CartItem(models.Model):
     cart = models.ForeignKey(
         Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.PROTECT,
+        null=True, blank=True
+    )
     quantity = models.PositiveIntegerField(default=1)
 
     class Meta:
         verbose_name = "Səbət məhsulu"
         verbose_name_plural = "Səbət məhsulları"
-        unique_together = ("cart", "product")
+        unique_together = ("cart", "product", "variant")
+
+    @property
+    def selected_attrs(self):
+        if not self.variant:
+            return []
+        return [
+            {"name": v.attribute.name, "value": v.value}
+            for v in self.variant.attribute_values.all()
+        ]
 
     def __str__(self):
         return f"{self.product.title} x{self.quantity}"
@@ -626,6 +640,10 @@ class Order(models.Model):
         decimal_places=2,
         verbose_name="Ümumi Məbləğ"
     )
+    viewed = models.BooleanField(
+        default=False,
+        verbose_name="Baxdım",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Yaradılma Tarixi"
@@ -650,6 +668,12 @@ class OrderItem(models.Model):
         Product,
         on_delete=models.PROTECT,
         verbose_name="Məhsul"
+    )
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        related_name="+"
     )
     quantity = models.PositiveIntegerField(
         verbose_name="Miqdar"

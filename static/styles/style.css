@@ -2709,6 +2709,57 @@ footer .footer-copyright {
 #selected-product-info .selected-product-info-container .selected-product-info-content .add-to-cart-btn button:hover {
   opacity: 0.9;
 }
+#selected-product-info .selected-product-info-container .selected-product-info-content .out-of-stock-label {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+  background: #fafafa;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features {
+  margin-bottom: 24px;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature {
+  margin-bottom: 16px;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature .feature-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(20, 48, 130);
+  margin-bottom: 8px;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature .feature-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature .feature-options label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature .feature-options label input[type=radio] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  accent-color: rgb(20, 48, 130);
+}
+#selected-product-info .selected-product-info-container .selected-product-info-content .product-features .feature .feature-options label:hover {
+  opacity: 0.9;
+}
+@media (max-width: 991px) {
+  #selected-product-info .selected-product-info-container .selected-product-info-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
 
 #product-detail-other-products {
   padding: 30px 0px;
@@ -3991,7 +4042,6 @@ footer .footer-copyright {
 }
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-title {
   display: flex;
-  justify-content: space-between;
 }
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-title a {
   font-size: 24px;
@@ -4061,6 +4111,20 @@ footer .footer-copyright {
   #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-description {
     font-size: 14px;
   }
+}
+#cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-description .cart-product-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+#cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-description .cart-product-attributes .cart-product-attr {
+  font-size: 14px;
+}
+#cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-description .cart-product-attributes .cart-product-attr strong {
+  color: rgb(20, 48, 130);
+  margin-right: 4px;
+  font-weight: 600;
 }
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-content-and-delete .cart-product-content .cart-product-size {
   color: rgb(20, 48, 130);

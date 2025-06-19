@@ -25,7 +25,6 @@ class CustomTranslationAdmin(TranslationAdmin):
         }
 
 
-
 class ProductAttributeValueInline(admin.TabularInline):
     model = ProductAttributeValue
     extra = 1
@@ -246,8 +245,18 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('product', 'quantity', 'unit_price')
+    readonly_fields = ('product', 'variant_attrs', 'quantity', 'unit_price')
     can_delete = False
+
+    def variant_attrs(self, obj):
+        if not obj.variant:
+            return "-"
+        pairs = [
+            f"{av.attribute.name}: {av.value}"
+            for av in obj.variant.attribute_values.all()
+        ]
+        return ", ".join(pairs)
+    variant_attrs.short_description = "Seçilmiş variant"
 
 
 @admin.register(Order)
@@ -256,11 +265,14 @@ class OrderAdmin(admin.ModelAdmin):
         "id",
         "full_name",
         "phone",
+        "viewed",
         "product_discount",
         "category_discount",
         "total",
         "created_at"
     )
+    list_editable = ("viewed",)
+    list_filter = ("viewed", "created_at")
     readonly_fields = (
         "discount_amount",
         "product_discount",
@@ -303,5 +315,3 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 class HomePageBannerAdmin(CustomTranslationAdmin):
     list_display = ('title', 'title_en', 'title_ru', 'created_at')
     readonly_fields = ('created_at',)
-
-

@@ -561,29 +561,50 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ============ ADD TO CART ==================
-document.body.addEventListener("click", async (e) => {
-  const addBtn = e.target.closest(".product-add-to-cart");
-  if (!addBtn) return;
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".product-add-to-cart");
+  if (!btn) return;
 
-  const productId = addBtn.dataset.product;
-  const csrftoken =
-    getCookie("csrftoken") ||
-    document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  const productId = btn.dataset.product;
+  const csrf = getCookie("csrftoken");
 
-  const res = await fetch(`/cart/add/${productId}/`, {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": csrftoken,
-      "X-Requested-With": "XMLHttpRequest",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
+  const cntEl = document.querySelector(".counter .counter-value");
+  const quantity = cntEl ? Math.max(1, parseInt(cntEl.textContent, 10)) : 1;
+
+  const checked = document.querySelectorAll(
+    ".feature-options input[type=radio]:checked"
+  );
+  const attr_values = {};
+  checked.forEach((inp) => {
+    const attrId = inp.name.replace("attr_", "");
+    attr_values[attrId] = inp.value;
   });
 
-  const json = await res.json();
-  updateCartCount(json.count);
-  showToast("Məhsul səbətə əlavə edildi!");
+  try {
+    const res = await fetch(`/cart/add/${productId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrf,
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ quantity, attr_values }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.ok === false) {
+      showToast(data.error || "Xəta baş verdi");
+      return;
+    }
+
+    updateCartCount(data.count);
+    showToast("Məhsul səbətə əlavə edildi!");
+  } catch (err) {
+    console.error(err);
+    showToast("Şəbəkə xətası");
+  }
 });
+
 
 function updateCartCount(count) {
   document.querySelectorAll(".cart-icon-wrapper").forEach((wrapper) => {
@@ -695,41 +716,6 @@ document
       showToast("Şəbəkə xətası, zəhmət olmasa yenidən cəhd edin.");
     }
   });
-
-// ============ PRODUCT-DETAIL ADD TO CART ==================
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".add-to-cart-btn__button");
-  if (!btn) return;
-
-  const productId = btn.dataset.product;
-  const counterEl = document.querySelector(".counter .counter-value");
-  const quantity = counterEl
-    ? Math.max(1, parseInt(counterEl.textContent, 10) || 1)
-    : 1;
-
-  const csrftoken = getCookie("csrftoken");
-
-  try {
-    const res = await fetch(`/cart/add/${productId}/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrftoken,
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: JSON.stringify({ quantity }),
-    });
-    const json = await res.json();
-    if (res.ok) {
-      showToast("Məhsul səbətə əlavə edildi!");
-    } else {
-      showToast(json.error || "Xəta baş verdi");
-    }
-  } catch (err) {
-    console.error(err);
-    showToast("Xəta baş verdi");
-  }
-});
 
 // blog detail scripts
 var blogSwiper = new Swiper(".blogDetailSwiper", {
