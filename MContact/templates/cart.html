@@ -171,8 +171,15 @@
                   {% trans 'Çatdırılma' %}
                 </div>
                 <div>
-                  {% trans 'Ödənişsiz' %}
+                  {% if shipping_fee == 0 %}
+                    {% trans 'Ödənişsiz' %}
+                  {% else %}
+                    ₼{{ shipping_fee|floatformat:2 }}
+                  {% endif %}
                 </div>
+              </div>
+              <div class="delivery-info" style="font-size: 12px; text-align: left;">
+                {% trans 'Şəhər daxili çatdırılma: sifariş 200₼-dək olduqda 10₼, 200₼-dan çox olduqda pulsuzdur.' %}
               </div>
 
               <hr />
@@ -181,7 +188,7 @@
                 <div>
                   {% trans 'Ümumi' %}
                 </div>
-                <div>₼{{ cart.grand_total|floatformat:2 }}</div>
+                <div>₼{{ final_total|floatformat:2 }}</div>
               </div>
 
               {% if cart.items.exists %}

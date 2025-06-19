@@ -1,5 +1,6 @@
 import random
 import datetime
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -137,20 +138,20 @@ def new_password(request):
     return render(request, "new-password.html")
 
 
-
 @ensure_csrf_cookie
 def products(request):
-    all_brands      = Brand.objects.all().order_by("name")
-    all_categories  = Category.objects.all().order_by("name")
-    all_attributes  = (ProductAttribute.objects
-                       .prefetch_related("values")
-                       .order_by("name"))
+    all_brands = Brand.objects.all().order_by("name")
+    all_categories = Category.objects.all().order_by("name")
+    all_attributes = (ProductAttribute.objects
+                      .prefetch_related("values")
+                      .order_by("name"))
 
-    brand_ids     = [int(x) for x in request.GET.getlist("brand")]
-    category_ids  = [int(x) for x in request.GET.getlist("category")]
-    min_price     = request.GET.get("min_price")
-    max_price     = request.GET.get("max_price")
-    ordering      = request.GET.get("ordering")
+    brand_ids = [int(x) for x in request.GET.getlist("brand")]
+    category_ids = [int(x) for x in request.GET.getlist("category")]
+    min_price = request.GET.get("min_price")
+    max_price = request.GET.get("max_price")
+    ordering = request.GET.get("ordering")
+    q = request.GET.get("q", "").strip()
 
     attr_filters = {}
     for key, vals in request.GET.lists():
@@ -162,6 +163,12 @@ def products(request):
                 continue
 
     qs = Product.objects.all()
+
+    if q:
+        qs = qs.filter(
+            Q(code__iexact=q) |
+            Q(title__icontains=q)
+        )
 
     if brand_ids:
         qs = qs.filter(brand_id__in=brand_ids)
@@ -185,14 +192,14 @@ def products(request):
     )
 
     if ordering == "price_asc":
-        qs = qs.order_by("_prio", "price")
+        qs = qs.order_by("price")
     elif ordering == "price_desc":
-        qs = qs.order_by("_prio", "-price")
+        qs = qs.order_by("-price")
     else:
         qs = qs.order_by("_prio", "-created_at")
 
     paginator = Paginator(qs, 8)
-    page_obj  = paginator.get_page(request.GET.get("page"))
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     session_user_id = request.session.get("user_id")
     wish_ids = (set(Wish.objects
@@ -932,10 +939,16 @@ def cart_view(request):
     )
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    shipping_fee = Decimal('0.00') if cart.grand_total >= Decimal(
+        '200.00') else Decimal('10.00')
+    final_total = cart.grand_total + shipping_fee
+
     context = {
         "cart": cart,
         "page_obj": page_obj,
         "discount_amount": cart.get_discount_code_amount(),
+        "shipping_fee": shipping_fee,
+        "final_total": final_total,
     }
     return render(request, "cart.html", context)
 
@@ -1041,6 +1054,10 @@ def order_create(request):
         )
         return redirect("MContact:order")
 
+    shipping_fee = Decimal('0.00') if cart.grand_total >= Decimal(
+        '200.00') else Decimal('10.00')
+    order_total = cart.grand_total + shipping_fee
+
     order = Order.objects.create(
         user_id=request.session.get("user_id"),
         full_name=full_name,
@@ -1054,7 +1071,7 @@ def order_create(request):
         product_discount=cart.product_discount,
         category_discount=cart.category_discount,
         subtotal=cart.raw_total,
-        total=cart.grand_total,
+        total=order_total,
     )
     for item in cart.items.select_related("product", "variant"):
         OrderItem.objects.create(

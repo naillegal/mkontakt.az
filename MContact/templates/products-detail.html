@@ -59,6 +59,11 @@
         <div class="col-lg-7 col-12">
           <div class="selected-product-info-content">
             <h1>{{ product.title }}</h1>
+            {% if product.code %}
+              <p class="product-code">
+                <strong>{% trans 'Məhsul Kodu' %}:</strong> {{ product.code }}
+              </p>
+            {% endif %}
             <span class="subtitle">
               {% if product.categories.all %}
                 {% for cat in product.categories.all %}

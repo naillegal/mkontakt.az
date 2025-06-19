@@ -640,6 +640,12 @@ class Order(models.Model):
         decimal_places=2,
         verbose_name="Ümumi Məbləğ"
     )
+    shipping_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Çatdırılma haqqı"
+    )
     viewed = models.BooleanField(
         default=False,
         verbose_name="Baxdım",
@@ -655,6 +661,12 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Sifariş #{self.pk}"
+    
+    @property
+    def shipping_fee(self) -> Decimal:
+        return Decimal('0.00') if self.total >= Decimal('200.00') else Decimal('10.00')
+    shipping_fee.fget.short_description = "Çatdırılma haqqı"
+    
 
 
 class OrderItem(models.Model):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-17 21:50+0400\n"
+"POT-Creation-Date: 2025-06-19 23:39+0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -16,9 +16,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
-"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: .\MContact\templates\about-us.html:5 .\MContact\templates\about-us.html:8
 #: .\MContact\templates\about-us.html:9 .\MContact\templates\about-us.html:10
@@ -27,29 +27,35 @@ msgstr "Mkontakt – О нас"
 
 #: .\MContact\templates\about-us.html:18
 #: .\MContact\templates\blog-detail.html:22 .\MContact\templates\blog.html:19
-#: .\MContact\templates\contact.html:18 .\MContact\templates\index.html:31
-#: .\MContact\templates\index.html:146 .\MContact\templates\index.html:507
+#: .\MContact\templates\contact.html:18 .\MContact\templates\index.html:37
+#: .\MContact\templates\index.html:244 .\MContact\templates\index.html:615
 #: .\MContact\templates\products-detail.html:22
 #: .\MContact\templates\products.html:18 .\MContact\templates\rules.html:18
-#: .\MContact\templates\wishlist.html:57 .\templates\layout.html:32
-#: .\templates\layout.html:146 .\templates\layout.html:246
+#: .\MContact\templates\wishlist.html:57 .\templates\layout.html:34
+#: .\templates\layout.html:227 .\templates\layout.html:329
 msgid "Əsas səhifə"
 msgstr "Главная"
 
 #: .\MContact\templates\about-us.html:22 .\MContact\templates\about-us.html:28
-#: .\MContact\templates\index.html:34 .\MContact\templates\index.html:152
-#: .\MContact\templates\index.html:510 .\templates\layout.html:35
-#: .\templates\layout.html:152 .\templates\layout.html:249
+#: .\MContact\templates\index.html:40 .\MContact\templates\index.html:250
+#: .\MContact\templates\index.html:618 .\templates\layout.html:37
+#: .\templates\layout.html:233 .\templates\layout.html:332
 msgid "Haqqımızda"
 msgstr "О нас"
 
 #: .\MContact\templates\about-us.html:31
 msgid ""
 "M-Kontakt şirkəti Azərbaycan məkanında 2003 cü ildən bu günümüzə qədər hər "
-"növ mebellərin istehsalı,mebel aksesuarlarının satışı ilə məşğuldur."
+"növ mebellərin istehsalı,mebel aksesuarlarının satışı ilə məşğuldur. "
+"Şirkətimiz fəaliyyətə başladığı andan etibarən xüsusi layihələr əsasında "
+"mebel istehsalı ilə məşğul olmağa başladı. İlk növbədə mebel fabrikində "
+"yüksək səviyyəli texnoloji avadanlıqlar quraşdırıldı ki, bu da istehsal "
+"olunan malların keyfiyyətcə daha mükəmməl olmasına təsir etməyə bilməzdi."
+"İstehsal olunan mallar keyfiyyətlə yanaşı estetik gözəlliyi, həmçinin dünya "
+"standartlarına uyğunluğu ilə fərqlənir. Məkanın xüsusiyyətləri nəzərə "
+"alınaraq hazırlanan məhsullar konseptual bütünlük yaratmaqla bərabər "
+"zərifliyi ilə evlərə ofislərə canlılıq qazandırır."
 msgstr ""
-"Компания M-Kontakt занимается производством всех видов мебели и продажей "
-"мебельных аксессуаров в Азербайджане с 2003 года."
 
 #: .\MContact\templates\about-us.html:32
 msgid ""
@@ -57,8 +63,9 @@ msgid ""
 "markaların idxalı və satışı ilə də məşğul olur.Respublika ərazisində bir çox "
 "şirkətlərlə əməkdaşlıq edirik."
 msgstr ""
-"Наша компания также импортирует и продает всемирно известные бренды в области "
-"мебельных аксессуаров. Мы сотрудничаем со многими компаниями по всей стране."
+"Наша компания также импортирует и продает всемирно известные бренды в "
+"области мебельных аксессуаров. Мы сотрудничаем со многими компаниями по всей "
+"стране."
 
 #: .\MContact\templates\about-us.html:33
 msgid ""
@@ -66,19 +73,18 @@ msgid ""
 "yaratdığı əlverişli şəraitdən yararlanmağa çalışırıq. Burada çalışan "
 "ustaların hər biri peşəkarcasına seçilmişdir."
 msgstr ""
-"Для развития предприятия мы стараемся воспользоваться благоприятными условиями, "
-"предоставленными государством предпринимателям. Каждый мастер, работающий у нас, "
-"профессионально отобран."
+"Для развития предприятия мы стараемся воспользоваться благоприятными "
+"условиями, предоставленными государством предпринимателям. Каждый мастер, "
+"работающий у нас, профессионально отобран."
 
 #: .\MContact\templates\about-us.html:34
 msgid ""
 "Bundan əlavə şirkətimizin Bakıda və Gəncə şəhərində filialları mövcuddur."
-msgstr ""
-"Кроме того, у нашей компании есть филиалы в Баку и Гяндже."
+msgstr "Кроме того, у нашей компании есть филиалы в Баку и Гяндже."
 
 #: .\MContact\templates\blog-detail.html:5
-#: .\MContact\templates\blog-detail.html:9 .\MContact\templates\index.html:324
-#: .\MContact\templates\index.html:344
+#: .\MContact\templates\blog-detail.html:9 .\MContact\templates\index.html:432
+#: .\MContact\templates\index.html:452
 msgid "Mkontakt"
 msgstr "Mkontakt"
 
@@ -88,9 +94,9 @@ msgid "Mkontakt Blog"
 msgstr "Блог Mkontakt"
 
 #: .\MContact\templates\blog-detail.html:26 .\MContact\templates\blog.html:23
-#: .\MContact\templates\index.html:40 .\MContact\templates\index.html:164
-#: .\MContact\templates\index.html:516 .\templates\layout.html:41
-#: .\templates\layout.html:164 .\templates\layout.html:255
+#: .\MContact\templates\index.html:46 .\MContact\templates\index.html:262
+#: .\MContact\templates\index.html:624 .\templates\layout.html:43
+#: .\templates\layout.html:245 .\templates\layout.html:338
 msgid "Bloq"
 msgstr "Блог"
 
@@ -128,47 +134,53 @@ msgstr "Выбрать все"
 msgid "Seçilənləri sil"
 msgstr "Удалить выбранное"
 
-#: .\MContact\templates\cart.html:123
+#: .\MContact\templates\cart.html:130
 msgid "Endirim kodu daxil edin"
 msgstr "Введите код скидки"
 
-#: .\MContact\templates\cart.html:124
+#: .\MContact\templates\cart.html:131
 msgid "Tətbiq et"
 msgstr "Применить"
 
-#: .\MContact\templates\cart.html:129
+#: .\MContact\templates\cart.html:136
 msgid "Ödəniş məlumatları"
 msgstr "Информация об оплате"
 
-#: .\MContact\templates\cart.html:134 .\MContact\templates\products.html:97
+#: .\MContact\templates\cart.html:141 .\MContact\templates\products.html:110
 msgid "Qiymət"
 msgstr "Цена"
 
-#: .\MContact\templates\cart.html:141
+#: .\MContact\templates\cart.html:148
 msgid "Məhsul endirimi"
 msgstr "Скидка на товар"
 
-#: .\MContact\templates\cart.html:149
+#: .\MContact\templates\cart.html:156
 msgid "Kateqoriya endirimi"
 msgstr "Скидка по категории"
 
-#: .\MContact\templates\cart.html:157
+#: .\MContact\templates\cart.html:164
 msgid "Endirim kodu"
 msgstr "Код скидки"
 
-#: .\MContact\templates\cart.html:164
+#: .\MContact\templates\cart.html:171
 msgid "Çatdırılma"
 msgstr "Доставка"
 
-#: .\MContact\templates\cart.html:167
+#: .\MContact\templates\cart.html:175
 msgid "Ödənişsiz"
 msgstr "Бесплатно"
 
-#: .\MContact\templates\cart.html:175
+#: .\MContact\templates\cart.html:182
+msgid ""
+"Şəhər daxili çatdırılma: sifariş 200₼-dək olduqda 10₼, 200₼-dan çox olduqda "
+"pulsuzdur."
+msgstr "Доставка по городу: 10 ₼ для заказов до 200 ₼; бесплатно для заказов свыше 200 ₼."
+
+#: .\MContact\templates\cart.html:189
 msgid "Ümumi"
 msgstr "Итого"
 
-#: .\MContact\templates\cart.html:182
+#: .\MContact\templates\cart.html:196
 msgid "Davam edin"
 msgstr "Перейти к оформлению"
 
@@ -206,11 +218,11 @@ msgid "Mkontakt - Əlaqə"
 msgstr "Mkontakt – Контакты"
 
 #: .\MContact\templates\contact.html:22 .\MContact\templates\contact.html:28
-#: .\MContact\templates\index.html:43 .\MContact\templates\index.html:170
-#: .\MContact\templates\index.html:402 .\MContact\templates\index.html:519
-#: .\MContact\templates\index.html:538 .\templates\layout.html:44
-#: .\templates\layout.html:170 .\templates\layout.html:258
-#: .\templates\layout.html:277
+#: .\MContact\templates\index.html:49 .\MContact\templates\index.html:268
+#: .\MContact\templates\index.html:510 .\MContact\templates\index.html:627
+#: .\MContact\templates\index.html:646 .\templates\layout.html:46
+#: .\templates\layout.html:251 .\templates\layout.html:341
+#: .\templates\layout.html:360
 msgid "Əlaqə"
 msgstr "Контакты"
 
@@ -224,7 +236,8 @@ msgstr "Ваш комфорт и удовлетворение важны для 
 
 #: .\MContact\templates\contact.html:37
 msgid "Hər hansı sualınız, sifarişiniz və ya əlavə məlumat üçün bizimlə"
-msgstr "Для любых вопросов, заказов или дополнительной информации связывайтесь с нами"
+msgstr ""
+"Для любых вопросов, заказов или дополнительной информации связывайтесь с нами"
 
 #: .\MContact\templates\contact.html:39
 msgid "istənilən vaxt əlaqə saxlaya bilərsiniz."
@@ -285,9 +298,9 @@ msgstr "Отправить"
 msgid "Mkontakt - Profil məlumatlarının yenilənməsi"
 msgstr "Mkontakt – Обновление профиля"
 
-#: .\MContact\templates\edit-profile.html:18 .\MContact\templates\index.html:74
-#: .\MContact\templates\index.html:118 .\templates\layout.html:74
-#: .\templates\layout.html:118
+#: .\MContact\templates\edit-profile.html:18 .\MContact\templates\index.html:80
+#: .\MContact\templates\index.html:170 .\templates\layout.html:76
+#: .\templates\layout.html:159
 msgid "Şəxsi məlumatlar"
 msgstr "Личные данные"
 
@@ -299,6 +312,12 @@ msgstr "Смена пароля"
 #: .\MContact\templates\register.html:31
 msgid "Ad soyad"
 msgstr "ФИО"
+
+#: .\MContact\templates\edit-profile.html:47
+#, fuzzy
+#| msgid "E-poçt ünvanı"
+msgid "E‑poçt ünvanı"
+msgstr "Email адрес"
 
 #: .\MContact\templates\edit-profile.html:53 .\MContact\templates\order.html:35
 #: .\MContact\templates\register.html:37
@@ -362,88 +381,86 @@ msgstr "качество продуктов в мебельных аксессу
 msgid "mükəmməl seçimlər yaratmaq bizim işimizdir."
 msgstr "наша миссия — создавать идеальные решения."
 
-#: .\MContact\templates\index.html:15
+#: .\MContact\templates\index.html:17
 msgid "Mkontakt - Əsas Səhifə"
 msgstr "Mkontakt – Главная"
 
-#: .\MContact\templates\index.html:26
+#: .\MContact\templates\index.html:32
 msgid "Mkontakt Logo"
 msgstr "Логотип Mkontakt"
 
-#: .\MContact\templates\index.html:37 .\MContact\templates\index.html:158
-#: .\MContact\templates\index.html:513
+#: .\MContact\templates\index.html:43 .\MContact\templates\index.html:256
+#: .\MContact\templates\index.html:621
 #: .\MContact\templates\products-detail.html:26
-#: .\MContact\templates\products.html:22 .\templates\layout.html:38 .\templates\layout.html:158 .\templates\layout.html:252
+#: .\MContact\templates\products.html:22 .\MContact\templates\products.html:28
+#: .\templates\layout.html:40 .\templates\layout.html:239
+#: .\templates\layout.html:335
 msgid "Məhsullar"
 msgstr "Товары"
 
-#: .\MContact\templates\index.html:77 .\MContact\templates\index.html:121
-#: .\templates\layout.html:77 .\templates\layout.html:121
+#: .\MContact\templates\index.html:83 .\MContact\templates\index.html:173
+#: .\templates\layout.html:79 .\templates\layout.html:162
 msgid "Parolun yenilənməsi"
 msgstr "Сброс пароля"
 
-#: .\MContact\templates\index.html:80 .\MContact\templates\index.html:124
-#: .\MContact\templates\wishlist.html:10 .\templates\layout.html:80 .\templates\layout.html:124
+#: .\MContact\templates\index.html:86 .\MContact\templates\index.html:176
+#: .\MContact\templates\wishlist.html:10 .\templates\layout.html:82
+#: .\templates\layout.html:165
 msgid "İstək siyahısı"
 msgstr "Список желаний"
 
-#: .\MContact\templates\index.html:83 .\MContact\templates\index.html:127
-#: .templates\layout.html:83 .\templates\layout.html:127
+#: .\MContact\templates\index.html:89 .\MContact\templates\index.html:179
+#: .\templates\layout.html:85 .\templates\layout.html:168
 msgid "Çıxış"
 msgstr "Выйти"
 
-#: .\MContact\templates\index.html:212
-msgid "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq"
-msgstr "Blум AVENTOS HF – Двойной подъем для комфорта"
-
-#: .\MContact\templates\index.html:213
-msgid ""
-"AVENTOS HF qaldırmalı mexanizmi sayəsində ikiqat qapılar yuxarıya doğru "
-"rahat və səssiz açılır. Mətbəx və yaşayış sahələrində geniş istifadə olunan "
-"bu sistem, optimal hərəkət erqonomikası və istənilən mövqedə sabit dayanma "
-"imkanı ilə fərqlənir."
-msgstr ""
-"Благодаря механизму подъема AVENTOS HF двойные двери поднимаются вверх плавно "
-"и бесшумно. Широко используемая в кухнях и жилых помещениях, эта система "
-"обеспечивает оптимальную эргономику движения и фиксируется в любом положении."
-
-#: .\MContact\templates\index.html:214
+#: .\MContact\templates\index.html:314 .\MContact\templates\index.html:320
 msgid "Ətraflı"
 msgstr "Подробнее"
 
-#: .\MContact\templates\index.html:249
+#: .\MContact\templates\index.html:317
+msgid "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq"
+msgstr "Blум AVENTOS HF – Двойной подъем для комфорта"
+
+#: .\MContact\templates\index.html:318
+msgid "AVENTOS HF qaldırmalı mexanizmi…"
+msgstr ""
+
+#: .\MContact\templates\index.html:357
 msgid "Məhsula bax"
 msgstr "Просмотр товара"
 
-#: .\MContact\templates\index.html:265
+#: .\MContact\templates\index.html:373
 msgid "Yeni əlavə olunan məhsullar"
 msgstr "Новые поступления"
 
-#: .\MContact\templates\index.html:266
+#: .\MContact\templates\index.html:374
 msgid ""
 "Yenilikləri ilk siz kəşf edin! Mebeliniz üçün ən son texnologiyalara sahib, "
 "funksional və estetik məhsullarımızla tanış olun. Keyfiyyət və rahatlıq bir "
 "arada!"
 msgstr ""
-"Будьте первыми, кто откроет новинки! Ознакомьтесь с нашими функциональными "
-"и эстетичными продуктами, оснащенными новейшими технологиями. Качество и "
+"Будьте первыми, кто откроет новинки! Ознакомьтесь с нашими функциональными и "
+"эстетичными продуктами, оснащенными новейшими технологиями. Качество и "
 "комфорт в одном!"
 
-#: .\MContact\templates\index.html:290 .\MContact\templates\index.html:380
-#: .\MContact\templates\products-detail.html:129 .\MContact\templates\products.html:151
+#: .\MContact\templates\index.html:398 .\MContact\templates\index.html:488
+#: .\MContact\templates\products-detail.html:117
+#: .\MContact\templates\products-detail.html:155
+#: .\MContact\templates\products.html:186
 msgid "Stokda yoxdur"
 msgstr "Нет в наличии"
 
-#: .\MContact\templates\index.html:301 .\MContact\templates\index.html:391
-#: .\MContact\templates\products-detail.html:140
+#: .\MContact\templates\index.html:409 .\MContact\templates\index.html:499
+#: .\MContact\templates\products-detail.html:167
 msgid "Hamısı"
 msgstr "Все"
 
-#: .\MContact\templates\index.html:307
+#: .\MContact\templates\index.html:415
 msgid "Ən çox axtarılan kateqoriyalar"
 msgstr "Самые популярные категории"
 
-#: .\MContact\templates\index.html:308
+#: .\MContact\templates\index.html:416
 msgid ""
 "Seçiminizi asanlaşdırmaq üçün ən populyar məhsul kateqoriyalarını bir araya "
 "gətirdik. Keyfiyyətli və funksional həlləri kəşf edin!"
@@ -451,43 +468,47 @@ msgstr ""
 "Мы собрали самые популярные категории товаров, чтобы упростить ваш выбор. "
 "Откройте для себя качественные и функциональные решения!"
 
-#: .\MContact\templates\index.html:356
-#: .\MContact\templates\products-detail.html:99
+#: .\MContact\templates\index.html:464
+#: .\MContact\templates\products-detail.html:128
 msgid "Digər məhsullar"
 msgstr "Другие товары"
 
-#: .\MContact\templates\index.html:399
+#: .\MContact\templates\index.html:507
 msgid "Bizimlə Əlaqə Saxlayın – Sizin Üçün Buradayıq!"
 msgstr "Свяжитесь с нами – мы здесь для вас!"
 
-#: .\MContact\templates\index.html:400
+#: .\MContact\templates\index.html:508
+#, fuzzy
+#| msgid ""
+#| "Suallarınız var? Sizin üçün ən uyğun həllləri təklif etməyə hazırıq! "
+#| "Əlaqə bölməsinə keçin və bizimlə rahat şəkildə əlaqə qurun."
 msgid ""
-"Suallarınız var? Sizin üçün ən uyğun həllləri təklif etməyə hazırıq! Əlaqə "
+"Suallarınız var? Sizin üçün ən uyğun həlləri təklif etməyə hazırıq! Əlaqə "
 "bölməsinə keçin və bizimlə rahat şəkildə əlaqə qurun."
 msgstr ""
-"Есть вопросы? Мы готовы предложить лучшие решения для вас! Перейдите в раздел "
-"Контакты и свяжитесь с нами легко."
+"Есть вопросы? Мы готовы предложить лучшие решения для вас! Перейдите в "
+"раздел Контакты и свяжитесь с нами легко."
 
-#: .\MContact\templates\index.html:410
+#: .\MContact\templates\index.html:518
 msgid "Üstünlüklərimiz – Bizimlə Fərqi Hiss Edin!"
 msgstr "Наши преимущества – ощутите разницу!"
 
-#: .\MContact\templates\index.html:420
+#: .\MContact\templates\index.html:528
 msgid "Yüksək Keyfiyyət"
 msgstr "Высокое качество"
 
-#: .\MContact\templates\index.html:421
+#: .\MContact\templates\index.html:529
 msgid ""
 "Məhsullarımız uzunömürlü materiallardan hazırlanır və dayanıqlılığı ilə "
 "seçilir."
 msgstr ""
 "Наши продукты изготовлены из долговечных материалов и отличаются надежностью."
 
-#: .\MContact\templates\index.html:429
+#: .\MContact\templates\index.html:537
 msgid "İnnovativ Həllər"
 msgstr "Инновационные решения"
 
-#: .\MContact\templates\index.html:430
+#: .\MContact\templates\index.html:538
 msgid ""
 "Son texnologiyalarla hazırlanmış funksional və rahat mexanizmlər təklif "
 "edirik."
@@ -495,17 +516,16 @@ msgstr ""
 "Мы предлагаем функциональные и удобные механизмы, созданные с использованием "
 "последних технологий."
 
-#: .\MContact\templates\index.html:438
+#: .\MContact\templates\index.html:546
 msgid "Müştəri Məmnuniyyəti"
 msgstr "Удовлетворенность клиентов"
 
-#: .\MContact\templates\index.html:439
+#: .\MContact\templates\index.html:547
 msgid ""
 "Sizə ən yaxşı xidməti təqdim etmək üçün hər zaman dəstək olmağa hazırıq."
-msgstr ""
-"Мы всегда готовы поддержать вас, чтобы предоставить лучший сервис."
+msgstr "Мы всегда готовы поддержать вас, чтобы предоставить лучший сервис."
 
-#: .\MContact\templates\index.html:484 .\templates\layout.html:223
+#: .\MContact\templates\index.html:592 .\templates\layout.html:305
 msgid ""
 "M-Kontakt şirkəti Azərbaycan məkanında 2003-cü ildən bu günümüzə qədər hər "
 "növ mebellərin istehsalı, mebel aksesuarlarının satışı ilə məşğuldur."
@@ -513,11 +533,12 @@ msgstr ""
 "Компания M-Kontakt занимается производством всех видов мебели и продажей "
 "мебельных аксессуаров в Азербайджане с 2003 года."
 
-#: .\MContact\templates\index.html:500 .\templates\layout.html:239
+#: .\MContact\templates\index.html:608 .\templates\layout.html:322
 msgid "2025 Mkontakt"
 msgstr "2025 Mkontakt"
 
-#: .\MContact\templates\index.html:525 .\MContact\templates\products.html:52 .\templates\layout.html:264
+#: .\MContact\templates\index.html:633 .\MContact\templates\products.html:61
+#: .\templates\layout.html:347
 msgid "Brendlər"
 msgstr "Бренды"
 
@@ -534,7 +555,8 @@ msgstr "Войти"
 msgid "Hesabınıza daxil olun"
 msgstr "Войдите в свой аккаунт"
 
-#: .\MContact\templates\login.html:34 .\MContact\templates\new-password.html:32 .\MContact\templates\register.html:46
+#: .\MContact\templates\login.html:34 .\MContact\templates\new-password.html:32
+#: .\MContact\templates\register.html:46
 msgid "Parol"
 msgstr "Пароль"
 
@@ -555,15 +577,28 @@ msgid "Qeydiyyatdan keçin"
 msgstr "Зарегистрироваться"
 
 #: .\MContact\templates\login.html:60
+#, fuzzy
+#| msgid ""
+#| "            Biz, mebel aksesuarları sahəsində ən son dizaynlar və "
+#| "yüksək<br />            keyfiyyətlə məhsullar təqdim edirik. Eviniz və "
+#| "ofisiniz üçün<br />            mükəmməl seçimlər yaratmaq bizim işimizdir."
 msgid ""
-"            Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br />"
-"            keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br />"
-"            mükəmməl seçimlər yaratmaq bizim işimizdir."
+"\n"
+"            Biz, mebel aksesuarları sahəsində ən son dizaynlar və yüksək<br /"
+">\n"
+"            keyfiyyətlə məhsullar təqdim edirik. Eviniz və ofisiniz üçün<br /"
+">\n"
+"            mükəmməl seçimlər yaratmaq bizim işimizdir.\n"
+"            "
 msgstr ""
-"Мы предлагаем новейшие дизайны и высококачественные продукты в области мебельных "
-"аксессуаров. Наша миссия – создавать идеальные решения для вашего дома и офиса."
+"Мы предлагаем новейшие дизайны и высококачественные продукты в области "
+"мебельных аксессуаров. Наша миссия – создавать идеальные решения для вашего "
+"дома и офиса."
 
-#: .\MContact\templates\new-password.html:5 .\MContact\templates\new-password.html:8 .\MContact\templates\new-password.html:9 .\MContact\templates\new-password.html:10
+#: .\MContact\templates\new-password.html:5
+#: .\MContact\templates\new-password.html:8
+#: .\MContact\templates\new-password.html:9
+#: .\MContact\templates\new-password.html:10
 msgid "Mkontakt - Yeni şifrənin təyin edilməsi"
 msgstr "Mkontakt – Установка нового пароля"
 
@@ -575,11 +610,13 @@ msgstr "Создайте новый пароль"
 msgid "Təhlükəsizlik üçün əvvəlki parollarınızdan fərqli olduğuna əmin olun"
 msgstr "Убедитесь, что он отличается от предыдущих паролей для безопасности"
 
-#: .\MContact\templates\new-password.html:38 .\MContact\templates\register.html:52
+#: .\MContact\templates\new-password.html:38
+#: .\MContact\templates\register.html:52
 msgid "Təkrar parol"
 msgstr "Повтор пароля"
 
-#: .\MContact\templates\order.html:5 .\MContact\templates\order.html:8 .\MContact\templates\order.html:9 .\MContact\templates\order.html:10
+#: .\MContact\templates\order.html:5 .\MContact\templates\order.html:8
+#: .\MContact\templates\order.html:9 .\MContact\templates\order.html:10
 msgid "Mkontakt - Sifariş"
 msgstr "Mkontakt – Заказ"
 
@@ -607,7 +644,8 @@ msgstr "Дата доставки"
 msgid "Çatdırılma saatı"
 msgstr "Время доставки"
 
-#: .\MContact\templates\otp.html:5 .\MContact\templates\otp.html:8 .\MContact\templates\otp.html:9 .\MContact\templates\otp.html:10
+#: .\MContact\templates\otp.html:5 .\MContact\templates\otp.html:8
+#: .\MContact\templates\otp.html:9 .\MContact\templates\otp.html:10
 msgid "Mkontakt - OTP kodu"
 msgstr "Mkontakt – Код OTP"
 
@@ -627,55 +665,65 @@ msgstr "отправили код сброса на ваш адрес – вве
 msgid "Mkontakt - Məhsul detalları"
 msgstr "Mkontakt – Данные о товаре"
 
-#: .\MContact\templates\products-detail.html:89
+#: .\MContact\templates\products-detail.html:64
+#, fuzzy
+#| msgid "Məhsul yoxdur"
+msgid "Məhsul Kodu"
+msgstr "Корзина пуста"
+
+#: .\MContact\templates\products-detail.html:113
 msgid "Səbətə əlavə et"
 msgstr "Добавить в корзину"
 
-#: .\MContact\templates\products.html:5 .\MContact\templates\products.html:8 .\MContact\templates\products.html:9 .\MContact\templates\products.html:10
+#: .\MContact\templates\products.html:5 .\MContact\templates\products.html:8
+#: .\MContact\templates\products.html:9 .\MContact\templates\products.html:10
 msgid "Mkontakt - Məhsullar"
 msgstr "Mkontakt – Товары"
 
-#: .\MContact\templates\products.html:37
+#: .\MContact\templates\products.html:38
 msgid "Tənzimləmə"
 msgstr "Сортировка"
 
-#: .\MContact\templates\products.html:40
+#: .\MContact\templates\products.html:43
 msgid "Əvvəlcə ucuz"
 msgstr "Сначала дешевые"
 
-#: .\MContact\templates\products.html:41
+#: .\MContact\templates\products.html:46
 msgid "Əvvəlcə baha"
 msgstr "Сначала дорогие"
 
-#: .\MContact\templates\products.html:48
+#: .\MContact\templates\products.html:55
 msgid "Filter"
 msgstr "Фильтр"
 
-#: .\MContact\templates\products.html:73
+#: .\MContact\templates\products.html:84
 msgid "Kateqoriyalar"
 msgstr "Категории"
 
-#: .\MContact\templates\products.html:86
+#: .\MContact\templates\products.html:98
 msgid "endirim"
 msgstr "скидка"
 
-#: .\MContact\templates\products.html:115
+#: .\MContact\templates\products.html:155
 msgid "Təsdiq et"
 msgstr "Подтвердить"
 
-#: .\MContact\templates\products.html:116
+#: .\MContact\templates\products.html:156
 msgid "Sıfırla"
 msgstr "Сбросить"
 
-#: .\MContact\templates\products.html:174
+#: .\MContact\templates\products.html:210
 msgid "Məhsul tapılmadı"
 msgstr "Товары не найдены"
 
-#: .\MContact\templates\products.html:175
+#: .\MContact\templates\products.html:212
 msgid "Seçdiyiniz filtirə əsasən məhsul tapılmadı"
 msgstr "По выбранному фильтру товары не найдены"
 
-#: .\MContact\templates\register-otp.html:5 .\MContact\templates\register-otp.html:8 .\MContact\templates\register-otp.html:9 .\MContact\templates\register-otp.html:10
+#: .\MContact\templates\register-otp.html:5
+#: .\MContact\templates\register-otp.html:8
+#: .\MContact\templates\register-otp.html:9
+#: .\MContact\templates\register-otp.html:10
 msgid "Mkontakt – Qeydiyyat OTP"
 msgstr "Mkontakt – OTP для регистрации"
 
@@ -695,7 +743,8 @@ msgstr "адрес 4-значный код. Пожалуйста, введите
 msgid "Qeydiyyatı Tamamla"
 msgstr "Завершить регистрацию"
 
-#: .\MContact\templates\register.html:5 .\MContact\templates\register.html:8 .\MContact\templates\register.html:9 .\MContact\templates\register.html:10
+#: .\MContact\templates\register.html:5 .\MContact\templates\register.html:8
+#: .\MContact\templates\register.html:9 .\MContact\templates\register.html:10
 msgid "Mkontakt - Qeydiyyat"
 msgstr "Mkontakt – Регистрация"
 
@@ -716,7 +765,9 @@ msgid "Doğum tarixini daxil edin"
 msgstr "Введите дату рождения"
 
 #: .\MContact\templates\register.html:62
-msgid "İstifadə qaydularını"
+#, fuzzy
+#| msgid "İstifadə qaydularını"
+msgid "İstifadə qaydalarını"
 msgstr "Условия использования"
 
 #: .\MContact\templates\register.html:62
@@ -731,7 +782,8 @@ msgstr "Уже есть аккаунт?"
 msgid "Giriş edin"
 msgstr "Войти"
 
-#: .\MContact\templates\rules.html:5 .\MContact\templates\rules.html:8 .\MContact\templates\rules.html:9 .\MContact\templates\rules.html:10
+#: .\MContact\templates\rules.html:5 .\MContact\templates\rules.html:8
+#: .\MContact\templates\rules.html:9 .\MContact\templates\rules.html:10
 msgid "Mkontakt - İstifadə qaydaları"
 msgstr "Mkontakt – Условия использования"
 
@@ -747,20 +799,23 @@ msgstr "1. Регистрация и вход"
 msgid ""
 "Saytımıza qeydiyyatdan keçərkən doğru və tam məlumatlar təqdim etməlisiniz."
 msgstr ""
-"При регистрации на нашем сайте вы должны предоставлять точную и полную информацию."
+"При регистрации на нашем сайте вы должны предоставлять точную и полную "
+"информацию."
 
 #: .\MContact\templates\rules.html:36
 msgid ""
 "Hesabınızı yalnız şəxsi məqsədləriniz üçün istifadə edin və üçüncü şəxslərə "
 "verməyin."
 msgstr ""
-"Используйте свой аккаунт только в личных целях и не передавайте его третьим лицам."
+"Используйте свой аккаунт только в личных целях и не передавайте его третьим "
+"лицам."
 
 #: .\MContact\templates\rules.html:37
 msgid ""
 "Hesabınızın təhlükəsizliyinə cavabdehsiniz və şifrənizin məxfiliyini qoruyun."
 msgstr ""
-"Вы несете ответственность за безопасность своего аккаунта и должны хранить пароль в тайне."
+"Вы несете ответственность за безопасность своего аккаунта и должны хранить "
+"пароль в тайне."
 
 #: .\MContact\templates\rules.html:41
 msgid "2. Məhsul Seçimi və Sifarişi"
@@ -772,7 +827,8 @@ msgstr "При выборе товара внимательно читайте �
 
 #: .\MContact\templates\rules.html:45
 msgid "Məhsul sifariş edərkən səhv məlumat daxil etməmək üçün diqqətli olun."
-msgstr "Будьте внимательны, чтобы не вводить неверные данные при оформлении заказа."
+msgstr ""
+"Будьте внимательны, чтобы не вводить неверные данные при оформлении заказа."
 
 #: .\MContact\templates\rules.html:46
 msgid "Saytımızda yalnız mövcud olan məhsullar sifariş verilə bilər."
@@ -786,7 +842,8 @@ msgstr "3. Оплата и доставка"
 msgid ""
 "Ödəniş prosesində göstərdiyiniz məlumatların doğru və aktual olması vacibdir."
 msgstr ""
-"Важно, чтобы информация, которую вы предоставляете при оплате, была точной и актуальной."
+"Важно, чтобы информация, которую вы предоставляете при оплате, была точной и "
+"актуальной."
 
 #: .\MContact\templates\rules.html:54
 msgid "Sifarişinizin çatdırılma ünvanını düzgün və tam şəkildə təqdim edin."
@@ -808,14 +865,16 @@ msgid ""
 "Saytımızda digər istifadəçilərin hüquqlarına zərər verən və ya qanunlara "
 "uyğun olmayan fəaliyyətlər qadağandır."
 msgstr ""
-"На нашем сайте запрещены действия, нарушающие права других пользователей или противоречащие законам."
+"На нашем сайте запрещены действия, нарушающие права других пользователей или "
+"противоречащие законам."
 
 #: .\MContact\templates\rules.html:63
 msgid ""
 "Sayt üzərindən saxta və ya yanıltıcı məlumat vermək, müştəri məlumatlarını "
 "pozmaq və ya spam göndərmək qətiyyən yolverilməzdir."
 msgstr ""
-"Категорически запрещено предоставлять ложную или вводящую в заблуждение информацию, нарушать данные клиентов или рассылать спам."
+"Категорически запрещено предоставлять ложную или вводящую в заблуждение "
+"информацию, нарушать данные клиентов или рассылать спам."
 
 #: .\MContact\templates\rules.html:67
 msgid "5. İstifadəçi Hüquqları və Məsuliyyətlər"
@@ -825,15 +884,15 @@ msgstr "5. Права и обязанности пользователя"
 msgid ""
 "Saytı istifadə edərkən bütün qanunlara və nizamnamələrə riayət etmək "
 "vacibdir."
-msgstr ""
-"При использовании сайта необходимо соблюдать все законы и правила."
+msgstr "При использовании сайта необходимо соблюдать все законы и правила."
 
 #: .\MContact\templates\rules.html:71
 msgid ""
 "Məhsul və xidmətlərimizə dair hər hansı bir şikayət və ya problem yaranarsa, "
 "müştəri xidmətimizlə əlaqə saxlamaq lazımdır."
 msgstr ""
-"Если у вас возникнут жалобы или проблемы с нашими товарами и услугами, свяжитесь со службой поддержки."
+"Если у вас возникнут жалобы или проблемы с нашими товарами и услугами, "
+"свяжитесь со службой поддержки."
 
 #: .\MContact\templates\rules.html:75
 msgid "6. İstifadəçi Məlumatlarının Qorunması"
@@ -844,14 +903,16 @@ msgid ""
 "Şəxsi məlumatlarınızın təhlükəsizliyi bizim üçün önəmlidir. Məlumatlarınız "
 "yalnız xidmətin təmin edilməsi məqsədilə istifadə olunacaq."
 msgstr ""
-"Безопасность ваших персональных данных важна для нас. Ваша информация будет использоваться только для предоставления услуги."
+"Безопасность ваших персональных данных важна для нас. Ваша информация будет "
+"использоваться только для предоставления услуги."
 
 #: .\MContact\templates\rules.html:79
 msgid ""
 "İstifadəçi məlumatlarının üçüncü tərəflərlə paylaşılması yalnız qanuni "
 "tələblərə uyğun olaraq həyata keçiriləcək."
 msgstr ""
-"Данные пользователей будут передаваться третьим лицам только в соответствии с юридическими требованиями."
+"Данные пользователей будут передаваться третьим лицам только в соответствии "
+"с юридическими требованиями."
 
 #: .\MContact\templates\rules.html:83
 msgid "7. Saytın Dəyişdirilməsi və Bağlanması"
@@ -862,14 +923,16 @@ msgid ""
 "Saytımızın funksiyalarında dəyişiklik etmək və ya xidmətləri müvəqqəti "
 "olaraq dayandırmaq haqqına sahibik."
 msgstr ""
-"Мы оставляем за собой право изменять функционал сайта или временно приостанавливать услуги."
+"Мы оставляем за собой право изменять функционал сайта или временно "
+"приостанавливать услуги."
 
 #: .\MContact\templates\rules.html:87
 msgid ""
 "İstifadəçilər bu dəyişikliklərə dərhal riayət etməli və uyğun olaraq "
 "davranmalıdırlar."
 msgstr ""
-"Пользователи должны немедленно соблюдать эти изменения и действовать соответственно."
+"Пользователи должны немедленно соблюдать эти изменения и действовать "
+"соответственно."
 
 #: .\MContact\templates\wishlist.html:5
 msgid "Mkontakt – İstək siyahısı"
@@ -883,6 +946,24 @@ msgstr "Ваш список желаний пуст"
 msgid "İstək siyahısına məhsul əlavə et."
 msgstr "Добавьте товар в список желаний."
 
-#: .\templates\layout.html:243
+#: .\templates\layout.html:326
 msgid "Səhifələr"
 msgstr "Страницы"
+
+#~ msgid ""
+#~ "M-Kontakt şirkəti Azərbaycan məkanında 2003 cü ildən bu günümüzə qədər "
+#~ "hər növ mebellərin istehsalı,mebel aksesuarlarının satışı ilə məşğuldur."
+#~ msgstr ""
+#~ "Компания M-Kontakt занимается производством всех видов мебели и продажей "
+#~ "мебельных аксессуаров в Азербайджане с 2003 года."
+
+#~ msgid ""
+#~ "AVENTOS HF qaldırmalı mexanizmi sayəsində ikiqat qapılar yuxarıya doğru "
+#~ "rahat və səssiz açılır. Mətbəx və yaşayış sahələrində geniş istifadə "
+#~ "olunan bu sistem, optimal hərəkət erqonomikası və istənilən mövqedə sabit "
+#~ "dayanma imkanı ilə fərqlənir."
+#~ msgstr ""
+#~ "Благодаря механизму подъема AVENTOS HF двойные двери поднимаются вверх "
+#~ "плавно и бесшумно. Широко используемая в кухнях и жилых помещениях, эта "
+#~ "система обеспечивает оптимальную эргономику движения и фиксируется в "
+#~ "любом положении."
