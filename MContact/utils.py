@@ -49,7 +49,7 @@ def get_or_create_cart(request):
 
 
 def send_mail_async(subject, message, recipient_list, **kwargs):
-    from_email = kwargs.pop("from_email", settings.EMAIL_HOST_USER)
+    from_email = kwargs.pop("from_email", settings.DEFAULT_FROM_EMAIL)
 
     def _task():
         try:
