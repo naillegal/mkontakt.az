@@ -75,6 +75,7 @@
     margin: auto;
     display: flex;
     gap: 20px;
+    align-items: flex-start;
     @media (max-width: 991px) {
       display: block;
     }
@@ -209,9 +210,10 @@
     }
     .if-products-exists {
       width: 75%;
-      margin: auto;
+      margin: 0 0 0 auto;
       @media (max-width: 991px) {
         width: 100%;
+        margin: 0px;
       }
       .products-list {
         @media (max-width: 991px) {
@@ -362,7 +364,11 @@
     .if-products-doesnt-exists {
       display: none;
       width: 75%;
-      margin: auto;
+      margin: 0 0 0 auto;
+      @media (max-width: 991px) {
+        width: 100%;
+        margin: 0;
+      }
       .img-container {
         background-color: white;
         padding: 30px;
