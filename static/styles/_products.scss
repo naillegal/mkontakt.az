@@ -166,7 +166,8 @@
 
         &.active {
           .filter-dropdown {
-            max-height: 300px;
+            max-height: 190px;
+            overflow-y: auto;
           }
 
           .filter-by-icon {

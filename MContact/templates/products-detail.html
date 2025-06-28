@@ -67,7 +67,7 @@
             <span class="subtitle">
               {% if product.categories.all %}
                 {% for cat in product.categories.all %}
-                  <a href="{% url 'MContact:products' %}?category={{ cat.id }}" class="category-filter-link">{{ cat.name }}</a>{% if not forloop.last %}, {% endif %}
+                  <a href="{% url 'MContact:products' %}?category={{ cat.id }}" class="category-filter-link">{{ cat.name }}</a>{% if not forloop.last %}{% endif %}
                 {% endfor %}
               {% endif %}
             </span>

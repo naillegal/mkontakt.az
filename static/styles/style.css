@@ -2297,7 +2297,8 @@ footer .footer-copyright {
   border-color: rgb(20, 48, 130);
 }
 #products-container .filter-and-products .filter .filter-by.active .filter-dropdown {
-  max-height: 300px;
+  max-height: 190px;
+  overflow-y: auto;
 }
 #products-container .filter-and-products .filter .filter-by.active .filter-by-icon {
   transform: rotate(180deg);
@@ -2630,7 +2631,7 @@ footer .footer-copyright {
   display: block;
   font-size: 14px;
   color: rgb(20, 48, 130);
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   text-decoration: none;
 }
 #selected-product-info .selected-product-info-container .selected-product-info-content p {
