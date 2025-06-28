@@ -2626,11 +2626,12 @@ footer .footer-copyright {
   color: #000;
   margin-bottom: 8px;
 }
-#selected-product-info .selected-product-info-container .selected-product-info-content .subtitle {
+#selected-product-info .selected-product-info-container .selected-product-info-content .subtitle a {
   display: block;
   font-size: 14px;
   color: rgb(20, 48, 130);
   margin-bottom: 16px;
+  text-decoration: none;
 }
 #selected-product-info .selected-product-info-container .selected-product-info-content p {
   font-size: 12px;

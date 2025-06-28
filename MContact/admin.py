@@ -25,7 +25,6 @@ class CustomTranslationAdmin(TranslationAdmin):
         }
 
 
-
 class ProductAttributeValueInline(admin.TabularInline):
     model = ProductAttributeValue
     extra = 1
@@ -99,6 +98,7 @@ class ProductAdmin(CustomTranslationAdmin):
     search_fields = ('title', 'title_en', 'title_ru', 'brand__name')
     list_filter = ('brand', 'categories', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
+    filter_horizontal = ('categories', 'attributes',)
     inlines = [ProductImageInline, ProductVariantInline]
 
     def get_categories(self, obj):
@@ -305,5 +305,3 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 class HomePageBannerAdmin(CustomTranslationAdmin):
     list_display = ('title', 'title_en', 'title_ru', 'created_at')
     readonly_fields = ('created_at',)
-
-

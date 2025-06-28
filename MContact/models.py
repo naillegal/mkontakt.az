@@ -144,6 +144,13 @@ class Product(models.Model):
         ProductType, blank=True, related_name='products', verbose_name="Məhsulun növləri"
     )
 
+    attributes = models.ManyToManyField(
+        ProductAttribute,
+        blank=True,
+        related_name="products",
+        verbose_name="Xüsusiyyətlər"
+    )
+
     priority = models.PositiveIntegerField(
         blank=True, null=True,
         verbose_name="Sıra nömrəsi"
