@@ -120,6 +120,43 @@ class Category(models.Model):
         return self.name
 
 
+class SubCategory(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='subcategories',
+        verbose_name="Alt kateqoriya"
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name="Alt kateqoriya adı"
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        verbose_name="Slug"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yaradılma tarixi"
+    )
+
+    class Meta:
+        verbose_name = "Alt kateqoriya"
+        verbose_name_plural = "Alt kateqoriyalar"
+        ordering = ['name']
+        unique_together = (('category', 'name'),)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
 class ProductType(models.Model):
     name = models.CharField(max_length=100, verbose_name="Məhsul növü")
 
@@ -136,8 +173,11 @@ class Product(models.Model):
         Brand, on_delete=models.SET_NULL, null=True,
         related_name='products', verbose_name="Brend"
     )
-    categories = models.ManyToManyField(
-        Category, blank=True, related_name='products', verbose_name="Kateqoriyalar"
+    subcategories = models.ManyToManyField(
+        SubCategory,
+        blank=True,
+        related_name='products',
+        verbose_name="Alt kateqoriyalar"
     )
 
     product_types = models.ManyToManyField(
@@ -511,12 +551,13 @@ class Cart(models.Model):
         cat_products: dict[Category, set[Product]] = {}
         for item in self.items.select_related("product").all():
             p = item.product
-            for cat in p.categories.all():
+            for sub in p.subcategories.all():
+                cat = sub.category
                 if cat.discount:
                     cat_products.setdefault(cat, set()).add(p)
         for cat, products in cat_products.items():
             frac = Decimal(cat.discount) / Decimal('100')
-            subtotal = sum(p.price for p in products)
+            subtotal = sum(prod.price for prod in products)
             total += subtotal * frac
         return total
 
@@ -668,12 +709,11 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Sifariş #{self.pk}"
-    
+
     @property
     def shipping_fee(self) -> Decimal:
         return Decimal('0.00') if self.total >= Decimal('200.00') else Decimal('10.00')
     shipping_fee.fget.short_description = "Çatdırılma haqqı"
-    
 
 
 class OrderItem(models.Model):

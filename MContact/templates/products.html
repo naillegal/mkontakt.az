@@ -90,16 +90,37 @@
           <div class="filter-dropdown">
             <ul>
               {% for category in categories %}
-                <li>
-                  <label>
-                    <input type="checkbox" name="category" value="{{ category.id }}" />
-                    {{ category.name }}
-                    {% if category.discount %}
-                      ({{ category.discount }}%{% trans 'endirim' %})
-                    {% endif %}
-                  </label>
-                </li>
-              {% endfor %}
+  <li>
+    <label>
+      <input type="checkbox" name="category" value="{{ category.id }}" />
+      <span class="category-name">
+      {{ category.name }}
+      </span>
+      {% if category.discount %}
+        ({{ category.discount }}%{% trans 'endirim' %})
+      {% endif %}
+    </label>
+
+    {% if category.subcategories.all %}
+      <ul class="subcategory-list">
+        {% for sub in category.subcategories.all %}
+  <li>
+    <label>
+      <input
+        type="checkbox"
+        name="subcategory"
+        value="{{ sub.id }}"
+        {% if sub.id in selected_subcategories %}checked{% endif %}
+      />
+      {{ sub.name }}
+    </label>
+  </li>
+{% endfor %}
+      </ul>
+    {% endif %}
+  </li>
+{% endfor %}
+
             </ul>
           </div>
         </div>

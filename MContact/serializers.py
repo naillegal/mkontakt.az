@@ -3,7 +3,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide, Brand, Category, Product,
     ProductType, ProductImage, CustomerReview,
     Blog, User, CartItem, Cart, DiscountCode, Wish, Order, OrderItem, UserDeviceToken,
-    ProductAttribute, ProductVariant, ProductAttributeValue
+    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory
 )
 import html
 from django.utils.html import strip_tags
@@ -43,8 +43,15 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'created_at')
 
 
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubCategory
+        fields = ("id", "name", "slug")
+
+
 class CategorySerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True, required=False)
+    subcategories = SubCategorySerializer(many=True, read_only=True)
 
     class Meta:
         model = Category
@@ -69,7 +76,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
-    category_names = serializers.SerializerMethodField()
+    subcategory_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
 
     has_variants = serializers.BooleanField(
@@ -78,20 +85,18 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = (
-            "id", "brand", "brand_name",
-            "categories", "category_names",
-            "title", "price", "image",
-            "code", "has_variants",
-        )
+        fields = ("id", "brand", "brand_name",
+                  "subcategories", "subcategory_names",
+                  "title", "price", "image",
+                  "code", "has_variants",)
 
     def get_price(self, obj):
         dec = Decimal(obj.price).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP)
         return "{:.2f}".format(dec)
 
-    def get_category_names(self, obj):
-        return list(obj.categories.values_list("name", flat=True))
+    def get_subcategory_names(self, obj):
+        return list(obj.subcategories.values_list("name", flat=True))
 
     def get_image(self, obj):
         qs = obj.images.all()

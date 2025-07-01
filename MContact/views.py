@@ -29,7 +29,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
     CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner,
-    ProductAttribute, ProductVariant, ProductAttributeValue
+    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -141,13 +141,15 @@ def new_password(request):
 @ensure_csrf_cookie
 def products(request):
     all_brands = Brand.objects.all().order_by("name")
-    all_categories = Category.objects.all().order_by("name")
+    all_categories = Category.objects.prefetch_related(
+        'subcategories').all().order_by("name")
     all_attributes = (ProductAttribute.objects
                       .prefetch_related("values")
                       .order_by("name"))
 
     brand_ids = [int(x) for x in request.GET.getlist("brand")]
     category_ids = [int(x) for x in request.GET.getlist("category")]
+    subcategory_ids = [int(x) for x in request.GET.getlist("subcategory")]
     min_price = request.GET.get("min_price")
     max_price = request.GET.get("max_price")
     ordering = request.GET.get("ordering")
@@ -173,8 +175,8 @@ def products(request):
     if brand_ids:
         qs = qs.filter(brand_id__in=brand_ids)
 
-    if category_ids:
-        qs = qs.filter(categories__id__in=category_ids).distinct()
+    if subcategory_ids:
+        qs = qs.filter(subcategories__id__in=subcategory_ids).distinct()
 
     if min_price:
         qs = qs.filter(price__gte=min_price)
@@ -214,7 +216,9 @@ def products(request):
         "attributes": all_attributes,
         "wish_ids": wish_ids,
         "selected_brands":    brand_ids,
-        "selected_categories": category_ids,
+        "categories": all_categories,
+        "selected_categories":  category_ids,
+        "selected_subcategories": subcategory_ids,
         "selected_attr_vals": sum(attr_filters.values(), []),
     })
 
@@ -1903,14 +1907,9 @@ class CategoryProductsAPIView(generics.ListAPIView):
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        category_id = self.kwargs['category_id']
-        get_object_or_404(Category, pk=category_id)
-        return (
-            Product.objects
-                   .filter(categories__id=category_id)
-                   .distinct()
-                   .order_by('-created_at')
-        )
+        subcat_id = self.kwargs['subcategory_id']
+        get_object_or_404(SubCategory, pk=subcat_id)
+        return Product.objects.filter(subcategories__id=subcat_id).distinct()
 
 
 class RegisterDeviceTokenAPIView(APIView):

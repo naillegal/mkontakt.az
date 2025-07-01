@@ -62,9 +62,15 @@
                           </div>
 
                           <div class="cart-product-description">
-                            {% for c in item.product.categories.all %}
-                              {{ c.name }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
+                            {% if item.product.subcategories.exists %}
+                              {% for sub in item.product.subcategories.all %}
+                                {{ sub.name }}{% if not forloop.last %}, {% endif %}
+                              {% endfor %}
+                            {% else %}
+                              {% for c in item.product.categories.all %}
+                                {{ c.name }}{% if not forloop.last %}, {% endif %}
+                              {% endfor %}
+                            {% endif %}
                             <div class="cart-product-attributes">
                               {% if item.variant %}
                                 {% for v in item.variant.attribute_values.all %}

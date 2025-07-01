@@ -65,11 +65,10 @@
               </p>
             {% endif %}
             <span class="subtitle">
-              {% if product.categories.all %}
-                {% for cat in product.categories.all %}
-                  <a href="{% url 'MContact:products' %}?category={{ cat.id }}" class="category-filter-link">{{ cat.name }}</a>{% if not forloop.last %}{% endif %}
-                {% endfor %}
-              {% endif %}
+              {% for sub in product.subcategories.all %}
+                <a href="{% url 'MContact:products' %}?subcategory={{ sub.id }}" class="category-filter-link">{{ sub.name }}</a>{% if not forloop.last %}{% endif %}
+              {% empty %}
+              {% endfor %}
             </span>
             <p>{{ product.description }}</p>
 

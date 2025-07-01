@@ -156,6 +156,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.querySelectorAll("input[name='category']").forEach((categoryCb) => {
+    categoryCb.addEventListener("change", () => {
+      const li = categoryCb.closest("li");
+      if (!li) return;
+      li.querySelectorAll("input[name='subcategory']").forEach((subCb) => {
+        subCb.checked = categoryCb.checked;
+      });
+    });
+  });
+
   const regulationContent = document.querySelector(
     ".regulation-products-content"
   );
@@ -210,6 +220,10 @@ document.addEventListener("DOMContentLoaded", function () {
       document
         .querySelectorAll("input[name='category']:checked")
         .forEach((cb) => url.searchParams.append("category", cb.value));
+
+      document
+        .querySelectorAll("input[name='subcategory']:checked")
+        .forEach((cb) => url.searchParams.append("subcategory", cb.value));
 
       document
         .querySelectorAll("input[name^='attr_']:checked")
@@ -347,10 +361,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cb) cb.checked = true;
   });
 
+  params.getAll("subcategory").forEach((id) => {
+    const cb = document.querySelector(
+      `input[name="subcategory"][value="${id}"]`
+    );
+    if (cb) cb.checked = true;
+  });
+
   document.querySelectorAll(".filter-by").forEach((group) => {
     const hasChecked =
       group.querySelector('input[name="brand"]:checked') ||
       group.querySelector('input[name="category"]:checked') ||
+      group.querySelector('input[name="subcategory"]:checked') ||
       group.querySelector('input[name^="attr_"]:checked');
 
     if (hasChecked) {

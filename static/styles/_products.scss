@@ -123,6 +123,10 @@
           max-height: 0;
           overflow: hidden;
           transition: max-height 0.3s ease;
+          .category-name{
+            color: rgba(20, 48, 130, 1);
+            font-weight: 600;
+          }
 
           ul {
             list-style: none;
@@ -137,6 +141,14 @@
 
               &:hover {
                 color: rgba(20, 48, 130, 1);
+              }
+              .subcategory-list {
+                margin-top: 4px;
+                margin-left: 16px;
+                list-style-type: disc;
+                li {
+                  margin: 2px 0;
+                }
               }
             }
           }

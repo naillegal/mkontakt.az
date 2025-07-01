@@ -2262,6 +2262,10 @@ footer .footer-copyright {
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
+#products-container .filter-and-products .filter .filter-by .filter-dropdown .category-name {
+  color: rgb(20, 48, 130);
+  font-weight: 600;
+}
 #products-container .filter-and-products .filter .filter-by .filter-dropdown ul {
   list-style: none;
   margin: 0;
@@ -2275,6 +2279,14 @@ footer .footer-copyright {
 }
 #products-container .filter-and-products .filter .filter-by .filter-dropdown ul li:hover {
   color: rgb(20, 48, 130);
+}
+#products-container .filter-and-products .filter .filter-by .filter-dropdown ul li .subcategory-list {
+  margin-top: 4px;
+  margin-left: 16px;
+  list-style-type: disc;
+}
+#products-container .filter-and-products .filter .filter-by .filter-dropdown ul li .subcategory-list li {
+  margin: 2px 0;
 }
 #products-container .filter-and-products .filter .filter-by .filter-dropdown .price-avg {
   display: flex;

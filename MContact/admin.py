@@ -4,7 +4,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
     ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order,
-    OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue, ProductVariant
+    OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue, ProductVariant, SubCategory
 )
 from django.http import HttpResponse
 import openpyxl
@@ -50,10 +50,18 @@ class BrandAdmin(CustomTranslationAdmin):
     search_fields = ('name', 'name_en', 'name_ru')
 
 
+class SubCategoryInline(admin.TabularInline):
+    model = SubCategory
+    extra = 1
+    fields = ('name', 'slug',)
+    prepopulated_fields = {'slug': ('name',)}
+
+
 @admin.register(Category)
 class CategoryAdmin(CustomTranslationAdmin):
     list_display = ('name', 'name_en', 'name_ru', 'discount', 'created_at')
     search_fields = ('name', 'name_en', 'name_ru')
+    inlines = [SubCategoryInline]
 
 
 # @admin.register(ProductType)
@@ -88,7 +96,7 @@ class ProductAdmin(CustomTranslationAdmin):
         'priority',
         'code',
         'brand',
-        'get_categories',
+        'get_subcategories',
         'price',
         'discount',
         'is_active',
@@ -96,14 +104,15 @@ class ProductAdmin(CustomTranslationAdmin):
     )
     list_editable = ('priority',)
     search_fields = ('title', 'title_en', 'title_ru', 'brand__name')
-    list_filter = ('brand', 'categories', 'created_at')
+    list_filter = ('brand', 'subcategories__category',
+                   'subcategories', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
-    filter_horizontal = ('categories', 'attributes',)
+    filter_horizontal = ('subcategories', 'attributes',)
     inlines = [ProductImageInline, ProductVariantInline]
 
-    def get_categories(self, obj):
-        return ", ".join(cat.name for cat in obj.categories.all())
-    get_categories.short_description = "Kateqoriyalar"
+    def get_subcategories(self, obj):
+        return ", ".join(sc.name for sc in obj.subcategories.all())
+    get_subcategories.short_description = "Alt Kateqoriyalar"
 
     def main_image_preview(self, obj):
         url = obj.get_main_image_url()
