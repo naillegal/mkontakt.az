@@ -55,7 +55,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('id', 'name', 'image', 'created_at')
+        fields = ('id', 'name', 'image', 'subcategories', 'created_at')
         read_only_fields = ('created_at',)
 
 
@@ -111,7 +111,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
-    category_names = serializers.SerializerMethodField()
+    subcategory_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
 
     variants = ProductVariantSerializer(many=True, read_only=True)
@@ -123,7 +123,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "id", "title", "code", "description",
             "images", "price",
             "brand", "brand_name",
-            "categories", "category_names",
+            "subcategories", "subcategory_names",
             "variants", "attributes",
         )
 
@@ -132,8 +132,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             Decimal("0.01"), rounding=ROUND_HALF_UP)
         return "{:.2f}".format(dec)
 
-    def get_category_names(self, obj):
-        return list(obj.categories.values_list("name", flat=True))
+    def get_subcategory_names(self, obj):
+        return list(obj.subcategories.values_list("name", flat=True))
 
     def get_images(self, obj):
         qs = obj.images.all()
