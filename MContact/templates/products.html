@@ -238,31 +238,50 @@
     </div>
 
     {% if page_obj.has_other_pages %}
-      <div class="pagination">
-        {% if page_obj.has_previous %}
-          <a class="page-item prev" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}"><span>&lsaquo;</span></a>
-        {% else %}
-          <div class="page-item prev" aria-label="Əvvəlki səhifə">
-            <span>&lsaquo;</span>
-          </div>
-        {% endif %}
-
-        {% for p in page_obj.paginator.page_range %}
-          {% if p == page_obj.number %}
-            <div class="page-item active">{{ p }}</div>
-          {% else %}
-            <a class="page-item" href="?page={{ p }}{{ request.GET.urlencode|safe|cut:'page=' }}">{{ p }}</a>
-          {% endif %}
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-          <a class="page-item next" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}"><span>&rsaquo;</span></a>
-        {% else %}
-          <div class="page-item next" aria-label="Növbəti səhifə">
-            <span>&rsaquo;</span>
-          </div>
-        {% endif %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a style="text-decoration: none;" class="page-item prev" 
+         href="?page={{ page_obj.previous_page_number }}
+               {% for key, value in request.GET.items %}
+                 {% if key != 'page' %}&{{ key }}={{ value }}{% endif %}
+               {% endfor %}">
+        <span>&lsaquo;</span>
+      </a>
+    {% else %}
+      <div class="page-item prev" aria-label="Əvvəlki səhifə">
+        <span>&lsaquo;</span>
       </div>
     {% endif %}
+
+    {% for p in page_obj.paginator.page_range %}
+      {% if p == page_obj.number %}
+        <div class="page-item active">{{ p }}</div>
+      {% else %}
+        <a style="text-decoration: none;" class="page-item"
+           href="?page={{ p }}
+                 {% for key, value in request.GET.items %}
+                   {% if key != 'page' %}&{{ key }}={{ value }}{% endif %}
+                 {% endfor %}">
+          {{ p }}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a style="text-decoration: none;" class="page-item next"
+         href="?page={{ page_obj.next_page_number }}
+               {% for key, value in request.GET.items %}
+                 {% if key != 'page' %}&{{ key }}={{ value }}{% endif %}
+               {% endfor %}">
+        <span>&rsaquo;</span>
+      </a>
+    {% else %}
+      <div class="page-item next" aria-label="Növbəti səhifə">
+        <span>&rsaquo;</span>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
   </section>
 {% endblock %}
