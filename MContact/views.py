@@ -200,7 +200,7 @@ def products(request):
     else:
         qs = qs.order_by("_prio", "-created_at")
 
-    paginator = Paginator(qs, 8)
+    paginator = Paginator(qs, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     session_user_id = request.session.get("user_id")
@@ -893,27 +893,15 @@ def wishlist_view(request):
 def cart_add(request, product_id):
     data = json.loads(request.body.decode() or "{}")
     quantity = int(data.get("quantity", 1))
-    attr_values = data.get("attr_values", {})
-    selected_ids = [int(v) for v in attr_values.values()]
+    variant_id = data.get("variant_id")
 
     product = get_object_or_404(Product, pk=product_id)
-
     variant = None
-    if selected_ids:
-        wanted = set(selected_ids)
-        for v in (ProductVariant.objects
-                  .filter(product=product, is_active=True)
-                  .prefetch_related("attribute_values")):
-            vals = set(v.attribute_values.values_list("id", flat=True))
-            if vals == wanted:
-                variant = v
-                break
-    if variant is None and selected_ids:
-        variant = ProductVariant.objects.create(product=product)
-        variant.attribute_values.set(selected_ids)
+    if variant_id:
+        variant = get_object_or_404(
+            ProductVariant, pk=variant_id, product=product, is_active=True)
 
     cart = get_or_create_cart(request)
-
     item, created = CartItem.objects.get_or_create(
         cart=cart,
         product=product,
@@ -1288,6 +1276,10 @@ class MobileCartView(APIView):
                     type=openapi.TYPE_INTEGER,
                     description='(Required) Əlavə ediləcək məhsulun ID-si'
                 ),
+                "variant_id": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="(Optional) Variant ID – göndərilsə həmin kombinasiyanı əlavə edir/silir"
+                ),
                 'quantity': openapi.Schema(
                     type=openapi.TYPE_INTEGER,
                     description='(Optional) Əlavə ediləcək miqdar, default 1',
@@ -1309,18 +1301,32 @@ class MobileCartView(APIView):
         user_id = data.get("user_id")
         session_key = data.get("session_key")
         product_id = data.get("product_id")
+        variant_id = data.get("variant_id")
         qty = int(data.get("quantity", 1))
 
         if not product_id:
             return Response({"detail": "product_id göndərilməlidir."}, status=400)
 
         product = get_object_or_404(Product, pk=product_id)
+
+        variant = None
+        if variant_id is not None:
+            variant = get_object_or_404(
+                ProductVariant,
+                pk=variant_id,
+                product=product,
+                is_active=True
+            )
+
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id, session_key=session_key)
+            user_id=user_id,
+            session_key=session_key
+        )
 
         item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
+            variant=variant,
             defaults={"quantity": qty},
         )
         if not created:
@@ -1328,7 +1334,10 @@ class MobileCartView(APIView):
             item.save()
 
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response({"session_key": session_key, "cart": ser.data}, status=200)
+        return Response(
+            {"session_key": session_key, "cart": ser.data},
+            status=status.HTTP_200_OK
+        )
 
     @swagger_auto_schema(
         operation_summary="Səbəti əldə et",
@@ -1376,6 +1385,10 @@ class MobileCartView(APIView):
                     type=openapi.TYPE_INTEGER,
                     description='(Required) Səbətdən silinəcək məhsulun ID-si'
                 ),
+                "variant_id": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="(Optional) Variant ID – göndərilsə həmin kombinasiyanı əlavə edir/silir"
+                ),
             },
             required=['product_id'],
         ),
@@ -1392,20 +1405,29 @@ class MobileCartView(APIView):
         user_id = data.get("user_id")
         session_key = data.get("session_key")
         product_id = data.get("product_id")
+        variant_id = data.get("variant_id")
 
         if not product_id:
-            return Response({"detail": "product_id göndərilməlidir."}, status=400)
+            return Response(
+                {"detail": "product_id göndərilməlidir."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id, session_key=session_key
+            user_id=user_id,
+            session_key=session_key
         )
 
-        CartItem.objects.filter(cart=cart, product_id=product_id).delete()
+        qs = CartItem.objects.filter(cart=cart, product_id=product_id)
+        if variant_id is not None:
+            qs = qs.filter(variant_id=variant_id)
+
+        qs.delete()
 
         ser = MobileCartSerializer(cart, context={"request": request})
         return Response(
             {"session_key": session_key, "cart": ser.data},
-            status=200
+            status=status.HTTP_200_OK
         )
 
 

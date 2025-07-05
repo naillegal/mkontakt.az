@@ -68,26 +68,29 @@
               {% for sub in product.subcategories.all %}
                 <a href="{% url 'MContact:products' %}?subcategory={{ sub.id }}" class="category-filter-link">{{ sub.name }}</a>{% if not forloop.last %}{% endif %}
               {% empty %}
+
               {% endfor %}
             </span>
             <p>{{ product.description }}</p>
 
-            <div class="product-features">
-              {% for attribute in attributes %}
-                <div class="feature">
-                  <div class="feature-title">{{ attribute.name }}</div>
-                  <div class="feature-options">
-                    {% for val in attribute.values.all %}
-                      <label>
-                        <input type="radio" name="attr_{{ attribute.id }}" value="{{ val.id }}" />
-                        {{ val.value }}
-                      </label>
-                    {% endfor %}
-                  </div>
-                </div>
-              {% empty %}
-                <p>Bu məhsul üçün xüsusiyyət seçimi yoxdur.</p>
-              {% endfor %}
+            <div class="product-variants">
+              <h3>{% trans 'Versiyalar' %}</h3>
+              <ul>
+                {% for variant in product.variants.all %}
+                  <li>
+                    <label>
+                      <input type="radio" name="variant" value="{{ variant.id }}" />
+                      {% for val in variant.attribute_values.all %}
+                        {{ val.attribute.name }}: {{ val.value }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}— ₼{{ variant.price_override|default:product.price }}
+                    </label>
+                  </li>
+                {% empty %}
+                  <li>
+                    {% trans 'Bu məhsul üçün versiya yoxdur.' %}
+                  </li>
+                {% endfor %}
+              </ul>
             </div>
 
             <span class="price">₼{{ product.price }}</span>

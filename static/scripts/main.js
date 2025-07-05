@@ -583,14 +583,8 @@ document.addEventListener("click", async (e) => {
   const cntEl = document.querySelector(".counter .counter-value");
   const quantity = cntEl ? Math.max(1, parseInt(cntEl.textContent, 10)) : 1;
 
-  const checked = document.querySelectorAll(
-    ".feature-options input[type=radio]:checked"
-  );
-  const attr_values = {};
-  checked.forEach((inp) => {
-    const attrId = inp.name.replace("attr_", "");
-    attr_values[attrId] = inp.value;
-  });
+  const variantInput = document.querySelector("input[name='variant']:checked");
+  const variantId = variantInput ? parseInt(variantInput.value, 10) : null;
 
   try {
     const res = await fetch(`/cart/add/${productId}/`, {
@@ -600,7 +594,7 @@ document.addEventListener("click", async (e) => {
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ quantity, attr_values }),
+      body: JSON.stringify({ quantity, variant_id: variantId }),
     });
 
     const data = await res.json();

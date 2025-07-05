@@ -295,6 +295,11 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def get_selected_attrs(self, obj):
         return obj.selected_attrs
+    
+    def get_unit_price(self, obj):
+        if obj.variant and obj.variant.price_override is not None:
+            return obj.variant.price_override
+        return obj.product.price
 
 
 class MobileCartSerializer(serializers.ModelSerializer):
