@@ -77,26 +77,35 @@ class ProductListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     subcategory_names = serializers.SerializerMethodField()
+    category_ids = serializers.SerializerMethodField()      
+    category_names = serializers.SerializerMethodField()    
     brand_name = serializers.CharField(source="brand.name", read_only=True)
+    has_variants = serializers.BooleanField(source="variants.exists", read_only=True)
 
-    has_variants = serializers.BooleanField(
-        source="variants.exists", read_only=True
-    )
+    variants = ProductVariantSerializer(many=True, read_only=True)       
 
     class Meta:
         model = Product
-        fields = ("id", "brand", "brand_name",
-                  "subcategories", "subcategory_names",
-                  "title", "price", "image",
-                  "code", "has_variants",)
+        fields = (
+            "id",
+            "brand",
+            "brand_name",
+            "category_ids",      
+            "category_names",    
+            "subcategories",
+            "subcategory_names",
+            "title",
+            "price",
+            "image",
+            "code",
+            "has_variants",
+            "variants"
+        )
 
     def get_price(self, obj):
-        dec = Decimal(obj.price).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP)
-        return "{:.2f}".format(dec)
-
-    def get_subcategory_names(self, obj):
-        return list(obj.subcategories.values_list("name", flat=True))
+        return "{:.2f}".format(
+            obj.price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        )
 
     def get_image(self, obj):
         qs = obj.images.all()
@@ -107,6 +116,22 @@ class ProductListSerializer(serializers.ModelSerializer):
         req = self.context.get("request")
         return req.build_absolute_uri(img.image.url) if req else img.image.url
 
+    def get_subcategory_names(self, obj):
+        return list(obj.subcategories.values_list("name", flat=True))
+
+    def get_category_ids(self, obj):
+        return list(
+            obj.subcategories.values_list("category_id", flat=True).distinct()
+        )
+
+    def get_category_names(self, obj):
+        return list(
+            obj.subcategories
+               .select_related("category")
+               .values_list("category__name", flat=True)
+               .distinct()
+        )
+
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
@@ -115,7 +140,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name", read_only=True)
 
     variants = ProductVariantSerializer(many=True, read_only=True)
-    attributes = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -124,7 +148,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "images", "price",
             "brand", "brand_name",
             "subcategories", "subcategory_names",
-            "variants", "attributes",
+            "variants",
         )
 
     def get_price(self, obj):
@@ -295,7 +319,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def get_selected_attrs(self, obj):
         return obj.selected_attrs
-    
+
     def get_unit_price(self, obj):
         if obj.variant and obj.variant.price_override is not None:
             return obj.variant.price_override
@@ -396,3 +420,38 @@ class DeviceTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDeviceToken
         fields = ("token", "platform")
+
+
+class AttributeValueFilterSerializer(serializers.Serializer):
+    attribute_id = serializers.IntegerField(required=False)  
+    value_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+
+class ProductFilterRequestSerializer(serializers.Serializer):
+    page = serializers.IntegerField(required=False, min_value=1, default=1)
+    perpage = serializers.IntegerField(required=False, min_value=1,
+                                       max_value=100, default=10)
+    ordering = serializers.ChoiceField(
+        choices=["price_asc", "price_desc"], required=False
+    )
+    brand_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False)
+    category_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False)
+    subcategory_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False)
+    attributes = AttributeValueFilterSerializer(many=True, required=False)
+    code = serializers.CharField(required=False, allow_blank=True)
+    name = serializers.CharField(required=False, allow_blank=True)
+
+
+class ProductFilterResponseSerializer(serializers.Serializer):
+    page = serializers.IntegerField()
+    perpage = serializers.IntegerField()
+    total_pages = serializers.IntegerField()
+    total_items = serializers.IntegerField()
+    results = serializers.ListField(
+        child=serializers.DictField()
+    )

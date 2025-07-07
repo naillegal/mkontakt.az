@@ -37,7 +37,7 @@ from .serializers import (
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
-    DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer
+    DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer, ProductFilterRequestSerializer, ProductFilterResponseSerializer
 )
 from django.contrib import messages
 
@@ -200,7 +200,7 @@ def products(request):
     else:
         qs = qs.order_by("_prio", "-created_at")
 
-    paginator = Paginator(qs, 10)
+    paginator = Paginator(qs, 24)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     session_user_id = request.session.get("user_id")
@@ -2015,3 +2015,78 @@ class RegisterDeviceTokenAPIView(APIView):
 
         UserDeviceToken.objects.filter(user=request.user, token=token).delete()
         return Response({"detail": "Token silindi."}, status=status.HTTP_200_OK)
+
+
+class MobileProductFilterAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Mobil üçün məhsul filtrasiyası",
+        request_body=ProductFilterRequestSerializer,
+        responses={200: ProductFilterResponseSerializer()}
+    )
+    def post(self, request):
+        ser = ProductFilterRequestSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+
+        qs = Product.objects.all()
+
+        if name := data.get("name"):
+            qs = qs.filter(title__icontains=name)
+        if code := data.get("code"):
+            qs = qs.filter(code__iexact=code)
+
+        if (bids := data.get("brand_ids")):
+            qs = qs.filter(brand_id__in=bids)
+
+        if (scids := data.get("subcategory_ids")):
+            qs = qs.filter(subcategories__id__in=scids).distinct()
+
+        if (cids := data.get("category_ids")):
+            qs = qs.filter(subcategories__category_id__in=cids).distinct()
+
+        for attr in data.get("attributes", []):
+            values = attr["value_ids"]
+            if attr.get("attribute_id") is not None:
+                aid = attr["attribute_id"]
+                qs = qs.filter(
+                    variants__attribute_values__attribute_id=aid,
+                    variants__attribute_values__id__in=values,
+                )
+            else:
+                qs = qs.filter(
+                    variants__attribute_values__id__in=values
+                )
+
+        qs = qs.distinct().annotate(
+            _prio=Case(
+                When(priority__isnull=False, then="priority"),
+                default=Value(999999),
+                output_field=IntegerField()
+            )
+        )
+
+        ordering = data.get("ordering")
+        if ordering == "price_asc":
+            qs = qs.order_by("price")
+        elif ordering == "price_desc":
+            qs = qs.order_by("-price")
+        else:
+            qs = qs.order_by("_prio", "-created_at")
+
+        page_num = data.get("page", 1)
+        perpage = data.get("perpage", 10)
+        paginator = Paginator(qs, perpage)
+        page_obj = paginator.get_page(page_num)
+
+        prod_ser = ProductListSerializer(
+            page_obj, many=True, context={"request": request}
+        )
+
+        response_data = {
+            "page": page_obj.number,
+            "perpage": perpage,
+            "total_pages": paginator.num_pages,
+            "total_items": paginator.count,
+            "results": prod_ser.data
+        }
+        return Response(response_data, status=status.HTTP_200_OK)

@@ -112,4 +112,7 @@ urlpatterns = [
         views.RegisterDeviceTokenAPIView.as_view(),
         name='device-token'
     ),
+    path("api/products/filter/",
+         views.MobileProductFilterAPIView.as_view(),
+         name="mobile-products-filter"),
 ]
