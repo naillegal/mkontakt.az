@@ -14,7 +14,6 @@ from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db.models import Count
 from .utils import get_or_create_cart
 import json
 from django.utils import timezone
@@ -22,14 +21,14 @@ from decimal import Decimal
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import models as dj_models
-from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Case, When, Value, IntegerField, Prefetch, Count
 from django.views.decorators.csrf import ensure_csrf_cookie
 import uuid
 from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
     CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner,
-    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory
+    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory, RegistrationOTP
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -38,7 +37,7 @@ from .serializers import (
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
     DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer,
-    ProductFilterRequestSerializer, ProductFilterResponseSerializer, ProductAttributeSerializer
+    ProductFilterRequestSerializer, ProductFilterResponseSerializer, ProductAttributeSerializer, AttributeNameSerializer, AttributeValueSerializer
 )
 from django.contrib import messages
 
@@ -456,38 +455,19 @@ def contact_submit(request):
     return redirect('MContact:contact')
 
 
-@method_decorator(ensure_csrf_cookie, name="dispatch")
 class RegisterAPIView(APIView):
     @swagger_auto_schema(
         operation_summary="Qeydiyyat üçün OTP kodu göndər",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=[
-                "full_name", "email", "phone", "birth_date", "password"
-            ],
+            required=["full_name", "email", "phone", "birth_date", "password"],
             properties={
-                "full_name": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Ad Soyad"
-                ),
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL,
-                    description="E-poçt ünvanı"
-                ),
-                "phone": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Telefon nömrəsi"
-                ),
-                "birth_date": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_DATE,
-                    description="Doğum tarixi (YYYY-MM-DD)"
-                ),
-                "password": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format="password",
-                    description="Parol"
-                ),
-            },
+                "full_name": openapi.Schema(type=openapi.TYPE_STRING, description="Ad Soyad"),
+                "email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description="E-poçt ünvanı"),
+                "phone": openapi.Schema(type=openapi.TYPE_STRING, description="Telefon nömrəsi"),
+                "birth_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="Doğum tarixi (YYYY-MM-DD)"),
+                "password": openapi.Schema(type=openapi.TYPE_STRING, format="password", description="Parol"),
+            }
         ),
         responses={
             200: openapi.Response(
@@ -495,46 +475,48 @@ class RegisterAPIView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        "detail": openapi.Schema(type=openapi.TYPE_STRING)
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING, example="OTP kod email-ə göndərildi.")
                     }
                 )
             ),
-            400: openapi.Response(description="Validation Error")
-        },
+            400: openapi.Response(description="Validation Error — daxil edilmiş məlumatlarda səhv var")
+        }
     )
     def post(self, request):
-        data = request.data
-        full_name = data.get("full_name", "").strip()
-        email = data.get("email", "").strip().lower()
-        phone = data.get("phone", "").strip()
-        birth_date = data.get("birth_date", "").strip()
-        password = data.get("password", "").strip()
+        full_name = request.data.get("full_name", "").strip()
+        email = request.data.get("email",    "").strip().lower()
+        phone = request.data.get("phone",    "").strip()
+        birth = request.data.get("birth_date", "").strip()
+        password = request.data.get("password", "").strip()
 
         errors = {}
         if not full_name:
             errors["full_name"] = "Ad Soyad mütləqdir."
         if not email:
-            errors["email"] = "E-poçt mütləqdir."
+            errors["email"] = "E-mail mütləqdir."
         if not phone:
             errors["phone"] = "Telefon mütləqdir."
-        if not birth_date:
+        if not birth:
             errors["birth_date"] = "Doğum tarixi mütləqdir."
         if not password:
             errors["password"] = "Parol mütləqdir."
         if User.objects.filter(email=email).exists():
-            errors["email"] = "Bu e-poçt artıq istifadə olunub."
+            errors["email"] = "Bu e-mail artıq istifadə olunub."
 
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
+        RegistrationOTP.objects.filter(email=email).delete()
+
         code = f"{random.randint(0, 9999):04d}"
-        request.session['reg_full_name'] = full_name
-        request.session['reg_email'] = email
-        request.session['reg_phone'] = phone
-        request.session['reg_birth_date'] = birth_date
-        request.session['reg_password'] = password
-        request.session['reg_otp_expected'] = code
-        request.session['reg_otp_sent'] = True
+        RegistrationOTP.objects.create(
+            email=email,
+            full_name=full_name,
+            phone=phone,
+            birth_date=birth,
+            password=password,
+            code=code
+        )
 
         send_mail_async(
             subject="MContact – Qeydiyyat OTP kodu",
@@ -542,67 +524,71 @@ class RegisterAPIView(APIView):
             recipient_list=[email],
             fail_silently=False
         )
+        return Response(
+            {"detail": "OTP kod email-ə göndərildi."},
+            status=status.HTTP_200_OK
+        )
 
-        return Response({"detail": "OTP kod email-ə göndərildi."}, status=status.HTTP_200_OK)
 
-
-@method_decorator(ensure_csrf_cookie, name="dispatch")
 class RegisterOTPAPIView(APIView):
     @swagger_auto_schema(
-        operation_summary="Qeydiyyatı tamamlamaq üçün OTP kodunu yoxla",
+        operation_summary="OTP kodunu yoxla və istifadəçini yarat",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=["email", "otp_code"],
             properties={
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL,
-                    description="E-poçt ünvanı"
-                ),
-                "otp_code": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="4 rəqəmli OTP kodu"
-                ),
-            },
+                "email":    openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description="E-poçt ünvanı"),
+                "otp_code": openapi.Schema(type=openapi.TYPE_STRING, description="4 rəqəmli OTP kodu"),
+            }
         ),
         responses={
             201: openapi.Response(
                 description="User yaradıldı",
                 schema=UserSerializer()
             ),
-            400: openapi.Response(description="Validation Error")
-        },
+            400: openapi.Response(description="Validation Error — kod səhvdir və ya vaxtı bitib")
+        }
     )
     def post(self, request):
-        data = request.data
-        email = data.get("email", "").strip().lower()
-        otp_input = data.get("otp_code", "").strip()
+        serializer = VerifyOtpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"].lower()
+        otp_input = serializer.validated_data["otp_code"]
 
-        expected = request.session.get('reg_otp_expected')
-        sess_email = request.session.get('reg_email')
-        if not expected or email != sess_email:
+        try:
+            reg = RegistrationOTP.objects.get(email=email)
+        except RegistrationOTP.DoesNotExist:
             return Response(
                 {"detail": "Bu emaildə qeydiyyat mərhələsi başlamayıb."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if otp_input != expected:
+        if reg.is_expired():
+            reg.delete()
+            return Response(
+                {"detail": "OTP kodunun vaxtı bitib."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if otp_input != reg.code:
             return Response(
                 {"otp_code": "Yanlış OTP kodu."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         user = User.objects.create(
-            full_name=request.session.pop('reg_full_name'),
-            email=request.session.pop('reg_email'),
-            phone=request.session.pop('reg_phone'),
-            birth_date=request.session.pop('reg_birth_date'),
-            password=request.session.pop('reg_password'),
+            full_name=reg.full_name,
+            email=reg.email,
+            phone=reg.phone,
+            birth_date=reg.birth_date,
+            password=reg.password,
         )
-        for k in ('reg_otp_expected', 'reg_otp_sent'):
-            request.session.pop(k, None)
+        reg.delete()
 
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(
+            UserSerializer(user).data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class UserLoginAPIView(generics.GenericAPIView):
@@ -2059,7 +2045,6 @@ class MobileProductFilterAPIView(generics.GenericAPIView):
     pagination_class = CustomPageNumberPagination
 
     @swagger_auto_schema(
-        operation_summary="Mobil üçün məhsul filtrasiyası",
         request_body=ProductFilterRequestSerializer,
         responses={200: ProductFilterResponseSerializer()}
     )
@@ -2068,50 +2053,84 @@ class MobileProductFilterAPIView(generics.GenericAPIView):
         filter_ser.is_valid(raise_exception=True)
         data = filter_ser.validated_data
 
-        qs = Product.objects.all()
-        if name := data.get("name"):
-            qs = qs.filter(title__icontains=name)
-        if code := data.get("code"):
-            qs = qs.filter(code__iexact=code)
-        if (bids := data.get("brand_ids")):
-            qs = qs.filter(brand_id__in=bids)
-        if (scids := data.get("subcategory_ids")):
-            qs = qs.filter(subcategories__id__in=scids).distinct()
-        if (cids := data.get("category_ids")):
-            qs = qs.filter(subcategories__category_id__in=cids).distinct()
+        products = Product.objects.all()
 
-        for attr in data.get("attributes", []):
-            vals = attr["value_ids"]
-            if (aid := attr.get("attribute_id")) is not None:
-                qs = qs.filter(
-                    variants__attribute_values__attribute_id=aid,
-                    variants__attribute_values__id__in=vals,
-                )
-            else:
-                qs = qs.filter(variants__attribute_values__id__in=vals)
+        name = data.get("name")
+        if name:
+            products = products.filter(title__icontains=name)
 
-        qs = qs.distinct().annotate(
+        code = data.get("code")
+        if code:
+            products = products.filter(code__iexact=code)
+
+        brand_ids = [b for b in data.get("brand_ids", []) if b]
+        if brand_ids:
+            products = products.filter(brand_id__in=brand_ids)
+
+        subcat_ids = [s for s in data.get("subcategory_ids", []) if s]
+        if subcat_ids:
+            products = products.filter(
+                subcategories__id__in=subcat_ids).distinct()
+
+        cat_ids = [c for c in data.get("category_ids", []) if c]
+        if cat_ids:
+            products = products.filter(
+                subcategories__category_id__in=cat_ids).distinct()
+
+        raw_attrs = data.get("attributes", [])
+        attr_filters = []
+        for block in raw_attrs:
+            vids = [v for v in block.get("value_ids", []) if v]
+            aid = block.get("attribute_id")
+            if vids:
+                attr_filters.append({"attribute_id": aid, "value_ids": vids})
+
+        if attr_filters:
+            variants_qs = ProductVariant.objects.all()
+            for block in attr_filters:
+                aid = block["attribute_id"]
+                vids = block["value_ids"]
+                if aid:
+                    variants_qs = variants_qs.filter(
+                        attribute_values__attribute_id=aid,
+                        attribute_values__id__in=vids
+                    )
+                else:
+                    variants_qs = variants_qs.filter(
+                        attribute_values__id__in=vids
+                    )
+            variants_qs = variants_qs.distinct()
+
+            products = products.filter(variants__in=variants_qs).distinct()
+
+            products = products.prefetch_related(
+                Prefetch("variants", queryset=variants_qs)
+            )
+
+        products = products.annotate(
             _prio=Case(
                 When(priority__isnull=False, then="priority"),
                 default=Value(999999),
                 output_field=IntegerField()
             )
         )
+
         ordering = data.get("ordering")
         if ordering == "price_asc":
-            qs = qs.order_by("price")
+            products = products.order_by("price")
         elif ordering == "price_desc":
-            qs = qs.order_by("-price")
+            products = products.order_by("-price")
         else:
-            qs = qs.order_by("_prio", "-created_at")
+            products = products.order_by("_prio", "-created_at")
 
-        page = self.paginate_queryset(qs)
+        page = self.paginate_queryset(products)
         if page is not None:
             ser = self.get_serializer(
                 page, many=True, context={"request": request})
             return self.get_paginated_response(ser.data)
 
-        ser = self.get_serializer(qs, many=True, context={"request": request})
+        ser = self.get_serializer(
+            products, many=True, context={"request": request})
         return Response(ser.data, status=status.HTTP_200_OK)
 
 
@@ -2121,3 +2140,18 @@ class AttributeListAPIView(generics.ListAPIView):
         'values').order_by('id')
     serializer_class = ProductAttributeSerializer
     pagination_class = CustomPageNumberPagination
+
+
+class AttributeNameListAPIView(generics.ListAPIView):
+    queryset = ProductAttribute.objects.all().order_by('name')
+    serializer_class = AttributeNameSerializer
+
+
+class AttributeValueByAttributeAPIView(generics.ListAPIView):
+    serializer_class = AttributeValueSerializer
+
+    def get_queryset(self):
+        attribute_id = self.kwargs.get('attribute_id')
+        return ProductAttributeValue.objects.filter(
+            attribute_id=attribute_id
+        ).order_by('value')

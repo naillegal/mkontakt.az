@@ -77,12 +77,13 @@ class ProductListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     subcategory_names = serializers.SerializerMethodField()
-    category_ids = serializers.SerializerMethodField()      
-    category_names = serializers.SerializerMethodField()    
+    category_ids = serializers.SerializerMethodField()
+    category_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
-    has_variants = serializers.BooleanField(source="variants.exists", read_only=True)
+    has_variants = serializers.BooleanField(
+        source="variants.exists", read_only=True)
 
-    variants = ProductVariantSerializer(many=True, read_only=True)       
+    variants = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -90,8 +91,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "id",
             "brand",
             "brand_name",
-            "category_ids",      
-            "category_names",    
+            "category_ids",
+            "category_names",
             "subcategories",
             "subcategory_names",
             "title",
@@ -131,6 +132,10 @@ class ProductListSerializer(serializers.ModelSerializer):
                .values_list("category__name", flat=True)
                .distinct()
         )
+
+    def get_variants(self, obj):
+        variants = getattr(obj, "filtered_variants", obj.variants.all())
+        return ProductVariantSerializer(variants, many=True, context=self.context).data
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -423,7 +428,7 @@ class DeviceTokenSerializer(serializers.ModelSerializer):
 
 
 class AttributeValueFilterSerializer(serializers.Serializer):
-    attribute_id = serializers.IntegerField(required=False)  
+    attribute_id = serializers.IntegerField(required=False)
     value_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
@@ -455,3 +460,15 @@ class ProductFilterResponseSerializer(serializers.Serializer):
     results = serializers.ListField(
         child=serializers.DictField()
     )
+
+
+class AttributeNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttribute
+        fields = ('id', 'name')
+
+
+class AttributeValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttributeValue
+        fields = ('id', 'value')

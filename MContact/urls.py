@@ -115,5 +115,16 @@ urlpatterns = [
     path("api/products/filter/",
          views.MobileProductFilterAPIView.as_view(),
          name="mobile-products-filter"),
-    path('api/attributes/', views.AttributeListAPIView.as_view(), name='attribute-list'),
+    path('api/attributes/', views.AttributeListAPIView.as_view(),
+         name='attribute-list'),
+    path(
+        'api/attributes/names/',
+        views.AttributeNameListAPIView.as_view(),
+        name='attribute-names'
+    ),
+    path(
+        'api/attributes/<int:attribute_id>/values/',
+        views.AttributeValueByAttributeAPIView.as_view(),
+        name='attribute-values'
+    ),
 ]
