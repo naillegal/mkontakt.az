@@ -30,8 +30,8 @@ urlpatterns = [
          name='brand-list-create'),
     path('api/categories/', views.CategoryListCreateAPIView.as_view(),
          name='category-list-create'),
-#     path('api/product-types/', views.ProductTypeListCreateAPIView.as_view(),
-#          name='producttype-list-create'),
+    #     path('api/product-types/', views.ProductTypeListCreateAPIView.as_view(),
+    #          name='producttype-list-create'),
     path('api/products/', views.ProductListAPIView.as_view(), name='product-list'),
     path('api/products/<int:pk>/',
          views.ProductRetrieveAPIView.as_view(), name='product-detail'),
@@ -115,4 +115,5 @@ urlpatterns = [
     path("api/products/filter/",
          views.MobileProductFilterAPIView.as_view(),
          name="mobile-products-filter"),
+    path('api/attributes/', views.AttributeListAPIView.as_view(), name='attribute-list'),
 ]

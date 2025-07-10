@@ -37,7 +37,8 @@ from .serializers import (
     CustomerReviewSerializer, BlogSerializer, UserSerializer,
     UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer, ChangePasswordSerializer,
     ForgotPasswordSerializer, VerifyOtpSerializer, UpdatePasswordSerializer, MobileCartSerializer,
-    DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer, ProductFilterRequestSerializer, ProductFilterResponseSerializer
+    DiscountCodeSerializer, WishItemSerializer, OrderSerializer, DeviceTokenSerializer,
+    ProductFilterRequestSerializer, ProductFilterResponseSerializer, ProductAttributeSerializer
 )
 from django.contrib import messages
 
@@ -46,6 +47,41 @@ class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'perpage'
     max_page_size = 100
+
+    def paginate_queryset(self, queryset, request, view=None):
+        self.request = request
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+
+        paginator = self.django_paginator_class(queryset, page_size)
+        page_number = request.query_params.get(self.page_query_param, 1)
+
+        try:
+            self.page = paginator.page(page_number)
+        except (PageNotAnInteger, EmptyPage):
+            self.page = []
+            return []
+
+        return list(self.page)
+
+    def get_paginated_response(self, data):
+        total_pages = (self.page.paginator.num_pages
+                       if hasattr(self.page, 'paginator') else 0)
+        total_items = (self.page.paginator.count
+                       if hasattr(self.page, 'paginator') else 0)
+        current_page = (self.page.number
+                        if hasattr(self.page, 'number') else 1)
+
+        return Response({
+            'page': current_page,
+            'perpage': self.get_page_size(self.request),
+            'total_pages': total_pages,
+            'total_items': total_items,
+            'results': data,
+            'next': None if not data else self.get_next_link(),
+            'previous': self.get_previous_link(),
+        })
 
 
 def about_us(request):
@@ -2017,45 +2053,42 @@ class RegisterDeviceTokenAPIView(APIView):
         return Response({"detail": "Token silindi."}, status=status.HTTP_200_OK)
 
 
-class MobileProductFilterAPIView(APIView):
+class MobileProductFilterAPIView(generics.GenericAPIView):
+    parser_classes = [JSONParser]
+    serializer_class = ProductListSerializer
+    pagination_class = CustomPageNumberPagination
+
     @swagger_auto_schema(
         operation_summary="Mobil üçün məhsul filtrasiyası",
         request_body=ProductFilterRequestSerializer,
         responses={200: ProductFilterResponseSerializer()}
     )
-    def post(self, request):
-        ser = ProductFilterRequestSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        data = ser.validated_data
+    def post(self, request, *args, **kwargs):
+        filter_ser = ProductFilterRequestSerializer(data=request.data)
+        filter_ser.is_valid(raise_exception=True)
+        data = filter_ser.validated_data
 
         qs = Product.objects.all()
-
         if name := data.get("name"):
             qs = qs.filter(title__icontains=name)
         if code := data.get("code"):
             qs = qs.filter(code__iexact=code)
-
         if (bids := data.get("brand_ids")):
             qs = qs.filter(brand_id__in=bids)
-
         if (scids := data.get("subcategory_ids")):
             qs = qs.filter(subcategories__id__in=scids).distinct()
-
         if (cids := data.get("category_ids")):
             qs = qs.filter(subcategories__category_id__in=cids).distinct()
 
         for attr in data.get("attributes", []):
-            values = attr["value_ids"]
-            if attr.get("attribute_id") is not None:
-                aid = attr["attribute_id"]
+            vals = attr["value_ids"]
+            if (aid := attr.get("attribute_id")) is not None:
                 qs = qs.filter(
                     variants__attribute_values__attribute_id=aid,
-                    variants__attribute_values__id__in=values,
+                    variants__attribute_values__id__in=vals,
                 )
             else:
-                qs = qs.filter(
-                    variants__attribute_values__id__in=values
-                )
+                qs = qs.filter(variants__attribute_values__id__in=vals)
 
         qs = qs.distinct().annotate(
             _prio=Case(
@@ -2064,7 +2097,6 @@ class MobileProductFilterAPIView(APIView):
                 output_field=IntegerField()
             )
         )
-
         ordering = data.get("ordering")
         if ordering == "price_asc":
             qs = qs.order_by("price")
@@ -2073,20 +2105,19 @@ class MobileProductFilterAPIView(APIView):
         else:
             qs = qs.order_by("_prio", "-created_at")
 
-        page_num = data.get("page", 1)
-        perpage = data.get("perpage", 10)
-        paginator = Paginator(qs, perpage)
-        page_obj = paginator.get_page(page_num)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            ser = self.get_serializer(
+                page, many=True, context={"request": request})
+            return self.get_paginated_response(ser.data)
 
-        prod_ser = ProductListSerializer(
-            page_obj, many=True, context={"request": request}
-        )
+        ser = self.get_serializer(qs, many=True, context={"request": request})
+        return Response(ser.data, status=status.HTTP_200_OK)
 
-        response_data = {
-            "page": page_obj.number,
-            "perpage": perpage,
-            "total_pages": paginator.num_pages,
-            "total_items": paginator.count,
-            "results": prod_ser.data
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
+
+class AttributeListAPIView(generics.ListAPIView):
+
+    queryset = ProductAttribute.objects.prefetch_related(
+        'values').order_by('id')
+    serializer_class = ProductAttributeSerializer
+    pagination_class = CustomPageNumberPagination
