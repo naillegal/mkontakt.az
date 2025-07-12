@@ -86,7 +86,7 @@
       }
 
       .subtitle {
-        a{
+        a {
           display: block;
           font-size: 14px;
           color: rgba(20, 48, 130, 1);
@@ -236,6 +236,13 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+      }
+      .product-variants {
+        h3 {
+          @media (max-width: 991px) {
+            text-align: center;
+          }
+        }
       }
     }
   }

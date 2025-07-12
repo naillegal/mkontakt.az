@@ -2778,6 +2778,11 @@ footer .footer-copyright {
     align-items: center;
   }
 }
+@media (max-width: 991px) {
+  #selected-product-info .selected-product-info-container .selected-product-info-content .product-variants h3 {
+    text-align: center;
+  }
+}
 
 #product-detail-other-products {
   padding: 30px 0px;
@@ -4053,6 +4058,11 @@ footer .footer-copyright {
   transition: 0.2s ease-in-out;
   margin-right: 5px;
 }
+@media (max-width: 600px) {
+  #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-upper .select-and-delete-actions button {
+    padding: 8px 15px;
+  }
+}
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-upper .select-and-delete-actions button:hover {
   opacity: 0.5;
 }
@@ -4214,6 +4224,11 @@ footer .footer-copyright {
     padding: 12px;
   }
 }
+@media (max-width: 500px) {
+  #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-count-and-price .cart-product-count .counter {
+    padding: 5px;
+  }
+}
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-count-and-price .cart-product-count .counter .counter-btn {
   background: none;
   border: none;
@@ -4240,6 +4255,11 @@ footer .footer-copyright {
   color: rgb(0, 0, 0);
   font-weight: 500;
   font-size: 20px;
+}
+@media (max-width: 500px) {
+  #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-left .left-under .cart-product-box .cart-product-general-actions .cart-product-count-and-price .cart-product-price {
+    font-size: 18px;
+  }
 }
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-right {
   text-align: center;
@@ -4282,6 +4302,11 @@ footer .footer-copyright {
   border: none;
   cursor: pointer;
   transition: 0.2s ease-in-out;
+}
+@media (max-width: 600px) {
+  #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-right .submit-discount-code-container button {
+    padding: 0px;
+  }
 }
 #cart-main .cart-main-container .if-cart-exists .cart-container .cart-container-right .submit-discount-code-container button:hover {
   opacity: 0.7;

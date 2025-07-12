@@ -118,13 +118,20 @@ urlpatterns = [
     path('api/attributes/', views.AttributeListAPIView.as_view(),
          name='attribute-list'),
     path(
-        'api/attributes/names/',
+        'api/attribute/names/',
         views.AttributeNameListAPIView.as_view(),
         name='attribute-names'
     ),
     path(
-        'api/attributes/<int:attribute_id>/values/',
+        'api/attribute-values/<int:attribute_id>/',
         views.AttributeValueByAttributeAPIView.as_view(),
         name='attribute-values'
+    ),
+    path('api/filter-options/',
+         views.FilterOptionsListAPIView.as_view(), name='options-list'),
+    path(
+        'api/filter-options/<int:option_id>/',
+        views.FilterOptionValuesAPIView.as_view(),
+        name='filter-options-values'
     ),
 ]

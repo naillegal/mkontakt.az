@@ -1574,15 +1574,19 @@ class WishlistAPIView(APIView):
         operation_summary="Wishlist-i əldə et",
         manual_parameters=[
             openapi.Parameter(
-                'user_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                name='user_id',
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
                 description='(Required) İstifadəçi ID-si'
             )
         ],
-        responses={200: openapi.Response(
-            description="Wishlist məlumatı",
-            schema=WishItemSerializer(many=True)
-        ),
-            400: openapi.Response(description="user_id göndərilməlidir")}
+        responses={
+            200: openapi.Response(
+                description="Wishlist məhsulları",
+                schema=ProductListSerializer(many=True)
+            ),
+            400: "user_id göndərilməyibsə",
+        }
     )
     def get(self, request):
         user_id = request.query_params.get('user_id')
@@ -1592,9 +1596,17 @@ class WishlistAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         get_object_or_404(User, pk=user_id)
-        qs = Wish.objects.filter(user_id=user_id).select_related('product')
-        ser = WishItemSerializer(qs, many=True, context={'request': request})
-        return Response(ser.data, status=200)
+
+        product_ids = Wish.objects.filter(user_id=user_id) \
+                                  .values_list('product_id', flat=True)
+        products = Product.objects.filter(id__in=product_ids)
+
+        serializer = ProductListSerializer(
+            products,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Wishlist-ə məhsul əlavə et",
@@ -1608,11 +1620,11 @@ class WishlistAPIView(APIView):
         ),
         responses={
             201: openapi.Response(
-                description="Yeni wish yaradıldı",
-                schema=WishItemSerializer()
+                description="Wishlist yeniləndi",
+                schema=ProductListSerializer(many=True)
             ),
-            400: openapi.Response(description="user_id və product_id mütləqdir"),
-            404: openapi.Response(description="User və ya Product tapılmadı")
+            400: "user_id və product_id göndərilməyibsə",
+            404: "User və ya Product tapılmadıqda"
         }
     )
     def post(self, request):
@@ -1626,15 +1638,17 @@ class WishlistAPIView(APIView):
         user = get_object_or_404(User, pk=user_id)
         product = get_object_or_404(Product, pk=product_id)
 
-        wish, created = Wish.objects.get_or_create(user=user, product=product)
-        if not created:
-            return Response(
-                {"detail": "Artıq wishlist-də mövcuddur."},
-                status=status.HTTP_200_OK
-            )
+        Wish.objects.get_or_create(user=user, product=product)
 
-        ser = WishItemSerializer(wish, context={'request': request})
-        return Response(ser.data, status=status.HTTP_201_CREATED)
+        product_ids = Wish.objects.filter(user=user) \
+                                  .values_list('product_id', flat=True)
+        products = Product.objects.filter(id__in=product_ids)
+        serializer = ProductListSerializer(
+            products,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
         operation_summary="Wishlist-dən məhsul sil",
@@ -1648,11 +1662,11 @@ class WishlistAPIView(APIView):
         ),
         responses={
             200: openapi.Response(
-                description="Yenilənmiş wishlist",
-                schema=WishItemSerializer(many=True)
+                description="Wishlist yeniləndi",
+                schema=ProductListSerializer(many=True)
             ),
-            400: openapi.Response(description="user_id və product_id mütləqdir"),
-            404: openapi.Response(description="User və ya Product tapılmadı")
+            400: "user_id və product_id göndərilməyibsə",
+            404: "User və ya Product tapılmadıqda"
         }
     )
     def delete(self, request):
@@ -1668,9 +1682,15 @@ class WishlistAPIView(APIView):
 
         Wish.objects.filter(user_id=user_id, product_id=product_id).delete()
 
-        qs = Wish.objects.filter(user_id=user_id).select_related('product')
-        ser = WishItemSerializer(qs, many=True, context={'request': request})
-        return Response(ser.data, status=200)
+        product_ids = Wish.objects.filter(user_id=user_id) \
+                                  .values_list('product_id', flat=True)
+        products = Product.objects.filter(id__in=product_ids)
+        serializer = ProductListSerializer(
+            products,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MobileOrderView(APIView):
@@ -2155,3 +2175,100 @@ class AttributeValueByAttributeAPIView(generics.ListAPIView):
         return ProductAttributeValue.objects.filter(
             attribute_id=attribute_id
         ).order_by('value')
+
+
+class FilterOptionsListAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Filter başlıqları: Brendlər, Kateqoriyalar və Attribute adları",
+        responses={
+            200: openapi.Response(
+                description="ID və name siyahısı",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Sıradakı nömrə'),
+                            'name': openapi.Schema(type=openapi.TYPE_STRING, description='Başlıq')
+                        }
+                    )
+                )
+            )
+        }
+    )
+    def get(self, request):
+        data = [
+            {'id': 1, 'name': 'Brendlər'},
+            {'id': 2, 'name': 'Kateqoriyalar'},
+        ]
+        attrs = ProductAttribute.objects.order_by('name') \
+            .values_list('name', flat=True)
+        for idx, name in enumerate(attrs, start=3):
+            data.append({'id': idx, 'name': name})
+        return Response(data)
+
+
+class FilterOptionValuesAPIView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Seçilmiş FilterOption-a aid dəyərləri qaytarır",
+        manual_parameters=[
+            openapi.Parameter(
+                name='option_id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                description='FilterOptionsListAPIView-dən gələn id (1,2,3,...)'
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Seçilmiş option-un dəyərləri",
+                schema=openapi.Schema(
+                    # ← burada əlavə olunub
+                    type=openapi.TYPE_ARRAY,
+                    # ← və burada
+                    items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                )
+            ),
+            400: openapi.Response(description="Yanlış option_id"),
+            404: openapi.Response(description="Mənbə tapılmadı")
+        }
+    )
+    def get(self, request, option_id):
+        # 1: Brendlər
+        if option_id == 1:
+            qs = Brand.objects.all().order_by('name')
+            data = [{'id': b.id, 'name': b.name} for b in qs]
+            return Response(data)
+
+        # 2: Kateqoriyalar + alt-kateqoriyalar
+        if option_id == 2:
+            cats = Category.objects.prefetch_related('subcategories') \
+                                   .all().order_by('name')
+            data = []
+            for c in cats:
+                subcats = [
+                    {'id': sc.id, 'name': sc.name}
+                    for sc in c.subcategories.all().order_by('name')
+                ]
+                data.append({
+                    'id': c.id,
+                    'name': c.name,
+                    'subcategories': subcats
+                })
+            return Response(data)
+
+        # 3 və sonrası: Atribut dəyərləri
+        attr_names = list(
+            ProductAttribute.objects
+            .order_by('name')
+            .values_list('name', flat=True)
+        )
+        idx = option_id - 3
+        if idx < 0 or idx >= len(attr_names):
+            return Response({"detail": "Yanlış option_id."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        attribute = get_object_or_404(ProductAttribute, name=attr_names[idx])
+        values = attribute.values.order_by('value')
+        data = [{'id': v.id, 'name': v.value} for v in values]
+        return Response(data)
