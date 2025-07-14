@@ -82,8 +82,8 @@ class ProductListSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name", read_only=True)
     has_variants = serializers.BooleanField(
         source="variants.exists", read_only=True)
-
     variants = serializers.SerializerMethodField()
+    in_wishlist = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Product
@@ -100,7 +100,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "image",
             "code",
             "has_variants",
-            "variants"
+            "variants",
+            "in_wishlist",
         )
 
     def get_price(self, obj):

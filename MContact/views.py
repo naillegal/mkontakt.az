@@ -21,7 +21,7 @@ from decimal import Decimal
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import models as dj_models
-from django.db.models import Case, When, Value, IntegerField, Prefetch, Count
+from django.db.models import Case, When, Value, IntegerField, Prefetch, Count, Exists, OuterRef, BooleanField
 from django.views.decorators.csrf import ensure_csrf_cookie
 import uuid
 from .models import (
@@ -305,17 +305,22 @@ class CategoryListCreateAPIView(generics.ListCreateAPIView):
 #     queryset = ProductType.objects.all().order_by('id')
 #     serializer_class = ProductTypeSerializer
 
-
 class ProductListAPIView(generics.ListAPIView):
-    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductListSerializer
     pagination_class = CustomPageNumberPagination
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
-
+    def get_queryset(self):
+        qs = Product.objects.all().order_by("-created_at")
+        session_user_id = self.request.session.get("user_id")
+        if session_user_id:
+            wishlist_qs = Wish.objects.filter(
+                user_id=session_user_id,           
+                product_id=OuterRef('pk')
+            )
+            qs = qs.annotate(in_wishlist=Exists(wishlist_qs))
+        else:
+            qs = qs.annotate(in_wishlist=Value(False, output_field=BooleanField()))
+        return qs
 
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
