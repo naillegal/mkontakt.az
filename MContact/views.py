@@ -323,6 +323,7 @@ class ProductListAPIView(generics.ListAPIView):
                 False, output_field=BooleanField()))
         return qs
 
+
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = ProductDetailSerializer
     lookup_field = "pk"
