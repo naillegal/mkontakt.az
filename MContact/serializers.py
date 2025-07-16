@@ -144,6 +144,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
     subcategory_names = serializers.SerializerMethodField()
     brand_name = serializers.CharField(source="brand.name", read_only=True)
+    in_wishlist = serializers.BooleanField(read_only=True)
 
     variants = ProductVariantSerializer(many=True, read_only=True)
 
@@ -155,6 +156,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "brand", "brand_name",
             "subcategories", "subcategory_names",
             "variants",
+            "in_wishlist",
         )
 
     def get_price(self, obj):

@@ -314,24 +314,62 @@ class ProductListAPIView(generics.ListAPIView):
         session_user_id = self.request.session.get("user_id")
         if session_user_id:
             wishlist_qs = Wish.objects.filter(
-                user_id=session_user_id,           
+                user_id=session_user_id,
                 product_id=OuterRef('pk')
             )
             qs = qs.annotate(in_wishlist=Exists(wishlist_qs))
         else:
-            qs = qs.annotate(in_wishlist=Value(False, output_field=BooleanField()))
+            qs = qs.annotate(in_wishlist=Value(
+                False, output_field=BooleanField()))
         return qs
 
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductDetailSerializer
     lookup_field = "pk"
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                name="user_id",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                required=False,
+                description="(Optional) İstifadəçi ID‑si — wishlist annotasiyası üçün"
+            )
+        ],
+        responses={
+            200: ProductDetailSerializer(),
+            400: "Yanlış user_id"
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        user_id = request.query_params.get("user_id")
+        if user_id is not None:
+            try:
+                uid = int(user_id)
+            except ValueError:
+                raise ValidationError({"user_id": "Integer olmalıdır."})
+            if not User.objects.filter(pk=uid).exists():
+                raise ValidationError({"user_id": "Belə bir istifadəçi tapılmadı."})
+        return super().get(request, *args, **kwargs)
 
+    def get_queryset(self):
+        qs = Product.objects.all()
+        user_id = self.request.query_params.get("user_id")
+        if not user_id:
+            user_id = self.request.session.get("user_id")
+
+        if user_id:
+            wishlist_qs = Wish.objects.filter(
+                user_id=user_id,
+                product_id=OuterRef("pk")
+            )
+            qs = qs.annotate(in_wishlist=Exists(wishlist_qs))
+        else:
+            qs = qs.annotate(
+                in_wishlist=Value(False, output_field=BooleanField())
+            )
+        return qs
 
 def index(request):
     partners = PartnerSlider.objects.all().order_by('created_at')
@@ -2080,6 +2118,18 @@ class MobileProductFilterAPIView(generics.GenericAPIView):
 
         products = Product.objects.all()
 
+        session_user_id = request.session.get("user_id")
+        if session_user_id:
+            wishlist_qs = Wish.objects.filter(
+                user_id=session_user_id,
+                product_id=OuterRef('pk')
+            )
+            products = products.annotate(in_wishlist=Exists(wishlist_qs))
+        else:
+            products = products.annotate(
+                in_wishlist=Value(False, output_field=BooleanField())
+            )
+
         name = data.get("name")
         if name:
             products = products.filter(title__icontains=name)
@@ -2228,9 +2278,7 @@ class FilterOptionValuesAPIView(APIView):
             200: openapi.Response(
                 description="Seçilmiş option-un dəyərləri",
                 schema=openapi.Schema(
-                    # ← burada əlavə olunub
                     type=openapi.TYPE_ARRAY,
-                    # ← və burada
                     items=openapi.Schema(type=openapi.TYPE_OBJECT)
                 )
             ),
@@ -2239,13 +2287,11 @@ class FilterOptionValuesAPIView(APIView):
         }
     )
     def get(self, request, option_id):
-        # 1: Brendlər
         if option_id == 1:
             qs = Brand.objects.all().order_by('name')
             data = [{'id': b.id, 'name': b.name} for b in qs]
             return Response(data)
 
-        # 2: Kateqoriyalar + alt-kateqoriyalar
         if option_id == 2:
             cats = Category.objects.prefetch_related('subcategories') \
                                    .all().order_by('name')
@@ -2262,7 +2308,6 @@ class FilterOptionValuesAPIView(APIView):
                 })
             return Response(data)
 
-        # 3 və sonrası: Atribut dəyərləri
         attr_names = list(
             ProductAttribute.objects
             .order_by('name')
