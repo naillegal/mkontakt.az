@@ -314,23 +314,34 @@ class ProductListAPIView(generics.ListAPIView):
         session_user_id = self.request.session.get("user_id")
         if session_user_id:
             wishlist_qs = Wish.objects.filter(
-                user_id=session_user_id,           
+                user_id=session_user_id,
                 product_id=OuterRef('pk')
             )
             qs = qs.annotate(in_wishlist=Exists(wishlist_qs))
         else:
-            qs = qs.annotate(in_wishlist=Value(False, output_field=BooleanField()))
+            qs = qs.annotate(in_wishlist=Value(
+                False, output_field=BooleanField()))
         return qs
 
+
 class ProductRetrieveAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductDetailSerializer
     lookup_field = "pk"
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
+    def get_queryset(self):
+        qs = Product.objects.all()
+        session_user_id = self.request.session.get("user_id")
+        if session_user_id:
+            wishlist_qs = Wish.objects.filter(
+                user_id=session_user_id,
+                product_id=OuterRef('pk')
+            )
+            qs = qs.annotate(in_wishlist=Exists(wishlist_qs))
+        else:
+            qs = qs.annotate(
+                in_wishlist=Value(False, output_field=BooleanField())
+            )
+        return qs
 
 
 def index(request):
@@ -2079,6 +2090,18 @@ class MobileProductFilterAPIView(generics.GenericAPIView):
         data = filter_ser.validated_data
 
         products = Product.objects.all()
+
+        session_user_id = request.session.get("user_id")
+        if session_user_id:
+            wishlist_qs = Wish.objects.filter(
+                user_id=session_user_id,
+                product_id=OuterRef('pk')
+            )
+            products = products.annotate(in_wishlist=Exists(wishlist_qs))
+        else:
+            products = products.annotate(
+                in_wishlist=Value(False, output_field=BooleanField())
+            )
 
         name = data.get("name")
         if name:
