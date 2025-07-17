@@ -430,32 +430,46 @@ class OrderItemMiniSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = (
             "product_id", "product_title",
-            "quantity", "unit_price",
             "variant_id", "selected_attrs",
+            "quantity", "unit_price",
         )
 
     def get_selected_attrs(self, obj):
-        return obj.variant and [
+        if not obj.variant:
+            return []
+        return [
             {"name": v.attribute.name, "value": v.value}
             for v in obj.variant.attribute_values.all()
-        ] or []
+        ]
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    discount_amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
+    product_discount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
+    category_discount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
+    subtotal = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
+    shipping_fee = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
+    total = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True)
     items = OrderItemMiniSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
         fields = (
-            "id", "user_id", "full_name", "phone", "address",
+            "id", "user_id",
+            "full_name", "phone", "address",
             "delivery_date", "delivery_time",
-            "subtotal", "product_discount", "discount_amount", "total",
-            "created_at", "items"
+            "discount_amount", "product_discount", "category_discount",
+            "subtotal", "shipping_fee", "total",
+            "created_at",
+            "items",
         )
-        read_only_fields = (
-            "id", "subtotal", "product_discount",
-            "discount_amount", "total", "created_at", "items"
-        )
+        read_only_fields = fields
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):

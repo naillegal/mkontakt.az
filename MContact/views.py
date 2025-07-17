@@ -1749,267 +1749,114 @@ class MobileOrderView(APIView):
             required=[
                 "full_name", "phone", "address",
                 "delivery_date", "delivery_time",
+                "discount_amount", "product_discount", "category_discount",
                 "subtotal", "total", "items"
             ],
             properties={
-                "user_id": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description="(Optional) Login olmuş istifadəçi ID-si"
-                ),
-                "session_key": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="(Optional) Qonaq istifadəçi üçün session açarı"
-                ),
-                "full_name": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Müştərinin tam adı",
-                    example="Elvin Məmmədov"
-                ),
-                "phone": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Müştərinin telefon nömrəsi",
-                    example="+994551234567"
-                ),
-                "address": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Çatdırılma ünvanı",
-                    example="Bakı, Nərimanov"
-                ),
-                "delivery_date": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_DATE,
-                    description="Çatdırılma tarixi (YYYY-MM-DD)",
-                    example="2025-06-10"
-                ),
-                "delivery_time": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format="time",
-                    description="Çatdırılma vaxtı (HH:MM)",
-                    example="14:30"
-                ),
-                "discount_code": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Endirim kodu (mövcud ola bilər və ya boş)",
-                    example="TEST10"
-                ),
-                "discount_amount": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Endirim məbləği (decimal formatda)",
-                    example="5.00"
-                ),
-                "product_discount": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Məhsul endirimi (decimal formatda)",
-                    example="10.00"
-                ),
-                "subtotal": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Əsas məbləğ (decimal formatda)",
-                    example="100.00"
-                ),
-                "total": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Ümumi məbləğ (decimal formatda)",
-                    example="85.00"
-                ),
+                "user_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="(Optional) İstifadəçi ID"),
+                "session_key": openapi.Schema(type=openapi.TYPE_STRING,  description="(Optional) Session açarı"),
+                "full_name": openapi.Schema(type=openapi.TYPE_STRING, description="Tam ad", example="Test"),
+                "phone": openapi.Schema(type=openapi.TYPE_STRING, description="Telefon", example="+994551234567"),
+                "address": openapi.Schema(type=openapi.TYPE_STRING, description="Ünvan", example="Bakı, Nərimanov"),
+                "delivery_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="Çatdırılma tarixi", example="2025-07-05"),
+                "delivery_time": openapi.Schema(type=openapi.TYPE_STRING, format="time", description="Çatdırılma vaxtı", example="18:47"),
+                "discount_amount": openapi.Schema(type=openapi.TYPE_STRING, description="Endirim Məbləği", example="0.00"),
+                "product_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Məhsul Endirimi", example="2.40"),
+                "category_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Kateqoriya Endirimi", example="1.50"),
+                "subtotal": openapi.Schema(type=openapi.TYPE_STRING, description="Ara Cəm", example="60.00"),
+                "total": openapi.Schema(type=openapi.TYPE_STRING, description="Ümumi Məbləğ", example="66.10"),
                 "items": openapi.Schema(
                     type=openapi.TYPE_ARRAY,
-                    description="Sifarişə daxil olan məhsulların siyahısı",
+                    description="Sifariş Məhsulları",
                     items=openapi.Schema(
                         type=openapi.TYPE_OBJECT,
                         required=["product_id", "quantity", "unit_price"],
                         properties={
-                            "product_id": openapi.Schema(
-                                type=openapi.TYPE_INTEGER,
-                                description="Məhsulun ID-si",
-                                example=42
-                            ),
-                            "quantity": openapi.Schema(
-                                type=openapi.TYPE_INTEGER,
-                                description="Miqdar",
-                                example=2
-                            ),
-                            "unit_price": openapi.Schema(
-                                type=openapi.TYPE_STRING,
-                                description="Vahid qiymət (decimal formatda)",
-                                example="15.50"
-                            ),
-                        }
-                    )
+                            "product_id": openapi.Schema(type=openapi.TYPE_INTEGER, example=42),
+                            "variant_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="(Optional) Variant ID", example=7),
+                            "quantity": openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                            "unit_price": openapi.Schema(type=openapi.TYPE_STRING, example="30.00"),
+                        },
+                    ),
                 ),
-            }
+            },
         ),
         responses={
-            201: openapi.Response(
-                description="Sifariş uğurla yaradıldı",
-                schema=OrderSerializer()
-            ),
-            400: openapi.Response(description="Bad Request"),
-            404: openapi.Response(description="Product tapılmadı")
-        }
+            201: openapi.Response(description="Sifariş uğurla yaradıldı", schema=OrderSerializer()),
+            400: "Validation Error",
+        },
     )
     def post(self, request, *args, **kwargs):
         data = request.data
+        for f in (
+            "full_name", "phone", "address",
+            "delivery_date", "delivery_time",
+            "discount_amount", "product_discount", "category_discount",
+            "subtotal", "total", "items"
+        ):
+            if f not in data:
+                return Response({"detail": f"'{f}' tələb olunur."}, status=400)
 
-        user_id = data.get("user_id", None)
-        session_key = data.get("session_key", None)
-
-        full_name = data.get("full_name", "").strip()
-        phone = data.get("phone", "").strip()
-        address = data.get("address", "").strip()
-        delivery_date = data.get("delivery_date", "").strip()
-        delivery_time = data.get("delivery_time", "").strip()
-        subtotal = data.get("subtotal", None)
-        total = data.get("total", None)
-
-        missing_fields = []
-        if not full_name:
-            missing_fields.append("full_name")
-        if not phone:
-            missing_fields.append("phone")
-        if not address:
-            missing_fields.append("address")
-        if not delivery_date:
-            missing_fields.append("delivery_date")
-        if not delivery_time:
-            missing_fields.append("delivery_time")
-        if subtotal is None:
-            missing_fields.append("subtotal")
-        if total is None:
-            missing_fields.append("total")
-
-        if missing_fields:
-            return Response(
-                {"detail": f"Tələb olunan sahələr çatışmır: {', '.join(missing_fields)}."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        discount_code = data.get("discount_code", "").strip()
-        discount_amount_str = data.get("discount_amount", None)
-        product_discount_str = data.get("product_discount", None)
-
-        try:
-            discount_amount = (
-                Decimal(discount_amount_str) if discount_amount_str is not None else Decimal(
-                    "0.00")
-            )
-        except Exception:
-            return Response(
-                {"detail": "discount_amount sahəsi doğru formatda deyil. Məsələn: \"5.00\"."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            product_discount = (
-                Decimal(product_discount_str) if product_discount_str is not None else Decimal(
-                    "0.00")
-            )
-        except Exception:
-            return Response(
-                {"detail": "product_discount sahəsi doğru formatda deyil. Məsələn: \"10.00\"."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            subtotal_dec = Decimal(str(subtotal))
-        except Exception:
-            return Response(
-                {"detail": "subtotal sahəsi doğru formatda deyil. Məsələn: \"100.00\"."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            total_dec = Decimal(str(total))
-        except Exception:
-            return Response(
-                {"detail": "total sahəsi doğru formatda deyil. Məsələn: \"85.00\"."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        items = data.get("items", None)
-        if not items or not isinstance(items, list):
-            return Response(
-                {"detail": "items siyahısı göndərilməlidir və ən azı bir məhsul olmalıdır."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        parsed_items = []
-        for idx, itm in enumerate(items, start=1):
-            pid = itm.get("product_id", None)
-            qty = itm.get("quantity", None)
-            unit_price = itm.get("unit_price", None)
-
-            missing = []
-            if pid is None:
-                missing.append("product_id")
-            if qty is None:
-                missing.append("quantity")
-            if unit_price is None:
-                missing.append("unit_price")
-
-            if missing:
-                return Response(
-                    {"detail": f"items[{idx}] içində çatışmayan sahələr: {', '.join(missing)}."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+        def to_dec(key):
             try:
-                product_obj = Product.objects.get(pk=pid)
-            except Product.DoesNotExist:
-                return Response(
-                    {"detail": f"items[{idx}] içində product_id='{pid}' tapılmadı."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                return Decimal(str(data.get(key)))
+            except:
+                raise ValueError(f"{key} düzgün deyildir.")
+        try:
+            discount_amount = to_dec("discount_amount")
+            product_discount = to_dec("product_discount")
+            category_discount = to_dec("category_discount")
+            subtotal = to_dec("subtotal")
+            total = to_dec("total")
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
 
+        parsed = []
+        for i, itm in enumerate(data["items"], 1):
+            if "product_id" not in itm or "quantity" not in itm or "unit_price" not in itm:
+                return Response({"detail": f"items[{i}] sahələri çatışmır."}, status=400)
+            prod = get_object_or_404(Product, pk=itm["product_id"])
+            var = None
+            if itm.get("variant_id") is not None:
+                var = get_object_or_404(
+                    ProductVariant,
+                    pk=itm["variant_id"],
+                    product=prod,
+                    is_active=True
+                )
             try:
-                qty_int = int(qty)
-                if qty_int < 1:
-                    raise ValueError()
-            except Exception:
-                return Response(
-                    {"detail": f"items[{idx}] içində quantity düzgün deyil. Tam ədəd olmalıdır."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            try:
-                unit_price_dec = Decimal(str(unit_price))
-            except Exception:
-                return Response(
-                    {"detail": f"items[{idx}] içində unit_price düzgün formatda deyil. Məsələn: \"15.50\"."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            parsed_items.append({
-                "product": product_obj,
-                "quantity": qty_int,
-                "unit_price": unit_price_dec,
-            })
+                qty = int(itm["quantity"])
+                up = Decimal(str(itm["unit_price"]))
+            except:
+                return Response({"detail": f"items[{i}] quantity/unit_price yanlışdır."}, status=400)
+            parsed.append({"product": prod, "variant": var,
+                          "quantity": qty, "unit_price": up})
 
         order = Order.objects.create(
-            user_id=user_id,
-            full_name=full_name,
-            phone=phone,
-            address=address,
-            delivery_date=delivery_date,
-            delivery_time=delivery_time,
-            discount_code=discount_code if discount_code else "",
+            full_name=data["full_name"],
+            phone=data["phone"],
+            address=data["address"],
+            delivery_date=data["delivery_date"],
+            delivery_time=data["delivery_time"],
             discount_amount=discount_amount,
             product_discount=product_discount,
-            subtotal=subtotal_dec,
-            total=total_dec,
+            category_discount=category_discount,
+            subtotal=subtotal,
+            total=total,
             created_at=timezone.now()
         )
 
-        for itm in parsed_items:
+        for itm in parsed:
             OrderItem.objects.create(
                 order=order,
                 product=itm["product"],
+                variant=itm["variant"],
                 quantity=itm["quantity"],
                 unit_price=itm["unit_price"]
             )
 
-        serialized_order = OrderSerializer(order)
-        return Response(serialized_order.data, status=status.HTTP_201_CREATED)
+        ser = OrderSerializer(order, context={"request": request})
+        return Response(ser.data, status=201)
 
 
 class CategoryProductsAPIView(generics.ListAPIView):
