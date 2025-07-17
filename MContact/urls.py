@@ -134,4 +134,9 @@ urlpatterns = [
         views.FilterOptionValuesAPIView.as_view(),
         name='filter-options-values'
     ),
+    path(
+        "api/notifications/broadcast/",
+        views.BroadcastNotificationView.as_view(),
+        name="broadcast-notification"
+    ),
 ]

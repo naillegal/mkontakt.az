@@ -107,3 +107,13 @@ def broadcast_notification(title, body, data=None):
             send_push_notification(tok, title, body, data)
         except Exception:
             continue
+
+def send_push(tokens: list[str], title: str, body: str) -> None:
+    if not tokens:
+        return
+    messaging.send_multicast(
+        messaging.MulticastMessage(
+            notification=messaging.Notification(title=title, body=body),
+            tokens=tokens
+        )
+    )

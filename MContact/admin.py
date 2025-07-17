@@ -4,7 +4,8 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
     ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order,
-    OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue, ProductVariant, SubCategory
+    OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue,
+    ProductVariant, SubCategory, PushNotification
 )
 from django.http import HttpResponse
 import openpyxl
@@ -314,3 +315,10 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 class HomePageBannerAdmin(CustomTranslationAdmin):
     list_display = ('title', 'title_en', 'title_ru', 'created_at')
     readonly_fields = ('created_at',)
+
+
+@admin.register(PushNotification)
+class PushNotificationAdmin(admin.ModelAdmin):
+    list_display   = ("title", "created_at")
+    filter_horizontal = ("recipients",)   
+    readonly_fields  = ("created_at",)

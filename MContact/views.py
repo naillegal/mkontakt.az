@@ -28,7 +28,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
     CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner,
-    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory, RegistrationOTP
+    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory, RegistrationOTP, PushNotification
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -351,7 +351,8 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
             except ValueError:
                 raise ValidationError({"user_id": "Integer olmalıdır."})
             if not User.objects.filter(pk=uid).exists():
-                raise ValidationError({"user_id": "Belə bir istifadəçi tapılmadı."})
+                raise ValidationError(
+                    {"user_id": "Belə bir istifadəçi tapılmadı."})
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -371,6 +372,7 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
                 in_wishlist=Value(False, output_field=BooleanField())
             )
         return qs
+
 
 def index(request):
     partners = PartnerSlider.objects.all().order_by('created_at')
@@ -2323,3 +2325,89 @@ class FilterOptionValuesAPIView(APIView):
         values = attribute.values.order_by('value')
         data = [{'id': v.id, 'name': v.value} for v in values]
         return Response(data)
+
+
+class BroadcastNotificationView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Seçilmiş istifadəçilərə bildiriş göndər",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["user_ids", "title", "message"],
+            properties={
+                "user_ids": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    description="Bildiriş göndəriləcək istifadəçilərin ID-ləri",
+                    items=openapi.Items(type=openapi.TYPE_INTEGER),
+                    example=[1, 2, 5]
+                ),
+                "title": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Bildirişin başlığı",
+                    example="Kampaniya başladı!"
+                ),
+                "message": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Bildirişin mətni",
+                    example="Bütün məhsullara 20% endirim!"
+                ),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Göndərilən token sayı",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "sent": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description="Göndərilən cihaz tokenlərinin sayı",
+                            example=3
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Yoxlanış xətası",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="user_ids, title, message tələb olunur."
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description="Heç bir istifadəçi tapılmadı",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "detail": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="İstifadəçi tapılmadı."
+                        )
+                    }
+                )
+            ),
+        }
+    )
+    def post(self, request):
+        ids = request.data.get("user_ids", [])
+        title = request.data.get("title", "")
+        body = request.data.get("message", "")
+        if not ids or not title or not body:
+            return Response(
+                {"detail": "user_ids, title, message tələb olunur."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        users = User.objects.filter(id__in=ids)
+        if not users.exists():
+            return Response({"detail": "İstifadəçi tapılmadı."}, status=status.HTTP_404_NOT_FOUND)
+
+        note = PushNotification.objects.create(title=title, message=body)
+        note.recipients.set(users)
+        sent = note.send()
+
+        return Response({"sent": sent}, status=status.HTTP_200_OK)

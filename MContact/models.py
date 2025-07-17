@@ -855,3 +855,32 @@ class RegistrationOTP(models.Model):
 
     def __str__(self):
         return f"{self.email} – {self.code}"
+
+class PushNotification(models.Model):
+    title = models.CharField(max_length=120)
+    message = models.TextField()
+    recipients = models.ManyToManyField(User, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bildiriş"
+        verbose_name_plural = "Bildirişlər"
+
+    def __str__(self):
+        return f"{self.title} ({self.created_at:%d.%m %H:%M})"
+
+    def send(self) -> int:
+        from .models import UserDeviceToken
+        from .utils import send_push
+
+        tokens = list(
+            UserDeviceToken.objects
+            .filter(user__in=self.recipients.all())
+            .values_list("token", flat=True)
+        )
+        send_push(tokens, self.title, self.message)
+        return len(tokens)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.send()

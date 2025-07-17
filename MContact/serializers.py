@@ -298,40 +298,57 @@ class UpdatePasswordSerializer(serializers.Serializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(source="product.id")
-    product_title = serializers.CharField(source="product.title")
-    product_image = serializers.SerializerMethodField()
-    unit_price = serializers.DecimalField(
-        max_digits=10, decimal_places=2, source="product.price"
-    )
-    line_total = serializers.SerializerMethodField()
-
-    variant_id = serializers.IntegerField(source="variant.id", read_only=True)
-    selected_attrs = serializers.SerializerMethodField()
+    title = serializers.CharField(source='product.title', read_only=True)
+    price = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
+    subcategories = serializers.SerializerMethodField()
+    values = serializers.SerializerMethodField()
+    selected_variant = ProductVariantSerializer(
+        source='variant', read_only=True)
 
     class Meta:
         model = CartItem
         fields = (
-            "id", "product_id", "product_title",
-            "product_image", "quantity", "unit_price",
-            "line_total", "variant_id", "selected_attrs",
+            'id',
+            'title',
+            'price',
+            'image',
+            'categories',
+            'subcategories',
+            'values',
+            'quantity',
+            'selected_variant',
         )
 
-    def get_product_image(self, obj):
-        url = obj.product.get_main_image_url()
-        req = self.context.get("request")
-        return req.build_absolute_uri(url) if req else url
-
-    def get_line_total(self, obj):
-        return obj.product.price * obj.quantity
-
-    def get_selected_attrs(self, obj):
-        return obj.selected_attrs
-
-    def get_unit_price(self, obj):
+    def get_price(self, obj):
         if obj.variant and obj.variant.price_override is not None:
             return obj.variant.price_override
         return obj.product.price
+
+    def get_image(self, obj):
+        url = obj.product.get_main_image_url()
+        req = self.context.get('request')
+        return req.build_absolute_uri(url) if req else url
+
+    def get_categories(self, obj):
+        return list(
+            obj.product.subcategories
+               .values_list('category__name', flat=True)
+               .distinct()
+        )
+
+    def get_subcategories(self, obj):
+        return list(
+            obj.product.subcategories
+               .values_list('name', flat=True)
+        )
+
+    def get_values(self, obj):
+        return obj.selected_attrs
+
+
+type = serializers.Serializer
 
 
 class MobileCartSerializer(serializers.ModelSerializer):
@@ -340,21 +357,38 @@ class MobileCartSerializer(serializers.ModelSerializer):
         max_digits=10, decimal_places=2, read_only=True)
     product_discount = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True)
+    category_discount = serializers.SerializerMethodField()
     discount_amount = serializers.SerializerMethodField()
-    grand_total = serializers.DecimalField(
-        max_digits=10, decimal_places=2, read_only=True)
+    shipping_fee = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
         fields = (
             "id", "user_id", "session_key",
             "items",
-            "raw_total", "product_discount",
-            "discount_amount", "grand_total",
+            "raw_total", "product_discount", "category_discount",
+            "discount_amount", "shipping_fee", "grand_total",
         )
 
+    def get_category_discount(self, obj):
+        cat = Decimal(str(obj.category_discount))
+        return str(int(cat)) if cat == cat.quantize(Decimal('1')) else "{:.2f}".format(cat)
+
     def get_discount_amount(self, obj):
-        return obj.get_discount_code_amount()
+        amt = Decimal(str(obj.get_discount_code_amount()))
+        return str(int(amt)) if amt == amt.quantize(Decimal('1')) else "{:.2f}".format(amt)
+
+    def get_shipping_fee(self, obj):
+        fee = Decimal('0') if obj.grand_total >= Decimal(
+            '200.00') else Decimal('10')
+        return str(int(fee))
+
+    def get_grand_total(self, obj):
+        base = Decimal(str(obj.grand_total))
+        fee = Decimal(self.get_shipping_fee(obj))
+        total = base + fee
+        return str(int(total)) if total == total.quantize(Decimal('1')) else "{:.2f}".format(total)
 
 
 class DiscountCodeSerializer(serializers.ModelSerializer):
