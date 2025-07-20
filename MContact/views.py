@@ -1475,7 +1475,7 @@ class MobileCartView(APIView):
         product_id = data.get("product_id")
         variant_id = data.get("variant_id")
 
-        if not product_id:
+        if product_id is None:
             return Response(
                 {"detail": "product_id göndərilməlidir."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1486,11 +1486,35 @@ class MobileCartView(APIView):
             session_key=session_key
         )
 
-        qs = CartItem.objects.filter(cart=cart, product_id=product_id)
-        if variant_id is not None:
-            qs = qs.filter(variant_id=variant_id)
+        deleted = 0
 
-        qs.delete()
+        try:
+            cid = int(product_id)
+            deleted = CartItem.objects.filter(cart=cart, id=cid).delete()[0]
+        except (TypeError, ValueError):
+            pass
+
+        if deleted == 0:
+            try:
+                pid = int(product_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": "product_id rəqəm olmalıdır."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            qs = CartItem.objects.filter(cart=cart, product_id=pid)
+            if variant_id is not None:
+                qs = qs.filter(variant_id=variant_id)
+            deleted = qs.delete()[0]
+
+        if deleted == 0:
+            return Response(
+                {"detail": "Silinməsi üçün uyğun məhsul tapılmadı."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if hasattr(cart, "_prefetched_objects_cache"):
+            cart._prefetched_objects_cache.pop("items", None)
 
         ser = MobileCartSerializer(cart, context={"request": request})
         return Response(
@@ -1952,111 +1976,161 @@ class RegisterDeviceTokenAPIView(APIView):
         return Response({"detail": "Token silindi."}, status=status.HTTP_200_OK)
 
 
-class MobileProductFilterAPIView(generics.GenericAPIView):
+class MobileProductFilterAPIView(APIView):
     parser_classes = [JSONParser]
-    serializer_class = ProductListSerializer
     pagination_class = CustomPageNumberPagination
 
     @swagger_auto_schema(
-        request_body=ProductFilterRequestSerializer,
-        responses={200: ProductFilterResponseSerializer()}
+        operation_summary="Mobile product filter",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "page":     openapi.Schema(type=openapi.TYPE_INTEGER, default=1),
+                "perpage":  openapi.Schema(type=openapi.TYPE_INTEGER, default=10),
+                "ordering": openapi.Schema(type=openapi.TYPE_STRING, enum=["price_asc", "price_desc"]),
+                "code":     openapi.Schema(type=openapi.TYPE_STRING),
+                "name":     openapi.Schema(type=openapi.TYPE_STRING),
+            },
+            additional_properties=openapi.Schema(
+                type=openapi.TYPE_OBJECT
+            ),
+            example={
+                "page": 1,
+                "perpage": 10,
+                "ordering": "price_asc",
+                "code": "string",
+                "name": "string",
+                "1": [1, 2],
+                "2": {
+                    "1": [2, 3]
+                }
+            }
+        ),
+        responses={200: ProductFilterResponseSerializer()},
     )
     def post(self, request, *args, **kwargs):
-        filter_ser = ProductFilterRequestSerializer(data=request.data)
-        filter_ser.is_valid(raise_exception=True)
-        data = filter_ser.validated_data
+        data = request.data
+        page_num = int(data.get("page", 1))
+        perpage = int(data.get("perpage", self.pagination_class.page_size))
+        ordering = data.get("ordering")
+        code_q = data.get("code", "").strip()
+        name_q = data.get("name", "").strip()
 
-        products = Product.objects.all()
-
-        session_user_id = request.session.get("user_id")
-        if session_user_id:
-            wishlist_qs = Wish.objects.filter(
-                user_id=session_user_id,
-                product_id=OuterRef('pk')
-            )
-            products = products.annotate(in_wishlist=Exists(wishlist_qs))
+        qs = Product.objects.all()
+        user_id = request.session.get("user_id")
+        if user_id:
+            wqs = Wish.objects.filter(
+                user_id=user_id, product_id=OuterRef("pk"))
+            qs = qs.annotate(in_wishlist=Exists(wqs))
         else:
-            products = products.annotate(
-                in_wishlist=Value(False, output_field=BooleanField())
-            )
+            qs = qs.annotate(in_wishlist=Value(
+                False, output_field=BooleanField()))
 
-        name = data.get("name")
-        if name:
-            products = products.filter(title__icontains=name)
+        if name_q:
+            qs = qs.filter(title__icontains=name_q)
+        if code_q:
+            qs = qs.filter(code__iexact=code_q)
 
-        code = data.get("code")
-        if code:
-            products = products.filter(code__iexact=code)
+        numeric_filters = {k: v for k, v in data.items() if k.isdigit()}
 
-        brand_ids = [b for b in data.get("brand_ids", []) if b]
-        if brand_ids:
-            products = products.filter(brand_id__in=brand_ids)
+        brand_block = numeric_filters.pop("1", None)
+        if isinstance(brand_block, list):
+            brand_ids = []
+            for b in brand_block:
+                try:
+                    bi = int(b)
+                    if bi > 0:
+                        brand_ids.append(bi)
+                except:
+                    pass
+            if brand_ids:
+                qs = qs.filter(brand_id__in=brand_ids)
 
-        subcat_ids = [s for s in data.get("subcategory_ids", []) if s]
-        if subcat_ids:
-            products = products.filter(
-                subcategories__id__in=subcat_ids).distinct()
+        category_block = numeric_filters.pop("2", None)
+        if category_block is not None:
+            if isinstance(category_block, list):
+                sub_ids = []
+                for s in category_block:
+                    try:
+                        si = int(s)
+                        if si > 0:
+                            sub_ids.append(si)
+                    except:
+                        pass
+                if sub_ids:
+                    qs = qs.filter(subcategories__id__in=sub_ids).distinct()
+            elif isinstance(category_block, dict):
+                q_cat = Q()
+                for cat_id_str, subs in category_block.items():
+                    try:
+                        cat_id = int(cat_id_str)
+                    except:
+                        continue
+                    if isinstance(subs, list):
+                        clean_subs = []
+                        for sub in subs:
+                            try:
+                                subi = int(sub)
+                                if subi > 0:
+                                    clean_subs.append(subi)
+                            except:
+                                pass
+                        if clean_subs:
+                            q_cat |= Q(
+                                subcategories__category_id=cat_id,
+                                subcategories__id__in=clean_subs
+                            )
+                if q_cat:
+                    qs = qs.filter(q_cat).distinct()
 
-        cat_ids = [c for c in data.get("category_ids", []) if c]
-        if cat_ids:
-            products = products.filter(
-                subcategories__category_id__in=cat_ids).distinct()
+        attribute_blocks = {k: v for k,
+                            v in numeric_filters.items() if int(k) >= 3}
+        if attribute_blocks:
+            vqs = ProductVariant.objects.all()
+            for _, val_ids in attribute_blocks.items():
+                if not isinstance(val_ids, list):
+                    continue
+                cleaned = []
+                for vid in val_ids:
+                    try:
+                        vi = int(vid)
+                        if vi > 0:
+                            cleaned.append(vi)
+                    except:
+                        pass
+                if cleaned:
+                    vqs = vqs.filter(attribute_values__id__in=cleaned)
+            vqs = vqs.distinct()
+            if vqs.exists():
+                qs = qs.filter(variants__in=vqs).distinct()
+                qs = qs.prefetch_related(Prefetch("variants", queryset=vqs))
+            else:
+                qs = qs.none()
 
-        raw_attrs = data.get("attributes", [])
-        attr_filters = []
-        for block in raw_attrs:
-            vids = [v for v in block.get("value_ids", []) if v]
-            aid = block.get("attribute_id")
-            if vids:
-                attr_filters.append({"attribute_id": aid, "value_ids": vids})
-
-        if attr_filters:
-            variants_qs = ProductVariant.objects.all()
-            for block in attr_filters:
-                aid = block["attribute_id"]
-                vids = block["value_ids"]
-                if aid:
-                    variants_qs = variants_qs.filter(
-                        attribute_values__attribute_id=aid,
-                        attribute_values__id__in=vids
-                    )
-                else:
-                    variants_qs = variants_qs.filter(
-                        attribute_values__id__in=vids
-                    )
-            variants_qs = variants_qs.distinct()
-
-            products = products.filter(variants__in=variants_qs).distinct()
-
-            products = products.prefetch_related(
-                Prefetch("variants", queryset=variants_qs)
-            )
-
-        products = products.annotate(
+        qs = qs.annotate(
             _prio=Case(
-                When(priority__isnull=False, then="priority"),
+                When(priority__isnull=False, then='priority'),
                 default=Value(999999),
                 output_field=IntegerField()
             )
         )
 
-        ordering = data.get("ordering")
         if ordering == "price_asc":
-            products = products.order_by("price")
+            qs = qs.order_by("price")
         elif ordering == "price_desc":
-            products = products.order_by("-price")
+            qs = qs.order_by("-price")
         else:
-            products = products.order_by("_prio", "-created_at")
+            qs = qs.order_by("_prio", "-created_at")
 
-        page = self.paginate_queryset(products)
-        if page is not None:
-            ser = self.get_serializer(
-                page, many=True, context={"request": request})
-            return self.get_paginated_response(ser.data)
-
-        ser = self.get_serializer(
-            products, many=True, context={"request": request})
-        return Response(ser.data, status=status.HTTP_200_OK)
+        paginator = self.pagination_class()
+        paginator.page_size = perpage
+        if hasattr(request.query_params, "_mutable"):
+            request.query_params._mutable = True
+        request.query_params["page"] = page_num
+        page = paginator.paginate_queryset(qs, request, view=self)
+        serializer = ProductListSerializer(
+            page, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 class AttributeListAPIView(generics.ListAPIView):
