@@ -1977,44 +1977,67 @@ class RegisterDeviceTokenAPIView(APIView):
 
 
 class MobileProductFilterAPIView(APIView):
-    parser_classes = [JSONParser]
     pagination_class = CustomPageNumberPagination
 
     @swagger_auto_schema(
         operation_summary="Mobile product filter",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "page":     openapi.Schema(type=openapi.TYPE_INTEGER, default=1),
-                "perpage":  openapi.Schema(type=openapi.TYPE_INTEGER, default=10),
-                "ordering": openapi.Schema(type=openapi.TYPE_STRING, enum=["price_asc", "price_desc"]),
-                "code":     openapi.Schema(type=openapi.TYPE_STRING),
-                "name":     openapi.Schema(type=openapi.TYPE_STRING),
-            },
-            additional_properties=openapi.Schema(
-                type=openapi.TYPE_OBJECT
+        manual_parameters=[
+            openapi.Parameter(
+                name="page",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                description="Səhifə nömrəsi",
+                default=1
             ),
-            example={
-                "page": 1,
-                "perpage": 10,
-                "ordering": "price_asc",
-                "code": "string",
-                "name": "string",
-                "1": [1, 2],
-                "2": {
-                    "1": [2, 3]
-                }
-            }
-        ),
+            openapi.Parameter(
+                name="perpage",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                description="Səhifədəki element sayı",
+                default=10
+            ),
+            openapi.Parameter(
+                name="ordering",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Sıralama: price_asc və ya price_desc"
+            ),
+            openapi.Parameter(
+                name="code",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Məhsul kodu (dəqiq uyğunluq)"
+            ),
+            openapi.Parameter(
+                name="name",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Məhsul adı üzərində axtarış"
+            ),
+            openapi.Parameter(
+                name="1",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_ARRAY,
+                description="Brand filter — bir neçə dəyər üçün birdən çox ?1=1&1=2 göndərin",
+                items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            openapi.Parameter(
+                name="2",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_ARRAY,
+                description="Subcategory filter — ?2=3&2=4 kimi",
+                items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+        ],
         responses={200: ProductFilterResponseSerializer()},
     )
-    def post(self, request, *args, **kwargs):
-        data = request.data
-        page_num = int(data.get("page", 1))
-        perpage = int(data.get("perpage", self.pagination_class.page_size))
-        ordering = data.get("ordering")
-        code_q = data.get("code", "").strip()
-        name_q = data.get("name", "").strip()
+    def get(self, request, *args, **kwargs):
+        params = request.query_params
+        page_num = int(params.get("page", 1))
+        perpage = int(params.get("perpage", self.pagination_class.page_size))
+        ordering = params.get("ordering")
+        code_q = params.get("code", "").strip()
+        name_q = params.get("name", "").strip()
 
         qs = Product.objects.all()
         user_id = request.session.get("user_id")
@@ -2031,75 +2054,32 @@ class MobileProductFilterAPIView(APIView):
         if code_q:
             qs = qs.filter(code__iexact=code_q)
 
-        numeric_filters = {k: v for k, v in data.items() if k.isdigit()}
+        numeric_filters = {
+            key: params.getlist(key)
+            for key in params
+            if key.isdigit()
+        }
 
-        brand_block = numeric_filters.pop("1", None)
-        if isinstance(brand_block, list):
-            brand_ids = []
-            for b in brand_block:
-                try:
-                    bi = int(b)
-                    if bi > 0:
-                        brand_ids.append(bi)
-                except:
-                    pass
-            if brand_ids:
-                qs = qs.filter(brand_id__in=brand_ids)
+        brand_vals = numeric_filters.pop("1", [])
+        if brand_vals:
+            brand_ids = [int(v) for v in brand_vals if v.isdigit()]
+            qs = qs.filter(brand_id__in=brand_ids)
 
-        category_block = numeric_filters.pop("2", None)
-        if category_block is not None:
-            if isinstance(category_block, list):
-                sub_ids = []
-                for s in category_block:
-                    try:
-                        si = int(s)
-                        if si > 0:
-                            sub_ids.append(si)
-                    except:
-                        pass
-                if sub_ids:
-                    qs = qs.filter(subcategories__id__in=sub_ids).distinct()
-            elif isinstance(category_block, dict):
-                q_cat = Q()
-                for cat_id_str, subs in category_block.items():
-                    try:
-                        cat_id = int(cat_id_str)
-                    except:
-                        continue
-                    if isinstance(subs, list):
-                        clean_subs = []
-                        for sub in subs:
-                            try:
-                                subi = int(sub)
-                                if subi > 0:
-                                    clean_subs.append(subi)
-                            except:
-                                pass
-                        if clean_subs:
-                            q_cat |= Q(
-                                subcategories__category_id=cat_id,
-                                subcategories__id__in=clean_subs
-                            )
-                if q_cat:
-                    qs = qs.filter(q_cat).distinct()
+        sub_vals = numeric_filters.pop("2", [])
+        if sub_vals:
+            sub_ids = [int(v) for v in sub_vals if v.isdigit()]
+            qs = qs.filter(subcategories__id__in=sub_ids).distinct()
 
-        attribute_blocks = {k: v for k,
-                            v in numeric_filters.items() if int(k) >= 3}
-        if attribute_blocks:
+        if numeric_filters:
             vqs = ProductVariant.objects.all()
-            for _, val_ids in attribute_blocks.items():
-                if not isinstance(val_ids, list):
+            for attr_key, val_list in numeric_filters.items():
+                try:
+                    attr_id = int(attr_key)
+                except ValueError:
                     continue
-                cleaned = []
-                for vid in val_ids:
-                    try:
-                        vi = int(vid)
-                        if vi > 0:
-                            cleaned.append(vi)
-                    except:
-                        pass
-                if cleaned:
-                    vqs = vqs.filter(attribute_values__id__in=cleaned)
+                vals = [int(v) for v in val_list if v.isdigit()]
+                if vals:
+                    vqs = vqs.filter(attribute_values__id__in=vals)
             vqs = vqs.distinct()
             if vqs.exists():
                 qs = qs.filter(variants__in=vqs).distinct()
@@ -2109,12 +2089,11 @@ class MobileProductFilterAPIView(APIView):
 
         qs = qs.annotate(
             _prio=Case(
-                When(priority__isnull=False, then='priority'),
+                When(priority__isnull=False, then="priority"),
                 default=Value(999999),
                 output_field=IntegerField()
             )
         )
-
         if ordering == "price_asc":
             qs = qs.order_by("price")
         elif ordering == "price_desc":
@@ -2128,6 +2107,7 @@ class MobileProductFilterAPIView(APIView):
             request.query_params._mutable = True
         request.query_params["page"] = page_num
         page = paginator.paginate_queryset(qs, request, view=self)
+
         serializer = ProductListSerializer(
             page, many=True, context={"request": request})
         return paginator.get_paginated_response(serializer.data)
