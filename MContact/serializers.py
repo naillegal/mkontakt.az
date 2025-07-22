@@ -244,6 +244,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    fcm_token = serializers.CharField(write_only=True, required=False)
+    platform = serializers.ChoiceField(
+        choices=UserDeviceToken.PLATFORM_CHOICES,
+        write_only=True,
+        required=False
+    )
 
 
 class UserSerializer(serializers.ModelSerializer):

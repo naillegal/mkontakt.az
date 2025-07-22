@@ -577,14 +577,32 @@ class RegisterAPIView(APIView):
 
 
 class RegisterOTPAPIView(APIView):
+    serializer_class = VerifyOtpSerializer
+
     @swagger_auto_schema(
         operation_summary="OTP kodunu yoxla və istifadəçini yarat",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["email", "otp_code"],
+            required=['email', 'otp_code'],
             properties={
-                "email":    openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description="E-poçt ünvanı"),
-                "otp_code": openapi.Schema(type=openapi.TYPE_STRING, description="4 rəqəmli OTP kodu"),
+                'email': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL,
+                    description="E‑poçt ünvanı"
+                ),
+                'otp_code': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="4 rəqəmli OTP kodu"
+                ),
+                'fcm_token': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Mobil FCM registration tokeni"
+                ),
+                'platform': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    enum=['android', 'ios'],
+                    description="Cihaz platforması"
+                ),
             }
         ),
         responses={
@@ -592,70 +610,125 @@ class RegisterOTPAPIView(APIView):
                 description="User yaradıldı",
                 schema=UserSerializer()
             ),
-            400: openapi.Response(description="Validation Error — kod səhvdir və ya vaxtı bitib")
+            400: openapi.Response(description="Yanlış OTP və ya validation xətası")
         }
     )
     def post(self, request):
-        serializer = VerifyOtpSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"].lower()
-        otp_input = serializer.validated_data["otp_code"]
+
+        email = serializer.validated_data['email'].lower()
+        otp_input = serializer.validated_data['otp_code']
 
         try:
             reg = RegistrationOTP.objects.get(email=email)
         except RegistrationOTP.DoesNotExist:
-            return Response(
-                {"detail": "Bu emaildə qeydiyyat mərhələsi başlamayıb."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'detail': 'Bu email üçün OTP göndərilməyib.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if reg.is_expired():
             reg.delete()
-            return Response(
-                {"detail": "OTP kodunun vaxtı bitib."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'detail': 'OTP kodunun vaxtı bitib.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if otp_input != reg.code:
-            return Response(
-                {"otp_code": "Yanlış OTP kodu."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'otp_code': 'Yanlış OTP kodu.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.create(
             full_name=reg.full_name,
             email=reg.email,
             phone=reg.phone,
             birth_date=reg.birth_date,
-            password=reg.password,
+            password=reg.password
         )
         reg.delete()
 
+        fcm_token = request.data.get('fcm_token')
+        platform = request.data.get('platform')
+        if fcm_token:
+            UserDeviceToken.objects.update_or_create(
+                token=fcm_token,
+                defaults={'user': user, 'platform': platform or 'android'}
+            )
+
         return Response(
-            UserSerializer(user).data,
+            UserSerializer(user, context={'request': request}).data,
             status=status.HTTP_201_CREATED
         )
-
 
 class UserLoginAPIView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Login və FCM token qeydiyyatı",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email', 'password'],
+            properties={
+                'email': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL,
+                    description="E‑poçt ünvanı"
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format='password',
+                    description="Parol"
+                ),
+                'fcm_token': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Mobil FCM registration tokeni"
+                ),
+                'platform': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    enum=['android', 'ios'],
+                    description="Cihaz platforması"
+                ),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Login uğurlu oldu",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'detail': openapi.Schema(type=openapi.TYPE_STRING),
+                        'user': openapi.Schema(type=openapi.TYPE_OBJECT)
+                    }
+                )
+            ),
+            400: openapi.Response(description="Yanlış email/parol və ya validation xətası")
+        }
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         email = serializer.validated_data['email']
         password = serializer.validated_data['password']
+
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"detail": "Yanlış email və ya parol."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Yanlış email və ya parol.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if user.password != password:
-            return Response({"detail": "Yanlış email və ya parol."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Yanlış email və ya parol.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        fcm_token = serializer.validated_data.get('fcm_token')
+        platform = serializer.validated_data.get('platform')
+        if fcm_token:
+            UserDeviceToken.objects.update_or_create(
+                token=fcm_token,
+                defaults={'user': user, 'platform': platform or 'android'}
+            )
 
         return Response({
-            "detail": "Login uğurlu oldu.",
-            "user": UserSerializer(user).data
+            'detail': 'Login uğurlu oldu.',
+            'user': UserSerializer(user, context={'request': request}).data
         }, status=status.HTTP_200_OK)
 
 
