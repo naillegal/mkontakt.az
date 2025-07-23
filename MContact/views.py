@@ -1849,7 +1849,7 @@ class MobileOrderView(APIView):
                 "full_name", "phone", "address",
                 "delivery_date", "delivery_time",
                 "discount_amount", "product_discount", "category_discount",
-                "subtotal", "total", "items"
+                "subtotal", "items"
             ],
             properties={
                 "user_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="(Optional) İstifadəçi ID"),
@@ -1859,10 +1859,9 @@ class MobileOrderView(APIView):
                 "delivery_date": openapi.Schema(type=openapi.TYPE_STRING, description="Çatdırılma tarixi (DD.MM.YYYY)", example="24.07.2025"),
                 "delivery_time": openapi.Schema(type=openapi.TYPE_STRING, description="Çatdırılma vaxtı (HH:MM)", example="18:23"),
                 "discount_amount": openapi.Schema(type=openapi.TYPE_STRING, description="Endirim Məbləği", example="0.00"),
-                "product_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Məhsul Endirimi", example="2.40"),
-                "category_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Kateqoriya Endirimi", example="1.50"),
+                "product_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Məhsul Endirimi", example="0.00"),
+                "category_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Kateqoriya Endirimi", example="0.00"),
                 "subtotal": openapi.Schema(type=openapi.TYPE_STRING, description="Ara Cəm", example="60.00"),
-                "total": openapi.Schema(type=openapi.TYPE_STRING, description="Ümumi Məbləğ", example="66.10"),
                 "items": openapi.Schema(
                     type=openapi.TYPE_ARRAY,
                     description="Sifariş Məhsulları",
@@ -1891,7 +1890,7 @@ class MobileOrderView(APIView):
             "full_name", "phone", "address",
             "delivery_date", "delivery_time",
             "discount_amount", "product_discount", "category_discount",
-            "subtotal", "total", "items",
+            "subtotal", "items",
         )
         for field in required:
             if field not in data:
@@ -1907,7 +1906,6 @@ class MobileOrderView(APIView):
         product_discount = to_decimal("product_discount")
         category_discount = to_decimal("category_discount")
         subtotal = to_decimal("subtotal")
-        total = to_decimal("total")
 
         date_str = data["delivery_date"]
         time_str = data["delivery_time"]
@@ -1952,6 +1950,10 @@ class MobileOrderView(APIView):
                 "quantity": qty,
                 "unit_price": up
             })
+
+        shipping_fee = Decimal('0.00') if subtotal >= Decimal(
+            '200.00') else Decimal('10.00')
+        total = subtotal + shipping_fee
 
         order = Order.objects.create(
             user_id=data.get("user_id"),
