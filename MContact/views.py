@@ -657,6 +657,7 @@ class RegisterOTPAPIView(APIView):
             status=status.HTTP_201_CREATED
         )
 
+
 class UserLoginAPIView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
 
@@ -1851,12 +1852,11 @@ class MobileOrderView(APIView):
             ],
             properties={
                 "user_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="(Optional) İstifadəçi ID"),
-                "session_key": openapi.Schema(type=openapi.TYPE_STRING,  description="(Optional) Session açarı"),
                 "full_name": openapi.Schema(type=openapi.TYPE_STRING, description="Tam ad", example="Test"),
                 "phone": openapi.Schema(type=openapi.TYPE_STRING, description="Telefon", example="+994551234567"),
                 "address": openapi.Schema(type=openapi.TYPE_STRING, description="Ünvan", example="Bakı, Nərimanov"),
-                "delivery_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="Çatdırılma tarixi", example="2025-07-05"),
-                "delivery_time": openapi.Schema(type=openapi.TYPE_STRING, format="time", description="Çatdırılma vaxtı", example="18:47"),
+                "delivery_date": openapi.Schema(type=openapi.TYPE_STRING, description="Çatdırılma tarixi (DD.MM.YYYY)", example="24.07.2025"),
+                "delivery_time": openapi.Schema(type=openapi.TYPE_STRING, description="Çatdırılma vaxtı (HH:MM)", example="18:23"),
                 "discount_amount": openapi.Schema(type=openapi.TYPE_STRING, description="Endirim Məbləği", example="0.00"),
                 "product_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Məhsul Endirimi", example="2.40"),
                 "category_discount": openapi.Schema(type=openapi.TYPE_STRING, description="Kateqoriya Endirimi", example="1.50"),
@@ -1885,56 +1885,80 @@ class MobileOrderView(APIView):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
-        for f in (
+
+        required = (
             "full_name", "phone", "address",
             "delivery_date", "delivery_time",
             "discount_amount", "product_discount", "category_discount",
-            "subtotal", "total", "items"
-        ):
-            if f not in data:
-                return Response({"detail": f"'{f}' tələb olunur."}, status=400)
+            "subtotal", "total", "items",
+        )
+        for field in required:
+            if field not in data:
+                raise ValidationError({field: "Bu sahə tələb olunur."})
 
-        def to_dec(key):
+        def to_decimal(key):
             try:
-                return Decimal(str(data.get(key)))
-            except:
-                raise ValueError(f"{key} düzgün deyildir.")
-        try:
-            discount_amount = to_dec("discount_amount")
-            product_discount = to_dec("product_discount")
-            category_discount = to_dec("category_discount")
-            subtotal = to_dec("subtotal")
-            total = to_dec("total")
-        except ValueError as e:
-            return Response({"detail": str(e)}, status=400)
+                return Decimal(str(data[key]))
+            except Exception:
+                raise ValidationError({key: "Düzgün ədəd formatı deyil."})
 
-        parsed = []
-        for i, itm in enumerate(data["items"], 1):
+        discount_amount = to_decimal("discount_amount")
+        product_discount = to_decimal("product_discount")
+        category_discount = to_decimal("category_discount")
+        subtotal = to_decimal("subtotal")
+        total = to_decimal("total")
+
+        date_str = data["delivery_date"]
+        time_str = data["delivery_time"]
+        try:
+            delivery_date = datetime.strptime(date_str, "%d.%m.%Y").date()
+        except ValueError:
+            raise ValidationError({
+                "delivery_date": "Format: DD.MM.YYYY olmalıdır (məs: 24.07.2025)."
+            })
+        try:
+            delivery_time = datetime.strptime(time_str, "%H:%M").time()
+        except ValueError:
+            raise ValidationError({
+                "delivery_time": "Format: HH:MM olmalıdır (məs: 18:23)."
+            })
+
+        parsed_items = []
+        for idx, itm in enumerate(data["items"], start=1):
             if "product_id" not in itm or "quantity" not in itm or "unit_price" not in itm:
-                return Response({"detail": f"items[{i}] sahələri çatışmır."}, status=400)
-            prod = get_object_or_404(Product, pk=itm["product_id"])
-            var = None
+                raise ValidationError(
+                    {f"items[{idx}]": "product_id, quantity və unit_price tələb olunur."})
+
+            product = get_object_or_404(Product, pk=itm["product_id"])
+            variant = None
             if itm.get("variant_id") is not None:
-                var = get_object_or_404(
+                variant = get_object_or_404(
                     ProductVariant,
                     pk=itm["variant_id"],
-                    product=prod,
+                    product=product,
                     is_active=True
                 )
             try:
                 qty = int(itm["quantity"])
                 up = Decimal(str(itm["unit_price"]))
-            except:
-                return Response({"detail": f"items[{i}] quantity/unit_price yanlışdır."}, status=400)
-            parsed.append({"product": prod, "variant": var,
-                          "quantity": qty, "unit_price": up})
+            except Exception:
+                raise ValidationError(
+                    {f"items[{idx}]": "quantity/unit_price formatı yanlışdır."})
+
+            parsed_items.append({
+                "product": product,
+                "variant": variant,
+                "quantity": qty,
+                "unit_price": up
+            })
 
         order = Order.objects.create(
+            user_id=data.get("user_id"),
             full_name=data["full_name"],
             phone=data["phone"],
             address=data["address"],
-            delivery_date=data["delivery_date"],
-            delivery_time=data["delivery_time"],
+            delivery_date=delivery_date,
+            delivery_time=delivery_time,
             discount_amount=discount_amount,
             product_discount=product_discount,
             category_discount=category_discount,
@@ -1943,7 +1967,7 @@ class MobileOrderView(APIView):
             created_at=timezone.now()
         )
 
-        for itm in parsed:
+        for itm in parsed_items:
             OrderItem.objects.create(
                 order=order,
                 product=itm["product"],
@@ -1952,8 +1976,8 @@ class MobileOrderView(APIView):
                 unit_price=itm["unit_price"]
             )
 
-        ser = OrderSerializer(order, context={"request": request})
-        return Response(ser.data, status=201)
+        serializer = OrderSerializer(order, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CategoryProductsAPIView(generics.ListAPIView):
