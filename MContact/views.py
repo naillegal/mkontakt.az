@@ -1377,7 +1377,6 @@ class MobileCartView(APIView):
     parser_classes = [JSONParser]
 
     def _get_or_create_cart(self, *, user_id, session_key):
-        cart = None
         if user_id:
             cart, _ = Cart.objects.get_or_create(user_id=user_id)
             if session_key:
@@ -1395,6 +1394,7 @@ class MobileCartView(APIView):
                 except Cart.DoesNotExist:
                     pass
             return cart, session_key
+
         if not session_key:
             session_key = uuid.uuid4().hex
         cart, _ = Cart.objects.get_or_create(
@@ -1403,41 +1403,21 @@ class MobileCartView(APIView):
 
     @swagger_auto_schema(
         operation_summary="Səbətə məhsul əlavə et",
-        operation_description="product_id göndərərək istifadəçinin səbətinə məhsul əlavə edir və ya mövcuddursa miqdarı artırır.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'user_id': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='(Optional) Login olmuş istifadəçi ID-si'
-                ),
-                'session_key': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='(Optional) Qonaq istifadəçi üçün session açarı'
-                ),
-                'product_id': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='(Required) Əlavə ediləcək məhsulun ID-si'
-                ),
-                "variant_id": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description="(Optional) Variant ID – göndərilsə həmin kombinasiyanı əlavə edir/silir"
-                ),
-                'quantity': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='(Optional) Əlavə ediləcək miqdar, default 1',
-                    default=1
-                ),
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='(Optional) İstifadəçi ID'),
+                'session_key': openapi.Schema(type=openapi.TYPE_STRING, description='(Optional) Session açarı'),
+                'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Məhsulun ID-si'),
+                'variant_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='(Optional) Variant ID'),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Əlavə ediləcək miqdar', default=1),
             },
             required=['product_id'],
         ),
         responses={
-            200: openapi.Response(
-                description="Uğurlu cavab, səbət məlumatı",
-                schema=MobileCartSerializer()
-            ),
-            400: openapi.Response(description="product_id yoxdursa və ya başqa xəta")
-        }
+            200: openapi.Response(description="Uğurlu cavab", schema=MobileCartSerializer()),
+            400: "product_id tələb olunur və ya səhv format"
+        },
     )
     def post(self, request):
         data = request.data
@@ -1448,58 +1428,38 @@ class MobileCartView(APIView):
         qty = int(data.get("quantity", 1))
 
         if not product_id:
-            return Response({"detail": "product_id göndərilməlidir."}, status=400)
+            return Response({"detail": "product_id tələb olunur."}, status=400)
 
         product = get_object_or_404(Product, pk=product_id)
-
         variant = None
         if variant_id is not None:
             variant = get_object_or_404(
-                ProductVariant,
-                pk=variant_id,
-                product=product,
-                is_active=True
-            )
+                ProductVariant, pk=variant_id, product=product, is_active=True)
 
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id,
-            session_key=session_key
-        )
+            user_id=user_id, session_key=session_key)
 
         item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            variant=variant,
-            defaults={"quantity": qty},
+            cart=cart, product=product, variant=variant, defaults={
+                "quantity": qty}
         )
         if not created:
             item.quantity += qty
             item.save()
 
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response(
-            {"session_key": session_key, "cart": ser.data},
-            status=status.HTTP_200_OK
-        )
+        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Səbəti əldə et",
         manual_parameters=[
-            openapi.Parameter(
-                'user_id', openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
-                description='Login olmuş istifadəçi ID-si, varsa'
-            ),
-            openapi.Parameter(
-                'session_key', openapi.IN_QUERY,
-                type=openapi.TYPE_STRING,
-                description='Qonaq istifadəçi üçün session açarı'
-            ),
+            openapi.Parameter('user_id', openapi.IN_QUERY,
+                              type=openapi.TYPE_INTEGER, description='(Optional) İstifadəçi ID'),
+            openapi.Parameter('session_key', openapi.IN_QUERY,
+                              type=openapi.TYPE_STRING, description='(Optional) Session açarı'),
         ],
         responses={200: openapi.Response(
-            description="Səbət məlumatı",
-            schema=MobileCartSerializer()
-        )}
+            description="Səbət məlumatı", schema=MobileCartSerializer())}
     )
     def get(self, request):
         user_id = request.query_params.get("user_id")
@@ -1508,94 +1468,95 @@ class MobileCartView(APIView):
         cart, session_key = self._get_or_create_cart(
             user_id=user_id, session_key=session_key)
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response({"session_key": session_key, "cart": ser.data}, status=200)
+        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Səbətdən məhsul sil",
-        operation_description="`product_id` göndərərək həmin məhsulu cart-dan silir və yenilənmiş cart məlumatını qaytarır.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'user_id': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='(Optional) Login olmuş istifadəçi ID-si'
-                ),
-                'session_key': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='(Optional) Qonaq istifadəçi üçün session açarı'
-                ),
-                'product_id': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description='(Required) Səbətdən silinəcək məhsulun ID-si'
-                ),
-                "variant_id": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description="(Optional) Variant ID – göndərilsə həmin kombinasiyanı əlavə edir/silir"
-                ),
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='(Optional) İstifadəçi ID'),
+                'session_key': openapi.Schema(type=openapi.TYPE_STRING, description='(Optional) Session açarı'),
+                'item_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Silinəcək CartItem ID'),
             },
-            required=['product_id'],
+            required=['item_id'],
         ),
         responses={
-            200: openapi.Response(
-                description="Uğurlu cavab, yenilənmiş cart məlumatı",
-                schema=MobileCartSerializer()
-            ),
-            400: openapi.Response(description="product_id göndərilməyibsə və ya başqa xəta")
-        }
+            200: openapi.Response(description="Uğurlu cavab", schema=MobileCartSerializer()),
+            400: "item_id tələb olunur və ya səhv format",
+            404: "CartItem tapılmadı"
+        },
     )
     def delete(self, request):
         data = request.data
         user_id = data.get("user_id")
         session_key = data.get("session_key")
-        product_id = data.get("product_id")
-        variant_id = data.get("variant_id")
+        item_id = data.get("item_id")
 
-        if product_id is None:
-            return Response(
-                {"detail": "product_id göndərilməlidir."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if item_id is None:
+            return Response({"detail": "item_id tələb olunur."}, status=400)
 
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id,
-            session_key=session_key
-        )
-
-        deleted = 0
+            user_id=user_id, session_key=session_key)
 
         try:
-            cid = int(product_id)
-            deleted = CartItem.objects.filter(cart=cart, id=cid).delete()[0]
-        except (TypeError, ValueError):
-            pass
-
-        if deleted == 0:
-            try:
-                pid = int(product_id)
-            except (TypeError, ValueError):
-                return Response(
-                    {"detail": "product_id rəqəm olmalıdır."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            qs = CartItem.objects.filter(cart=cart, product_id=pid)
-            if variant_id is not None:
-                qs = qs.filter(variant_id=variant_id)
-            deleted = qs.delete()[0]
-
-        if deleted == 0:
-            return Response(
-                {"detail": "Silinməsi üçün uyğun məhsul tapılmadı."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        if hasattr(cart, "_prefetched_objects_cache"):
-            cart._prefetched_objects_cache.pop("items", None)
+            CartItem.objects.get(cart=cart, id=item_id).delete()
+        except CartItem.DoesNotExist:
+            return Response({"detail": "CartItem tapılmadı."}, status=404)
 
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response(
-            {"session_key": session_key, "cart": ser.data},
-            status=status.HTTP_200_OK
-        )
+        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Məhsul miqdarını yenilə",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['item_id', 'quantity'],
+            properties={
+                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='(Optional) İstifadəçi ID'),
+                'session_key': openapi.Schema(type=openapi.TYPE_STRING, description='(Optional) Session açarı'),
+                'item_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Yenilənəcək CartItem ID'),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Yeni miqdar', example=3),
+            },
+        ),
+        responses={
+            200: openapi.Response(description="Cart yeniləndi", schema=MobileCartSerializer()),
+            400: "Validation Error",
+            404: "CartItem tapılmadı"
+        },
+    )
+    def patch(self, request):
+        data = request.data
+        user_id = data.get("user_id")
+        session_key = data.get("session_key")
+        item_id = data.get("item_id")
+        qty = data.get("quantity")
+
+        if item_id is None:
+            return Response({"detail": "item_id tələb olunur."}, status=400)
+        if qty is None:
+            return Response({"detail": "quantity tələb olunur."}, status=400)
+
+        try:
+            qty = int(qty)
+            if qty < 1:
+                raise ValueError
+        except ValueError:
+            return Response({"detail": "quantity müsbət tam ədəd olmalıdır."}, status=400)
+
+        cart, session_key = self._get_or_create_cart(
+            user_id=user_id, session_key=session_key)
+
+        try:
+            item = CartItem.objects.get(cart=cart, id=item_id)
+        except CartItem.DoesNotExist:
+            return Response({"detail": "CartItem tapılmadı."}, status=404)
+
+        item.quantity = qty
+        item.save()
+
+        ser = MobileCartSerializer(cart, context={"request": request})
+        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
 
 
 class DiscountCodeListCreateAPIView(generics.ListCreateAPIView):
