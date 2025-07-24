@@ -501,7 +501,6 @@ def contact_submit(request):
 
     return redirect('MContact:contact')
 
-
 class RegisterAPIView(APIView):
     @swagger_auto_schema(
         operation_summary="Qeydiyyat üçün OTP kodu göndər",
@@ -512,17 +511,21 @@ class RegisterAPIView(APIView):
                 "full_name": openapi.Schema(type=openapi.TYPE_STRING, description="Ad Soyad"),
                 "email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description="E-poçt ünvanı"),
                 "phone": openapi.Schema(type=openapi.TYPE_STRING, description="Telefon nömrəsi"),
-                "birth_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="Doğum tarixi (YYYY-MM-DD)"),
+                "birth_date": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Doğum tarixi (YYYY-MM-DD və ya DD.MM.YYYY)"
+                ),
                 "password": openapi.Schema(type=openapi.TYPE_STRING, format="password", description="Parol"),
             }
         ),
         responses={
             200: openapi.Response(
-                description="OTP kodu göndərildi",
+                description="OTP kod email-ə göndərildi",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        "detail": openapi.Schema(type=openapi.TYPE_STRING, example="OTP kod email-ə göndərildi.")
+                        "detail": openapi.Schema(type=openapi.TYPE_STRING,
+                                                 example="OTP kod email-ə göndərildi.")
                     }
                 )
             ),
@@ -531,9 +534,9 @@ class RegisterAPIView(APIView):
     )
     def post(self, request):
         full_name = request.data.get("full_name", "").strip()
-        email = request.data.get("email",    "").strip().lower()
-        phone = request.data.get("phone",    "").strip()
-        birth = request.data.get("birth_date", "").strip()
+        email = request.data.get("email", "").strip().lower()
+        phone = request.data.get("phone", "").strip()
+        birth_str = request.data.get("birth_date", "").strip()
         password = request.data.get("password", "").strip()
 
         errors = {}
@@ -543,7 +546,7 @@ class RegisterAPIView(APIView):
             errors["email"] = "E-mail mütləqdir."
         if not phone:
             errors["phone"] = "Telefon mütləqdir."
-        if not birth:
+        if not birth_str:
             errors["birth_date"] = "Doğum tarixi mütləqdir."
         if not password:
             errors["password"] = "Parol mütləqdir."
@@ -553,14 +556,23 @@ class RegisterAPIView(APIView):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        RegistrationOTP.objects.filter(email=email).delete()
+        try:
+            if "-" in birth_str:
+                birth_date = datetime.strptime(birth_str, "%Y-%m-%d").date()
+            else:
+                birth_date = datetime.strptime(birth_str, "%d.%m.%Y").date()
+        except ValueError:
+            raise ValidationError({
+                "birth_date": "Format: YYYY-MM-DD və ya DD.MM.YYYY olmalıdır."
+            })
 
+        RegistrationOTP.objects.filter(email=email).delete()
         code = f"{random.randint(0, 9999):04d}"
         RegistrationOTP.objects.create(
             email=email,
             full_name=full_name,
             phone=phone,
-            birth_date=birth,
+            birth_date=birth_date,
             password=password,
             code=code
         )
@@ -571,11 +583,11 @@ class RegisterAPIView(APIView):
             recipient_list=[email],
             fail_silently=False
         )
+
         return Response(
             {"detail": "OTP kod email-ə göndərildi."},
             status=status.HTTP_200_OK
         )
-
 
 class RegisterOTPAPIView(APIView):
     serializer_class = VerifyOtpSerializer
