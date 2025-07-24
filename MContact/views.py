@@ -1216,7 +1216,7 @@ def order_create(request):
             quantity=item.quantity,
             unit_price=item.product.price,
         )
-    cart.delete()
+    cart.items.all().delete()
 
     send_mail_async(
         subject="MContact – Yeni sifariş var",
@@ -1847,6 +1847,11 @@ class MobileOrderView(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
 
+        cart, session_key = self._get_or_create_cart(
+            user_id=data.get("user_id"),
+            session_key=data.get("session_key")
+        )
+
         required = (
             "full_name", "phone", "address",
             "delivery_date", "delivery_time",
@@ -1939,6 +1944,8 @@ class MobileOrderView(APIView):
                 quantity=itm["quantity"],
                 unit_price=itm["unit_price"]
             )
+
+        cart.items.all().delete()
 
         serializer = OrderSerializer(order, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
