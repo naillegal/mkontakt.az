@@ -2098,14 +2098,7 @@ class MobileProductFilterAPIView(APIView):
                 name="1",
                 in_=openapi.IN_QUERY,
                 type=openapi.TYPE_ARRAY,
-                description="Brand filter — bir neçə dəyər üçün birdən çox ?1=1&1=2 göndərin",
-                items=openapi.Items(type=openapi.TYPE_INTEGER)
-            ),
-            openapi.Parameter(
-                name="2",
-                in_=openapi.IN_QUERY,
-                type=openapi.TYPE_ARRAY,
-                description="Subcategory filter — ?2=3&2=4 kimi",
+                description="Brand filter — həm “&1=10&1=11” həm də “?1=10,11” formatlarını dəstəkləyir",
                 items=openapi.Items(type=openapi.TYPE_INTEGER)
             ),
         ],
@@ -2120,52 +2113,50 @@ class MobileProductFilterAPIView(APIView):
         name_q = params.get("name", "").strip()
 
         qs = Product.objects.all()
+
         user_id = request.session.get("user_id")
         if user_id:
-            wqs = Wish.objects.filter(
-                user_id=user_id, product_id=OuterRef("pk"))
+            wqs = Wish.objects.filter(user_id=user_id, product_id=OuterRef("pk"))
             qs = qs.annotate(in_wishlist=Exists(wqs))
         else:
-            qs = qs.annotate(in_wishlist=Value(
-                False, output_field=BooleanField()))
+            qs = qs.annotate(in_wishlist=Value(False, output_field=BooleanField()))
 
         if name_q:
             qs = qs.filter(title__icontains=name_q)
         if code_q:
             qs = qs.filter(code__iexact=code_q)
 
-        numeric_filters = {
-            key: params.getlist(key)
-            for key in params
-            if key.isdigit()
-        }
-
-        brand_vals = numeric_filters.pop("1", [])
-        if brand_vals:
-            brand_ids = [int(v) for v in brand_vals if v.isdigit()]
+        raw_brand_vals = params.getlist("1")  
+        brand_ids = []
+        for rv in raw_brand_vals:
+            for part in rv.split(","):
+                part = part.strip()
+                if part.isdigit():
+                    brand_ids.append(int(part))
+        if brand_ids:
             qs = qs.filter(brand_id__in=brand_ids)
 
-        sub_vals = numeric_filters.pop("2", [])
-        if sub_vals:
-            sub_ids = [int(v) for v in sub_vals if v.isdigit()]
+        raw_sub_vals = params.getlist("2")
+        sub_ids = []
+        for rv in raw_sub_vals:
+            for part in rv.split(","):
+                part = part.strip()
+                if part.isdigit():
+                    sub_ids.append(int(part))
+        if sub_ids:
             qs = qs.filter(subcategories__id__in=sub_ids).distinct()
 
-        if numeric_filters:
-            vqs = ProductVariant.objects.all()
-            for attr_key, val_list in numeric_filters.items():
-                try:
-                    attr_id = int(attr_key)
-                except ValueError:
-                    continue
-                vals = [int(v) for v in val_list if v.isdigit()]
+        for key in params.keys():
+            if key.isdigit() and key not in ("1", "2", "page", "perpage"):
+                raw_vals = params.getlist(key)
+                vals = []
+                for rv in raw_vals:
+                    for part in rv.split(","):
+                        part = part.strip()
+                        if part.isdigit():
+                            vals.append(int(part))
                 if vals:
-                    vqs = vqs.filter(attribute_values__id__in=vals)
-            vqs = vqs.distinct()
-            if vqs.exists():
-                qs = qs.filter(variants__in=vqs).distinct()
-                qs = qs.prefetch_related(Prefetch("variants", queryset=vqs))
-            else:
-                qs = qs.none()
+                    qs = qs.filter(variants__attribute_values__id__in=vals)
 
         qs = qs.annotate(
             _prio=Case(
@@ -2188,8 +2179,7 @@ class MobileProductFilterAPIView(APIView):
         request.query_params["page"] = page_num
         page = paginator.paginate_queryset(qs, request, view=self)
 
-        serializer = ProductListSerializer(
-            page, many=True, context={"request": request})
+        serializer = ProductListSerializer(page, many=True, context={"request": request})
         return paginator.get_paginated_response(serializer.data)
 
 
