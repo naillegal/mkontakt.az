@@ -50,9 +50,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'MContact.middleware.CustomLocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -176,3 +177,17 @@ MODELTRANSLATION_FALLBACK_LANGUAGES = ('az',)
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
+
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+
+    'SECURITY_DEFINITIONS': {
+        'AcceptLanguage': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Accept-Language',
+        },
+    },
+    'DEFAULT_SECURITY': [{'AcceptLanguage': []}],
+}
