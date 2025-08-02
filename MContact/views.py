@@ -271,7 +271,7 @@ def product_detail(request, slug):
                   .exclude(id=product_item.id)
                   .filter(priority__isnull=True)
                   .order_by('?'))
-    other_products = (prio + others)[:3]
+    other_products = (prio + others)[:12]
 
     session_user_id = request.session.get("user_id")
     wish_ids = set(Wish.objects.filter(user_id=session_user_id)
