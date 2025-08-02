@@ -2365,11 +2365,11 @@ class BroadcastNotificationView(APIView):
     )
     def post(self, request):
         ids = request.data.get("user_ids", [])
-        title = request.data.get("title", "")
-        body = request.data.get("message", "")
-        if not ids or not title or not body:
+        title = request.data.get("title", "").strip()
+        message = request.data.get("message", "").strip()
+        if not ids or not title or not message:
             return Response(
-                {"detail": "user_ids, title, message tələb olunur."},
+                {"detail": "user_ids, title və message mütləqdir."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -2377,8 +2377,8 @@ class BroadcastNotificationView(APIView):
         if not users.exists():
             return Response({"detail": "İstifadəçi tapılmadı."}, status=status.HTTP_404_NOT_FOUND)
 
-        note = PushNotification.objects.create(title=title, message=body)
+        note = PushNotification.objects.create(title=title, message=message)
         note.recipients.set(users)
-        sent = note.send()
+        sent_count = note.send()
 
-        return Response({"sent": sent}, status=status.HTTP_200_OK)
+        return Response({"sent": sent_count}, status=status.HTTP_200_OK)

@@ -856,6 +856,7 @@ class RegistrationOTP(models.Model):
     def __str__(self):
         return f"{self.email} – {self.code}"
 
+
 class PushNotification(models.Model):
     title = models.CharField(max_length=120)
     message = models.TextField()
@@ -883,4 +884,3 @@ class PushNotification(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.send()
