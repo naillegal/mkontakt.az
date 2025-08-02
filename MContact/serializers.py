@@ -259,9 +259,15 @@ class UserSerializer(serializers.ModelSerializer):
                   'birth_date', 'image', 'created_at']
         read_only_fields = ['id', 'created_at']
 
-
 class UserUpdateSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(write_only=True)
+    birth_date = serializers.DateField(
+        required=False,
+        input_formats=['%Y-%m-%d', '%d.%m.%Y'],
+        error_messages={
+            'invalid': 'Doğum tarixi formatı yalnışdır. Format: YYYY-MM-DD və ya DD.MM.YYYY olmalıdır.'
+        }
+    )
 
     class Meta:
         model = User
@@ -273,15 +279,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "birth_date",
             "image",
         ]
-        read_only_fields = []
         extra_kwargs = {
-            "full_name":  {"required": False},
-            "email":      {"required": False},
-            "phone":      {"required": False},
-            "birth_date": {"required": False},
-            "image":      {"required": False},
+            "full_name": {"required": False},
+            "email": {"required": False},
+            "phone": {"required": False},
+            "image": {"required": False},
         }
-
 
 class ChangePasswordSerializer(serializers.Serializer):
     id = serializers.IntegerField(write_only=True)
