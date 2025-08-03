@@ -21,328 +21,247 @@
 
     <header id="home-header">
       <div class="header-bg">
-        {% if banner %}
+  <div class="swiper bannerSwiper">
+    <div class="swiper-wrapper">
+      {% for banner in banners %}
+        <div class="swiper-slide">
           <img src="{{ banner.image.url }}" alt="{{ banner.title }}" />
-        {% else %}
-          <img src="{% static 'images/home-main-banner.png' %}" alt="Banner" />
-        {% endif %}
-
-        <div class="header-container">
-          <div class="logo">
-            <a href="{% url 'MContact:index' %}"><img src="{{ site_config.navbar_logo_url }}" alt="{% trans "Mkontakt Logo" %}"/></a>
-          </div>
-          <nav class="navbar">
-            <ul>
-              <li>
-                <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
-              </li>
-              <li>
-                <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
-              </li>
-              <li>
-                <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
-              </li>
-              <li>
-                <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
-              </li>
-              <li>
-                <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
-              </li>
-            </ul>
-          </nav>
-          <div class="responsive-navbar">
-            <div class="d-flex">
-              <div class="search-icon-wrapper search-toggle">
-                <i class="fa fa-search"></i>
-              </div>
-              <div class="cart-icon-wrapper">
-                  <a href="{% url 'MContact:cart_view' %}">
-                    <i class="fa fa-shopping-cart"></i>
-                    {% if cart_count %}
-                      <span class="cart-badge">{{ cart_count }}</span>
-                    {% endif %}
-                  </a>
-                </div>
-              <div class="user-menu">
-                <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
-                  <i class="fa-solid fa-user"></i>
-                </span>
-
-                <ul class="user-dropdown-menu">
-                  <li class="user-info">
-                    <img src="{% static 'images/user-default-blue.png' %}" alt="" />
-                    <div>
-                      <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
-                      <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
-                    </div>
-                  </li>
-                  <li>
-                    <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a>
-                  </li>
-                  <li>
-                    <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a>
-                  </li>
-                  <li>
-                    <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a>
-                  </li>
-                  <li>
-                    <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a>
-                  </li>
-                </ul>
-              </div>
-              <div class="menu-toggle">
-                <i class="fa-solid fa-bars"></i>
-              </div>
-              {% get_current_language as LANG %}
-              <div class="lang-menu">
-                <span class="lang-toggle">
-                  {% if LANG == "ru" %}
-                    <img src="{% static 'images/ru.svg' %}" alt="ru">
-                  {% elif LANG == "en" %}
-                    <img src="{% static 'images/en.svg' %}" alt="en">
-                  {% else %}
-                    <img src="{% static 'images/az.svg' %}" alt="az">
-                  {% endif %}
-                </span>
-                <ul class="lang-dropdown-menu">
-                <li>
-                  <form action="{% url 'set_language' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="language" value="az">
-                    <input type="hidden" name="next" value="{% lang_url 'az' %}">
-                    <button type="submit">
-                      <img src="{% static 'images/az.svg' %}" alt="az"> Azərbaycan
-                    </button>
-                  </form>
-                </li>
-              
-                <li>
-                  <form action="{% url 'set_language' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="language" value="ru">
-                    <input type="hidden" name="next" value="{% lang_url 'ru' %}">
-                    <button type="submit">
-                      <img src="{% static 'images/ru.svg' %}" alt="ru"> Русский
-                    </button>
-                  </form>
-                </li>
-              
-                <li>
-                  <form action="{% url 'set_language' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="language" value="en">
-                    <input type="hidden" name="next" value="{% lang_url 'en' %}">
-                    <button type="submit">
-                      <img src="{% static 'images/en.svg' %}" alt="en"> English
-                    </button>
-                  </form>
-                </li>
-              </ul>
-              </div>
-            </div>
-          </div>
-          <div class="header-icons">
-            <div class="search-icon-wrapper search-toggle">
-              <i class="fa fa-search"></i>
-            </div>
-            <div class="cart-icon-wrapper">
-                  <a href="{% url 'MContact:cart_view' %}">
-                    <i class="fa fa-shopping-cart"></i>
-                    {% if cart_count %}
-                      <span class="cart-badge">{{ cart_count }}</span>
-                    {% endif %}
-                  </a>
-            </div>
-            <div class="user-menu">
-              <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}">
-                <i class="fa-solid fa-user"></i>
-              </span>
-
-              <ul class="user-dropdown-menu">
-                <li class="user-info">
-                  <img src="{% static 'images/user-default-blue.png' %}" alt="" />
-                  <div>
-                    <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
-                    <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
-                  </div>
-                </li>
-                <li>
-                  <a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a>
-                </li>
-                <li>
-                  <a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a>
-                </li>
-                <li>
-                  <a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a>
-                </li>
-                <li>
-                  <a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a>
-                </li>
-              </ul>
-            </div>
-            {% get_current_language as LANG %}
-              <div class="lang-menu">
-                <span class="lang-toggle">
-                  {% if LANG == "ru" %}
-                    <img src="{% static 'images/ru.svg' %}" alt="ru">
-                  {% elif LANG == "en" %}
-                    <img src="{% static 'images/en.svg' %}" alt="en">
-                  {% else %}
-                    <img src="{% static 'images/az.svg' %}" alt="az">
-                  {% endif %}
-                </span>
-                <ul class="lang-dropdown-menu">
-              <li>
-                <form action="{% url 'set_language' %}" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="language" value="az">
-                  <input type="hidden" name="next" value="{% lang_url 'az' %}">
-                  <button type="submit">
-                    <img src="{% static 'images/az.svg' %}" alt="az"> Azərbaycan
-                  </button>
-                </form>
-              </li>
-            
-              <li>
-                <form action="{% url 'set_language' %}" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="language" value="ru">
-                  <input type="hidden" name="next" value="{% lang_url 'ru' %}">
-                  <button type="submit">
-                    <img src="{% static 'images/ru.svg' %}" alt="ru"> Русский
-                  </button>
-                </form>
-              </li>
-            
-              <li>
-                <form action="{% url 'set_language' %}" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="language" value="en">
-                  <input type="hidden" name="next" value="{% lang_url 'en' %}">
-                  <button type="submit">
-                    <img src="{% static 'images/en.svg' %}" alt="en"> English
-                  </button>
-                </form>
-              </li>
-              </ul>
-              </div>
+          <div class="main-banner-content">
+            <h1>{{ banner.title }}</h1>
+            <p>{{ banner.description }}</p>
+            <a href="{{ banner.link|default:'#' }}" class="main-banner-content-btn">{% trans "Ətraflı" %}</a>
           </div>
         </div>
-
-        <div class="responsive-header-container">
-          <div class="d-flex">
-            <div class="logo">
-              <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="" />
-            </div>
-            <div class="close-icon">
-              <i class="fa-solid fa-xmark"></i>
-            </div>
+      {% empty %}
+        <div class="swiper-slide">
+          <img src="{% static 'images/home-main-banner.png' %}" alt="Banner" />
+          <div class="main-banner-content">
+            <h1>{% trans "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq" %}</h1>
+            <p>{% blocktrans %}AVENTOS HF qaldırmalı mexanizmi…{% endblocktrans %}</p>
+            <a href="{% url 'MContact:products' %}" class="main-banner-content-btn">{% trans "Ətraflı" %}</a>
           </div>
-          <ul class="list-unstyled outside-ul">
-            <li>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+  </div>
+
+  <div class="header-container">
+    <div class="logo">
+      <a href="{% url 'MContact:index' %}"><img src="{{ site_config.navbar_logo_url }}" alt="{% trans "Mkontakt Logo" %}"/></a>
+    </div>
+    <nav class="navbar">
+      <ul>
+        <li><a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a></li>
+        <li><a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a></li>
+        <li><a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a></li>
+        <li><a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a></li>
+        <li><a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a></li>
+      </ul>
+    </nav>
+    <div class="responsive-navbar">
+      <div class="d-flex">
+        <div class="search-icon-wrapper search-toggle"><i class="fa fa-search"></i></div>
+        <div class="cart-icon-wrapper">
+          <a href="{% url 'MContact:cart_view' %}">
+            <i class="fa fa-shopping-cart"></i>
+            {% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
+          </a>
+        </div>
+        <div class="user-menu">
+          <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}"><i class="fa-solid fa-user"></i></span>
+          <ul class="user-dropdown-menu">
+            <li class="user-info">
+              <img src="{% static 'images/user-default-blue.png' %}" alt="" />
               <div>
-                <a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a>
+                <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+                <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
               </div>
             </li>
+            <li><a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a></li>
+            <li><a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a></li>
+            <li><a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a></li>
+            <li><a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a></li>
+          </ul>
+        </div>
+        <div class="menu-toggle"><i class="fa-solid fa-bars"></i></div>
+        {% get_current_language as LANG %}
+        <div class="lang-menu">
+          <span class="lang-toggle">
+            {% if LANG == "ru" %}<img src="{% static 'images/ru.svg' %}" alt="ru">{% elif LANG == "en" %}<img src="{% static 'images/en.svg' %}" alt="en">{% else %}<img src="{% static 'images/az.svg' %}" alt="az">{% endif %}
+          </span>
+          <ul class="lang-dropdown-menu">
             <li>
-              <div class="openmenu-divider-outside"></div>
-              <div>
-                <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
-              </div>
+              <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="language" value="az">
+                <input type="hidden" name="next" value="{% lang_url 'az' %}">
+                <button type="submit"><img src="{% static 'images/az.svg' %}" alt="az"> Azərbaycan</button>
+              </form>
             </li>
             <li>
-              <div class="openmenu-divider-outside"></div>
-              <div>
-                <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
-              </div>
+              <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="language" value="ru">
+                <input type="hidden" name="next" value="{% lang_url 'ru' %}">
+                <button type="submit"><img src="{% static 'images/ru.svg' %}" alt="ru"> Русский</button>
+              </form>
             </li>
             <li>
-              <div class="openmenu-divider-outside"></div>
-              <div>
-                <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
-              </div>
-            </li>
-            <li>
-              <div class="openmenu-divider-outside"></div>
-              <div>
-                <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
-              </div>
-              <div class="openmenu-divider-outside"></div>
+              <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="language" value="en">
+                <input type="hidden" name="next" value="{% lang_url 'en' %}">
+                <button type="submit"><img src="{% static 'images/en.svg' %}" alt="en"> English</button>
+              </form>
             </li>
           </ul>
-          <div class="responsive-header-contact-content">
-            <div class="mail d-flex">
-              <i class="fa-solid fa-envelope"></i>
-              <a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a>
-            </div>
-            <div class="phone d-flex">
-              <i class="fa-solid fa-phone"></i>
-              <a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a>
-            </div>
-            <div class="openmenu-divider-outside"></div>
-
-            <ul class="responsive-header-social-icons">
-              <li>
-                <a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a>
-              </li>
-              <li>
-                <a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a>
-              </li>
-              <li>
-                <a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a>
-              </li>
-              <li>
-                <a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div id="header-search" class="header-search">
-          <form action="{% url 'MContact:products' %}" method="get">
-            <input type="text" name="q" placeholder="Axtar..." autocomplete="off" value="{{ request.GET.q|default_if_none:'' }}" />
-            <button type="submit"><i class="fa fa-search"></i></button>
-          </form>
-          <span class="close-search">&times;</span>
-        </div>
-
-        <div class="main-banner-content">
-            {% if banner %}
-              <h1>{{ banner.title }}</h1>
-              <p>{{ banner.description }}</p>
-              <a href="{{ banner.link }}" class="main-banner-content-btn">
-                {% trans "Ətraflı" %}
-              </a>
-            {% else %}
-              <h1>{% trans "Blum AVENTOS HF - İkiqat Qaldırmalı Rahatlıq" %}</h1>
-              <p>{% blocktrans %}AVENTOS HF qaldırmalı mexanizmi…{% endblocktrans %}</p>
-              <a href="{% url 'MContact:products' %}" class="main-banner-content-btn">
-                {% trans "Ətraflı" %}
-              </a>
-            {% endif %}
         </div>
       </div>
+    </div>
+    <div class="header-icons">
+      <div class="search-icon-wrapper search-toggle"><i class="fa fa-search"></i></div>
+      <div class="cart-icon-wrapper">
+        <a href="{% url 'MContact:cart_view' %}">
+          <i class="fa fa-shopping-cart"></i>
+          {% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
+        </a>
+      </div>
+      <div class="user-menu">
+        <span class="user-toggle" data-authenticated="{% if user and user.id %}1{% else %}0{% endif %}"><i class="fa-solid fa-user"></i></span>
+        <ul class="user-dropdown-menu">
+          <li class="user-info">
+            <img src="{% static 'images/user-default-blue.png' %}" alt="" />
+            <div>
+              <div class="user-fullname">{{ user.full_name|default:'Qonaq istifadəçi'|truncatechars:25 }}</div>
+              <div class="user-email">{{ user.email|default:'guest@gmail.com'|truncatechars:25 }}</div>
+            </div>
+          </li>
+          <li><a href="{% url 'MContact:edit_profile' %}"><i class="fa-solid fa-user"></i> {% trans "Şəxsi məlumatlar" %}</a></li>
+          <li><a href="{% url 'MContact:change_password' %}"><i class="fa-solid fa-gear"></i> {% trans "Parolun yenilənməsi" %}</a></li>
+          <li><a href="{% url 'MContact:wishlist_view' %}"><i class="fa-solid fa-heart"></i> {% trans "İstək siyahısı" %}</a></li>
+          <li><a href="{% url 'MContact:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> {% trans "Çıxış" %}</a></li>
+        </ul>
+      </div>
+      {% get_current_language as LANG %}
+      <div class="lang-menu">
+        <span class="lang-toggle">
+          {% if LANG == "ru" %}<img src="{% static 'images/ru.svg' %}" alt="ru">{% elif LANG == "en" %}<img src="{% static 'images/en.svg' %}" alt="en">{% else %}<img src="{% static 'images/az.svg' %}" alt="az">{% endif %}
+        </span>
+        <ul class="lang-dropdown-menu">
+          <li>
+            <form action="{% url 'set_language' %}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="az">
+              <input type="hidden" name="next" value="{% lang_url 'az' %}">
+              <button type="submit"><img src="{% static 'images/az.svg' %}" alt="az"> Azərbaycan</button>
+            </form>
+          </li>
+          <li>
+            <form action="{% url 'set_language' %}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="ru">
+              <input type="hidden" name="next" value="{% lang_url 'ru' %}">
+              <button type="submit"><img src="{% static 'images/ru.svg' %}" alt="ru"> Русский</button>
+            </form>
+          </li>
+          <li>
+            <form action="{% url 'set_language' %}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="en">
+              <input type="hidden" name="next" value="{% lang_url 'en' %}">
+              <button type="submit"><img src="{% static 'images/en.svg' %}" alt="en"> English</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="responsive-header-container">
+    <div class="d-flex">
+      <div class="logo">
+        <img src="{% static 'images/mcontact-footer-blue-logo.png' %}" alt="" />
+      </div>
+      <div class="close-icon"><i class="fa-solid fa-xmark"></i></div>
+    </div>
+    <ul class="list-unstyled outside-ul">
+      <li><a href="{% url 'MContact:index' %}">{% trans "Əsas səhifə" %}</a></li>
+      <li>
+        <div class="openmenu-divider-outside"></div>
+        <a href="{% url 'MContact:about_us' %}">{% trans "Haqqımızda" %}</a>
+      </li>
+      <li>
+        <div class="openmenu-divider-outside"></div>
+        <a href="{% url 'MContact:products' %}">{% trans "Məhsullar" %}</a>
+      </li>
+      <li>
+        <div class="openmenu-divider-outside"></div>
+        <a href="{% url 'MContact:blog_list' %}">{% trans "Bloq" %}</a>
+      </li>
+      <li>
+        <div class="openmenu-divider-outside"></div>
+        <a href="{% url 'MContact:contact' %}">{% trans "Əlaqə" %}</a>
+        <div class="openmenu-divider-outside"></div>
+      </li>
+    </ul>
+    <div class="responsive-header-contact-content">
+      <div class="mail d-flex"><i class="fa-solid fa-envelope"></i><a href="mailto:{{ contact_info.technical_email }}"><span>{{ contact_info.technical_email }}</span></a></div>
+      <div class="phone d-flex"><i class="fa-solid fa-phone"></i><a href="tel:{{ contact_info.technical_mobile }}"><span>{{ contact_info.technical_mobile }}</span></a></div>
+      <div class="openmenu-divider-outside"></div>
+      <ul class="responsive-header-social-icons">
+        <li><a href="{{ contact_info.instagram }}"><i class="fab fa-instagram"></i></a></li>
+        <li><a href="{{ contact_info.facebook }}"><i class="fab fa-facebook-f"></i></a></li>
+        <li><a href="{{ contact_info.whatsapp }}"><i class="fab fa-whatsapp"></i></a></li>
+        <li><a href="{{ contact_info.youtube }}"><i class="fab fa-youtube"></i></a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="header-search" class="header-search">
+    <form action="{% url 'MContact:products' %}" method="get">
+      <input type="text" name="q" placeholder="Axtar..." autocomplete="off" value="{{ request.GET.q|default_if_none:'' }}" />
+      <button type="submit"><i class="fa fa-search"></i></button>
+    </form>
+    <span class="close-search">&times;</span>
+  </div>
+</div>
+
     </header>
 
     <section id="partners-slider-section">
-      <div class="container">
-        <div class="partners-slider-title">{{ slider_title }}</div>
-        <div class="swiper mySwiper">
-          <div class="swiper-wrapper">
-            {% for partner in partners %}
-              <div class="swiper-slide">
-                <div class="partner-circle">
-                  <img src="{{ partner.image.url }}" alt="{{ partner.title }}" />
-                </div>
-                <p>{{ partner.title }}</p>
+  <div class="container">
+    <div class="partners-slider-title">{{ slider_title }}</div>
+    <div class="swiper mySwiper">
+      <div class="swiper-wrapper">
+        {% for partner in partners %}
+          <div class="swiper-slide">
+            {% if partner.brand %}
+              <a href="{% url 'MContact:products' %}?brand={{ partner.brand.id }}" class="partner-circle">
+                <img src="{{ partner.image.url }}" alt="{{ partner.title }}" />
+              </a>
+              <p>
+                <a style="text-decoration: none; color: rgba(20, 48, 130, 1);" href="{% url 'MContact:products' %}?brand={{ partner.brand.id }}">
+                  {{ partner.title }}
+                </a>
+              </p>
+            {% else %}
+              <div class="partner-circle">
+                <img src="{{ partner.image.url }}" alt="{{ partner.title }}" />
               </div>
-            {% endfor %}
+              <p>{{ partner.title }}</p>
+            {% endif %}
           </div>
-          <div class="swiper-button-prev"></div>
-          <div class="swiper-button-next"></div>
-        </div>
+        {% endfor %}
       </div>
-    </section>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+  </div>
+</section>
+
 
     <section id="advertisement-slider">
       <div class="container">
@@ -354,7 +273,7 @@
                 <div class="slide-content">
                   <h2>{{ slide.title }}</h2>
                   <p>{{ slide.description }}</p>
-                  <a href="{{ slide.link|default:'#' }}">{% trans "Məhsula bax" %}</a>
+                  <a href="{{ slide.filter_link }}" class="main-banner-content-btn">{% trans "Məhsula bax" %}</a>
                 </div>
               </div>
             {% endfor %}

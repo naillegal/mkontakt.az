@@ -94,12 +94,12 @@
                             <button class="counter-btn plus" data-action="inc">+</button>
                           </div>
                         </div>
-                        <div class="cart-product-price">₼{{ item.product.price|floatformat:2 }}</div>
+                        <div class="cart-product-price">₼{{ item.total_price|floatformat:2 }}</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              {% endfor %}
+              {% endfor %}  
 
               {% if page_obj.has_other_pages %}
                 <div class="pagination">

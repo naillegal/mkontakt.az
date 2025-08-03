@@ -142,6 +142,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+var bannerSwiper = new Swiper(".bannerSwiper", {
+  slidesPerView: 1,
+  spaceBetween: 0,
+  loop: true,
+  navigation: {
+    nextEl: ".bannerSwiper .swiper-button-next",
+    prevEl: ".bannerSwiper .swiper-button-prev",
+  },
+  pagination: {
+    el: ".bannerSwiper .swiper-pagination",
+    clickable: true,
+  },
+  autoplay: {
+    delay: 5000,
+    disableOnInteraction: false,
+  },
+});
+
 // products scripts
 document.addEventListener("DOMContentLoaded", function () {
   const filterByElements = document.querySelectorAll(".filter-by");
@@ -434,6 +452,28 @@ document.addEventListener("DOMContentLoaded", function () {
   plusButton.addEventListener("click", function () {
     let currentValue = parseInt(counterValueElem.textContent, 10);
     counterValueElem.textContent = currentValue + 1;
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("#selected-product-info img").forEach((img) => {
+    img.style.cursor = "zoom-in";
+    img.addEventListener("click", () => {
+      const overlay = document.getElementById("lightbox-overlay");
+      const lightImg = document.getElementById("lightbox-img");
+      lightImg.src = img.src;
+      overlay.style.display = "flex";
+    });
+  });
+
+  document.getElementById("lightbox-close").addEventListener("click", () => {
+    document.getElementById("lightbox-overlay").style.display = "none";
+  });
+
+  document.getElementById("lightbox-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "lightbox-overlay") {
+      e.currentTarget.style.display = "none";
+    }
   });
 });
 
@@ -734,6 +774,21 @@ document.addEventListener("DOMContentLoaded", function () {
         .querySelectorAll(".blog-thumbnails .thumbnail")
         .forEach((div) => div.classList.remove("active"));
       this.parentElement.classList.add("active");
+    });
+  });
+});
+
+
+// contact iframe scripts 
+document.addEventListener("DOMContentLoaded", function () {
+  const tabs = document.querySelectorAll(".branch-tabs li");
+  const iframe = document.getElementById("branch-map");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", function () {
+      tabs.forEach((t) => t.classList.remove("active"));
+      this.classList.add("active");
+      iframe.src = this.dataset.src;
     });
   });
 });

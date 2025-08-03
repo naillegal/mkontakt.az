@@ -74,9 +74,8 @@ class ProductVariant(models.Model):
         ordering = ["product", "id"]
 
     def __str__(self):
-        attrs = ", ".join(
-            self.attribute_values.values_list("value", flat=True))
-        return f"{self.product.title} • {attrs or 'Varsiya'}"
+        label = self.code or f"Variant #{self.pk}"
+        return f"{self.product.title} • {label}"
 
 
 class Brand(models.Model):
@@ -279,6 +278,13 @@ class ProductImage(models.Model):
 class PartnerSlider(models.Model):
     title = models.CharField(max_length=255, verbose_name="Başlıq")
     image = models.ImageField(upload_to='partners/', verbose_name="Şəkil")
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="partner_slides",
+        verbose_name="Brend"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Yaradılma tarixi")
 
@@ -294,19 +300,104 @@ class PartnerSlider(models.Model):
 class AdvertisementSlide(models.Model):
     title = models.CharField(max_length=255, verbose_name="Başlıq")
     description = models.TextField(verbose_name="Təsvir")
-    image = models.ImageField(
-        upload_to='advertisements/', verbose_name="Şəkil")
-    link = models.URLField(blank=True, null=True, verbose_name="Keçid")
-    created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name="Yaradılma tarixi")
+    image = models.ImageField(upload_to='advertisements/', verbose_name="Şəkil")
+    link = models.URLField(blank=True, null=True, verbose_name="Xüsusi keçid")
+
+    brand = models.ForeignKey(
+        Brand, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+', verbose_name="Brend filtri"
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+', verbose_name="Kateqoriya filtri"
+    )
+    subcategory = models.ForeignKey(
+        SubCategory, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+', verbose_name="Alt-kateqoriya filtri"
+    )
+    attribute_values = models.ManyToManyField(
+        ProductAttributeValue,
+        blank=True,
+        related_name='+',
+        verbose_name="Xüsusiyyət dəyərləri filtri"
+    )
+    price_min = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True, verbose_name="Min. qiymət"
+    )
+    price_max = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True, verbose_name="Maks. qiymət"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yaradılma")
 
     class Meta:
         ordering = ['created_at']
-        verbose_name = "Reklam slayderi"
+        verbose_name = "Reklam slaydı"
         verbose_name_plural = "Reklam slayderləri"
 
     def __str__(self):
         return self.title
+
+    def build_filter_url(self):
+        from django.urls import reverse
+        from urllib.parse import urlencode
+
+        base = reverse("MContact:products")
+        params = {}
+
+        if self.brand:
+            params["brand"] = self.brand.id
+        if self.category:
+            params["category"] = self.category.id
+        if self.subcategory:
+            params["subcategory"] = self.subcategory.id
+        if self.price_min is not None:
+            params["min_price"] = str(self.price_min)
+        if self.price_max is not None:
+            params["max_price"] = str(self.price_max)
+
+        for av in self.attribute_values.all():
+            key = f"attr_{av.attribute.id}"
+            params.setdefault(key, []).append(av.id)
+
+        query = urlencode(params, doseq=True)
+        return f"{base}?{query}" if query else base
+    
+    def build_mobile_filter_url(self):
+        from django.urls import reverse
+        from urllib.parse import urlencode
+        from MContact.models import ProductAttribute  
+
+        base = reverse("mobile-products-filter")     
+        params = {}
+
+        if self.brand_id:
+            params['1'] = str(self.brand_id)        
+        if self.subcategory_id:                      
+            params['2'] = str(self.subcategory_id)
+
+        if self.attribute_values.exists():
+            attr_order = list(
+                ProductAttribute.objects.order_by('name').values_list('id', flat=True)
+            )
+            for av in self.attribute_values.all():
+                idx = attr_order.index(av.attribute_id)
+                key = str(idx + 3)                   
+                params.setdefault(key, []).append(str(av.id))
+
+        if self.price_min is not None:
+            params['min_price'] = str(self.price_min)
+        if self.price_max is not None:
+            params['max_price'] = str(self.price_max)
+
+        qs = urlencode(params, doseq=True)
+        return f"{base}?{qs}" if qs else base
+
+    @property
+    def filter_link(self):
+        return self.link or self.build_filter_url()
 
 
 class CustomerReview(models.Model):
@@ -531,7 +622,10 @@ class Cart(models.Model):
 
     @property
     def raw_total(self):
-        return sum(i.product.price * i.quantity for i in self.items.select_related("product"))
+        return sum(
+            item.unit_price * item.quantity
+            for item in self.items.select_related("product", "variant")
+        )
 
     @property
     def product_discount(self):
@@ -591,6 +685,16 @@ class CartItem(models.Model):
         verbose_name = "Səbət məhsulu"
         verbose_name_plural = "Səbət məhsulları"
         unique_together = ("cart", "product", "variant")
+
+    @property
+    def unit_price(self):
+        if self.variant and self.variant.price_override is not None:
+            return self.variant.price_override
+        return self.product.price
+
+    @property
+    def total_price(self):
+        return self.unit_price * self.quantity
 
     @property
     def selected_attrs(self):
@@ -884,3 +988,18 @@ class PushNotification(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
+
+class Branch(models.Model):
+    name = models.CharField(max_length=150)
+    iframe_src = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+        verbose_name = "Filial"
+        verbose_name_plural = "Filiallar"
+
+    def __str__(self):
+        return self.name

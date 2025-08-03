@@ -1,5 +1,4 @@
 import random
-import datetime
 from datetime import datetime
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -29,7 +28,7 @@ from .models import (
     PartnerSlider, AdvertisementSlide,
     Brand, Category, Product, ProductType, CustomerReview, Blog, ContactMessage, ContactInfo, User, Wish,
     CartItem, DiscountCode, DiscountCodeUse, Order, OrderItem, PasswordResetOTP, Cart, UserDeviceToken, HomePageBanner,
-    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory, RegistrationOTP, PushNotification
+    ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory, RegistrationOTP, PushNotification, Branch
 )
 from .serializers import (
     PartnerSliderSerializer, AdvertisementSlideSerializer,
@@ -376,7 +375,8 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
 
 
 def index(request):
-    partners = PartnerSlider.objects.all().order_by('created_at')
+    partners = PartnerSlider.objects.select_related(
+        'brand').all().order_by('created_at')
     advertisement_slides = AdvertisementSlide.objects.all().order_by('created_at')
 
     prio = list(Product.objects.filter(priority__isnull=False)
@@ -398,7 +398,7 @@ def index(request):
     wish_ids = set(Wish.objects.filter(user_id=session_user_id)
                    .values_list("product_id", flat=True)) if session_user_id else set()
 
-    banner = HomePageBanner.objects.order_by('-created_at').first()
+    banners = HomePageBanner.objects.order_by('-created_at')
 
     context = {
         'partners': partners,
@@ -409,7 +409,7 @@ def index(request):
         'random_products': random_products,
         'customer_reviews': customer_reviews,
         'wish_ids': wish_ids,
-        'banner': banner,
+        'banners': banners,
     }
     return render(request, 'index.html', context)
 
@@ -467,7 +467,8 @@ class BlogRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 def contact(request):
     contact_info = ContactInfo.objects.first()
-    return render(request, 'contact.html', {'contact_info': contact_info})
+    branches = Branch.objects.filter(is_active=True)
+    return render(request, 'contact.html', {'contact_info': contact_info, "branches": branches})
 
 
 def contact_submit(request):
@@ -500,6 +501,7 @@ def contact_submit(request):
         return redirect('MContact:contact')
 
     return redirect('MContact:contact')
+
 
 class RegisterAPIView(APIView):
     @swagger_auto_schema(
@@ -588,6 +590,7 @@ class RegisterAPIView(APIView):
             {"detail": "OTP kod email-ə göndərildi."},
             status=status.HTTP_200_OK
         )
+
 
 class RegisterOTPAPIView(APIView):
     serializer_class = VerifyOtpSerializer
@@ -1183,7 +1186,7 @@ def order_create(request):
     time_str = request.POST.get("delivery_time", "").strip()
 
     try:
-        dt_naive = datetime.datetime.strptime(
+        dt_naive = datetime.strptime(
             f"{date_str} {time_str}", "%Y-%m-%d %H:%M"
         )
     except ValueError:
@@ -1226,7 +1229,7 @@ def order_create(request):
             product=item.product,
             variant=item.variant,
             quantity=item.quantity,
-            unit_price=item.product.price,
+            unit_price=item.unit_price,
         )
     cart.items.all().delete()
 
@@ -1883,7 +1886,6 @@ class MobileOrderView(APIView):
         discount_amount = to_decimal("discount_amount")
         product_discount = to_decimal("product_discount")
         category_discount = to_decimal("category_discount")
-        subtotal = to_decimal("subtotal")
 
         date_str = data["delivery_date"]
         time_str = data["delivery_time"]
@@ -1904,7 +1906,8 @@ class MobileOrderView(APIView):
         for idx, itm in enumerate(data["items"], start=1):
             if "product_id" not in itm or "quantity" not in itm or "unit_price" not in itm:
                 raise ValidationError(
-                    {f"items[{idx}]": "product_id, quantity və unit_price tələb olunur."})
+                    {f"items[{idx}]": "product_id, quantity və unit_price tələb olunur."}
+                )
 
             product = get_object_or_404(Product, pk=itm["product_id"])
             variant = None
@@ -1915,19 +1918,30 @@ class MobileOrderView(APIView):
                     product=product,
                     is_active=True
                 )
+
             try:
                 qty = int(itm["quantity"])
-                up = Decimal(str(itm["unit_price"]))
             except Exception:
                 raise ValidationError(
-                    {f"items[{idx}]": "quantity/unit_price formatı yanlışdır."})
+                    {f"items[{idx}].quantity": "quantity formatı yanlışdır."}
+                )
+
+            if variant and variant.price_override is not None:
+                unit_price = variant.price_override
+            else:
+                unit_price = product.price
 
             parsed_items.append({
                 "product": product,
                 "variant": variant,
                 "quantity": qty,
-                "unit_price": up
+                "unit_price": unit_price
             })
+
+        subtotal = sum(
+            itm["unit_price"] * itm["quantity"]
+            for itm in parsed_items
+        )
 
         shipping_fee = Decimal('0.00') if subtotal >= Decimal(
             '200.00') else Decimal('10.00')
@@ -1960,7 +1974,7 @@ class MobileOrderView(APIView):
         cart.items.all().delete()
 
         serializer = OrderSerializer(order, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=201)
 
 
 class CategoryProductsAPIView(generics.ListAPIView):
@@ -2116,17 +2130,19 @@ class MobileProductFilterAPIView(APIView):
 
         user_id = request.session.get("user_id")
         if user_id:
-            wqs = Wish.objects.filter(user_id=user_id, product_id=OuterRef("pk"))
+            wqs = Wish.objects.filter(
+                user_id=user_id, product_id=OuterRef("pk"))
             qs = qs.annotate(in_wishlist=Exists(wqs))
         else:
-            qs = qs.annotate(in_wishlist=Value(False, output_field=BooleanField()))
+            qs = qs.annotate(in_wishlist=Value(
+                False, output_field=BooleanField()))
 
         if name_q:
             qs = qs.filter(title__icontains=name_q)
         if code_q:
             qs = qs.filter(code__iexact=code_q)
 
-        raw_brand_vals = params.getlist("1")  
+        raw_brand_vals = params.getlist("1")
         brand_ids = []
         for rv in raw_brand_vals:
             for part in rv.split(","):
@@ -2179,7 +2195,8 @@ class MobileProductFilterAPIView(APIView):
         request.query_params["page"] = page_num
         page = paginator.paginate_queryset(qs, request, view=self)
 
-        serializer = ProductListSerializer(page, many=True, context={"request": request})
+        serializer = ProductListSerializer(
+            page, many=True, context={"request": request})
         return paginator.get_paginated_response(serializer.data)
 
 

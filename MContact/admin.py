@@ -5,7 +5,7 @@ from .models import (
     Brand, Category, Product, ProductType, ProductImage, CustomerReview, Blog,
     ContactMessage, ContactInfo, User, Wish, Cart, CartItem, DiscountCode, Order,
     OrderItem, BlogImage, SiteConfiguration, HomePageBanner, ProductAttribute, ProductAttributeValue,
-    ProductVariant, SubCategory, PushNotification
+    ProductVariant, SubCategory, PushNotification, Branch
 )
 from django.http import HttpResponse
 import openpyxl
@@ -129,15 +129,32 @@ class ProductAdmin(CustomTranslationAdmin):
 
 @admin.register(PartnerSlider)
 class PartnerSliderAdmin(admin.ModelAdmin):
-    list_display = ('title', 'title_en', 'title_ru', 'created_at')
-    search_fields = ('title', 'title_en', 'title_ru')
+    list_display = ('title', 'brand', 'created_at')
+    list_filter = ('brand',)
+    search_fields = ('title', 'title_en', 'title_ru', 'brand__name')
+    fields = ('title', 'image', 'brand')
 
 
 @admin.register(AdvertisementSlide)
 class AdvertisementSlideAdmin(admin.ModelAdmin):
-    list_display = ('title', 'title_en', 'title_ru', 'created_at')
-    search_fields = ('title', 'title_en', 'title_ru',
-                     'description', 'description_en', 'description_ru')
+    list_display = ('title', 'brand', 'category', 'subcategory', 'created_at')
+    search_fields = ('title', 'title_en', 'title_ru', 'description',
+                     'description_en', 'description_ru')
+    filter_horizontal = ("attribute_values",)
+    fieldsets = (
+        (None, {
+            "fields": ("title", "description", "image", "link")
+        }),
+        ("Məhsul filtrləri", {
+            "fields": (
+                "brand",
+                "category",
+                "subcategory",
+                "attribute_values",
+                ("price_min", "price_max"),
+            )
+        }),
+    )
 
 
 @admin.register(CustomerReview)
@@ -319,6 +336,12 @@ class HomePageBannerAdmin(CustomTranslationAdmin):
 
 @admin.register(PushNotification)
 class PushNotificationAdmin(admin.ModelAdmin):
-    list_display   = ("title", "created_at")
-    filter_horizontal = ("recipients",)   
-    readonly_fields  = ("created_at",)
+    list_display = ("title", "created_at")
+    filter_horizontal = ("recipients",)
+    readonly_fields = ("created_at",)
+
+@admin.register(Branch)
+class BranchAdmin(admin.ModelAdmin):
+    list_display = ("name", "order", "is_active")
+    list_editable = ("order", "is_active")
+    search_fields = ("name",)

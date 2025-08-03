@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.urls import reverse
 from .models import (
     PartnerSlider, AdvertisementSlide, Brand, Category, Product,
     ProductType, ProductImage, CustomerReview,
@@ -191,19 +192,53 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 class PartnerSliderSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
+    mobile_link = serializers.SerializerMethodField()
+    filters     = serializers.SerializerMethodField()
 
     class Meta:
-        model = PartnerSlider
-        fields = ('id', 'title', 'image')
+        model  = PartnerSlider
+        fields = ('id', 'title', 'image', 'brand', 'brand_name',
+                  'mobile_link', 'filters')
+
+    def get_mobile_link(self, obj):
+        if obj.brand_id:
+            return (reverse('mobile-products-filter')
+                    + f'?1={obj.brand_id}')   
+        return reverse('mobile-products-filter')
+
+    def get_filters(self, obj):
+        return {"brand": obj.brand_id} if obj.brand_id else {}
 
 
 class AdvertisementSlideSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)
+    web_link = serializers.SerializerMethodField()
+    mobile_link = serializers.SerializerMethodField()
+    filters    = serializers.SerializerMethodField()     
 
     class Meta:
-        model = AdvertisementSlide
-        fields = ('id', 'title', 'description', 'image', 'link')
+        model  = AdvertisementSlide
+        fields = (
+            'id', 'title', 'description', 'image',
+            'web_link', 'mobile_link', 'filters',
+        )
 
+    def get_web_link(self, obj):
+        return obj.filter_link
+
+    def get_mobile_link(self, obj):
+        return obj.build_mobile_filter_url()
+
+    def get_filters(self, obj):
+        return {
+            "brand":        obj.brand_id,
+            "category":     obj.category_id,
+            "subcategory":  obj.subcategory_id,
+            "attr_values":  list(obj.attribute_values.values_list('id', flat=True)),
+            "price_min":    obj.price_min,
+            "price_max":    obj.price_max,
+        }
 
 class CustomerReviewSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True, required=False)
@@ -259,6 +294,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'birth_date', 'image', 'created_at']
         read_only_fields = ['id', 'created_at']
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(write_only=True)
     birth_date = serializers.DateField(
@@ -285,6 +321,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "phone": {"required": False},
             "image": {"required": False},
         }
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     id = serializers.IntegerField(write_only=True)
