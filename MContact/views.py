@@ -41,7 +41,6 @@ from .serializers import (
 )
 from django.contrib import messages
 
-
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "perpage"
@@ -61,9 +60,8 @@ class CustomPageNumberPagination(PageNumberPagination):
             return list(self.page)
         except (PageNotAnInteger, EmptyPage):
             self.page = None
-            self._paginator = paginator
-            self._requested_number = int(page_number) if str(
-                page_number).isdigit() else 1
+            self._paginator = paginator          
+            self._requested_number = int(page_number) if str(page_number).isdigit() else 1
             return []
 
     def get_next_link(self):
@@ -1518,23 +1516,37 @@ class MobileCartView(APIView):
     )
     def delete(self, request):
         data = request.data
-        user_id = data.get("user_id")
+        user_id     = data.get("user_id")
         session_key = data.get("session_key")
-        item_id = data.get("item_id")
+        item_id     = data.get("item_id")
+        product_id  = data.get("product_id")   
+        variant_id  = data.get("variant_id")   
 
-        if item_id is None:
-            return Response({"detail": "item_id tələb olunur."}, status=400)
+        if item_id is None and product_id is None:
+            return Response(
+                {"detail": "item_id və ya product_id tələb olunur."},
+                status=400
+            )
 
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id, session_key=session_key)
+            user_id=user_id, session_key=session_key
+        )
 
         try:
-            CartItem.objects.get(cart=cart, id=item_id).delete()
+            if item_id is not None:                         
+                item = CartItem.objects.get(cart=cart, id=item_id)
+            else:                                           
+                filters = {"cart": cart, "product_id": product_id}
+                if variant_id is not None:
+                    filters["variant_id"] = variant_id
+                item = CartItem.objects.get(**filters)
+            item.delete()
         except CartItem.DoesNotExist:
             return Response({"detail": "CartItem tapılmadı."}, status=404)
 
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
+        return Response({"session_key": session_key, "cart": ser.data},
+                        status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="Məhsul miqdarını yenilə",
@@ -1556,13 +1568,18 @@ class MobileCartView(APIView):
     )
     def patch(self, request):
         data = request.data
-        user_id = data.get("user_id")
+        user_id     = data.get("user_id")
         session_key = data.get("session_key")
-        item_id = data.get("item_id")
-        qty = data.get("quantity")
+        item_id     = data.get("item_id")
+        product_id  = data.get("product_id")     
+        variant_id  = data.get("variant_id")   
+        qty         = data.get("quantity")
 
-        if item_id is None:
-            return Response({"detail": "item_id tələb olunur."}, status=400)
+        if item_id is None and product_id is None:
+            return Response(
+                {"detail": "item_id və ya product_id tələb olunur."},
+                status=400
+            )
         if qty is None:
             return Response({"detail": "quantity tələb olunur."}, status=400)
 
@@ -1571,13 +1588,22 @@ class MobileCartView(APIView):
             if qty < 1:
                 raise ValueError
         except ValueError:
-            return Response({"detail": "quantity müsbət tam ədəd olmalıdır."}, status=400)
+            return Response(
+                {"detail": "quantity müsbət tam ədəd olmalıdır."}, status=400
+            )
 
         cart, session_key = self._get_or_create_cart(
-            user_id=user_id, session_key=session_key)
+            user_id=user_id, session_key=session_key
+        )
 
         try:
-            item = CartItem.objects.get(cart=cart, id=item_id)
+            if item_id is not None:                         
+                item = CartItem.objects.get(cart=cart, id=item_id)
+            else:                                          
+                filters = {"cart": cart, "product_id": product_id}
+                if variant_id is not None:
+                    filters["variant_id"] = variant_id
+                item = CartItem.objects.get(**filters)
         except CartItem.DoesNotExist:
             return Response({"detail": "CartItem tapılmadı."}, status=404)
 
@@ -1585,7 +1611,8 @@ class MobileCartView(APIView):
         item.save()
 
         ser = MobileCartSerializer(cart, context={"request": request})
-        return Response({"session_key": session_key, "cart": ser.data}, status=status.HTTP_200_OK)
+        return Response({"session_key": session_key, "cart": ser.data},
+                        status=status.HTTP_200_OK)
 
 
 class DiscountCodeListCreateAPIView(generics.ListCreateAPIView):
