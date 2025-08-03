@@ -108,12 +108,26 @@ def broadcast_notification(title, body, data=None):
         except Exception:
             continue
 
-def send_push(tokens: list[str], title: str, body: str) -> None:
+def send_push(tokens: list[str], title: str, body: str) -> int:
     if not tokens:
-        return
-    messaging.send_multicast(
-        messaging.MulticastMessage(
-            notification=messaging.Notification(title=title, body=body),
-            tokens=tokens
-        )
-    )
+        return 0
+
+    success = 0
+    chunk_size = 100  
+    for i in range(0, len(tokens), chunk_size):
+        chunk = tokens[i : i + chunk_size]
+        for tok in chunk:
+            try:
+                messaging.send(
+                    messaging.Message(
+                        notification=messaging.Notification(title=title, body=body),
+                        token=tok,
+                    )
+                )
+                success += 1
+            except messaging.UnregisteredError:
+                UserDeviceToken.objects.filter(token=tok).delete()
+            except Exception as exc:
+                logger.exception("FCM push failed (%s): %s", tok, exc)
+
+    return success
