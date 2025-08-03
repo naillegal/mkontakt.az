@@ -52,16 +52,9 @@ class CustomPageNumberPagination(PageNumberPagination):
         page_size = self.get_page_size(request)
         if not page_size:
             return None
-
         paginator = self.django_paginator_class(queryset, page_size)
         page_number = request.query_params.get(self.page_query_param, 1)
-
-        try:
-            self.page = paginator.page(page_number)
-        except (PageNotAnInteger, EmptyPage):
-            self.page = []
-            return []
-
+        self.page = paginator.get_page(page_number)
         return list(self.page)
 
     def get_paginated_response(self, data):
