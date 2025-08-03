@@ -41,11 +41,6 @@ from .serializers import (
 )
 from django.contrib import messages
 
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'perpage'
@@ -57,29 +52,54 @@ class CustomPageNumberPagination(PageNumberPagination):
         if not page_size:
             return None
         paginator = Paginator(queryset, page_size)
-        page_number = request.query_params.get(self.page_query_param, 1)
+        self._paginator = paginator
+        try:
+            page_number = int(request.query_params.get(self.page_query_param, 1))
+        except (TypeError, ValueError):
+            page_number = 1
+        if page_number < 1:
+            page_number = 1
+        self._requested_page_number = page_number
         try:
             page = paginator.page(page_number)
-        except PageNotAnInteger:
-            page = paginator.page(1)
+            self.page = page
+            return list(page)
         except EmptyPage:
+            self.page = None
             return []
-        self.page = page
-        return list(page)
 
     def get_paginated_response(self, data):
-        total_pages = self.page.paginator.num_pages
-        total_items = self.page.paginator.count
-        current_page = self.page.number
+        total_pages = self._paginator.num_pages
+        total_items = self._paginator.count
+        current_page = self._requested_page_number
         return Response({
             'page': current_page,
             'perpage': self.get_page_size(self.request),
             'total_pages': total_pages,
             'total_items': total_items,
             'results': data,
-            'next': self.get_next_link(),
+            'next': None,
+            'previous': None,
+        })
+
+    def get_paginated_response(self, data):
+        total_pages = (self.page.paginator.num_pages
+                       if hasattr(self.page, 'paginator') else 0)
+        total_items = (self.page.paginator.count
+                       if hasattr(self.page, 'paginator') else 0)
+        current_page = (self.page.number
+                        if hasattr(self.page, 'number') else 1)
+
+        return Response({
+            'page': current_page,
+            'perpage': self.get_page_size(self.request),
+            'total_pages': total_pages,
+            'total_items': total_items,
+            'results': data,
+            'next': None if not data else self.get_next_link(),
             'previous': self.get_previous_link(),
         })
+
 
 def about_us(request):
     return render(request, 'about-us.html')
