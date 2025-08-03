@@ -332,6 +332,15 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 class HomePageBannerAdmin(CustomTranslationAdmin):
     list_display = ('title', 'title_en', 'title_ru', 'created_at')
     readonly_fields = ('created_at',)
+    filter_horizontal = ("attribute_values",)
+
+    fieldsets = (
+        (None, {"fields": ("title", "description", "image", "link")}),
+        ("Məhsul filtrləri", {
+            "fields": ("brand", "category", "subcategory",
+                       "attribute_values", ("price_min", "price_max"))
+        }),
+    )
 
 
 @admin.register(PushNotification)
@@ -339,6 +348,7 @@ class PushNotificationAdmin(admin.ModelAdmin):
     list_display = ("title", "created_at")
     filter_horizontal = ("recipients",)
     readonly_fields = ("created_at",)
+
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):

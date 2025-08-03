@@ -300,7 +300,8 @@ class PartnerSlider(models.Model):
 class AdvertisementSlide(models.Model):
     title = models.CharField(max_length=255, verbose_name="Başlıq")
     description = models.TextField(verbose_name="Təsvir")
-    image = models.ImageField(upload_to='advertisements/', verbose_name="Şəkil")
+    image = models.ImageField(
+        upload_to='advertisements/', verbose_name="Şəkil")
     link = models.URLField(blank=True, null=True, verbose_name="Xüsusi keçid")
 
     brand = models.ForeignKey(
@@ -330,7 +331,8 @@ class AdvertisementSlide(models.Model):
         null=True, blank=True, verbose_name="Maks. qiymət"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yaradılma")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Yaradılma")
 
     class Meta:
         ordering = ['created_at']
@@ -364,27 +366,28 @@ class AdvertisementSlide(models.Model):
 
         query = urlencode(params, doseq=True)
         return f"{base}?{query}" if query else base
-    
+
     def build_mobile_filter_url(self):
         from django.urls import reverse
         from urllib.parse import urlencode
-        from MContact.models import ProductAttribute  
+        from MContact.models import ProductAttribute
 
-        base = reverse("mobile-products-filter")     
+        base = reverse("mobile-products-filter")
         params = {}
 
         if self.brand_id:
-            params['1'] = str(self.brand_id)        
-        if self.subcategory_id:                      
+            params['1'] = str(self.brand_id)
+        if self.subcategory_id:
             params['2'] = str(self.subcategory_id)
 
         if self.attribute_values.exists():
             attr_order = list(
-                ProductAttribute.objects.order_by('name').values_list('id', flat=True)
+                ProductAttribute.objects.order_by(
+                    'name').values_list('id', flat=True)
             )
             for av in self.attribute_values.all():
                 idx = attr_order.index(av.attribute_id)
-                key = str(idx + 3)                   
+                key = str(idx + 3)
                 params.setdefault(key, []).append(str(av.id))
 
         if self.price_min is not None:
@@ -932,6 +935,18 @@ class HomePageBanner(models.Model):
         blank=True,
         verbose_name="Ətraflı keçid URL-i"
     )
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL,
+                              null=True, blank=True, related_name='+')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL,
+                                 null=True, blank=True, related_name='+')
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL,
+                                    null=True, blank=True, related_name='+')
+    attribute_values = models.ManyToManyField(
+        ProductAttributeValue, blank=True, related_name='+')
+    price_min = models.DecimalField(max_digits=10, decimal_places=2,
+                                    null=True, blank=True)
+    price_max = models.DecimalField(max_digits=10, decimal_places=2,
+                                    null=True, blank=True)
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Yaradılma tarixi"
@@ -943,6 +958,54 @@ class HomePageBanner(models.Model):
 
     def __str__(self):
         return self.title
+
+    def build_filter_url(self):
+        from django.urls import reverse
+        from urllib.parse import urlencode
+        base = reverse("MContact:products")
+        params = {}
+        if self.brand_id:
+            params["brand"] = self.brand_id
+        if self.category_id:
+            params["category"] = self.category_id
+        if self.subcategory_id:
+            params["subcategory"] = self.subcategory_id
+        if self.price_min is not None:
+            params["min_price"] = str(self.price_min)
+        if self.price_max is not None:
+            params["max_price"] = str(self.price_max)
+        for av in self.attribute_values.all():
+            key = f"attr_{av.attribute_id}"
+            params.setdefault(key, []).append(av.id)
+        qs = urlencode(params, doseq=True)
+        return f"{base}?{qs}" if qs else base
+
+    def build_mobile_filter_url(self):
+        from django.urls import reverse
+        from urllib.parse import urlencode
+        from MContact.models import ProductAttribute
+        base = reverse("mobile-products-filter")
+        params = {}
+        if self.brand_id:
+            params["1"] = str(self.brand_id)
+        if self.subcategory_id:
+            params["2"] = str(self.subcategory_id)
+        if self.attribute_values.exists():
+            order = list(ProductAttribute.objects.order_by("name")
+                         .values_list("id", flat=True))
+            for av in self.attribute_values.all():
+                idx = order.index(av.attribute_id)
+                params.setdefault(str(idx + 3), []).append(str(av.id))
+        if self.price_min is not None:
+            params["min_price"] = str(self.price_min)
+        if self.price_max is not None:
+            params["max_price"] = str(self.price_max)
+        qs = urlencode(params, doseq=True)
+        return f"{base}?{qs}" if qs else base
+
+    @property
+    def filter_link(self):
+        return self.link or self.build_filter_url()
 
 
 class RegistrationOTP(models.Model):

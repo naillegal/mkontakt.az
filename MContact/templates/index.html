@@ -29,7 +29,7 @@
           <div class="main-banner-content">
             <h1>{{ banner.title }}</h1>
             <p>{{ banner.description }}</p>
-            <a href="{{ banner.link|default:'#' }}" class="main-banner-content-btn">{% trans "Ətraflı" %}</a>
+            <a href="{{ banner.filter_link }}" class="main-banner-content-btn">{% trans "Ətraflı" %}</a>
           </div>
         </div>
       {% empty %}
