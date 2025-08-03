@@ -41,6 +41,7 @@ from .serializers import (
 )
 from django.contrib import messages
 
+
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "perpage"
@@ -60,8 +61,9 @@ class CustomPageNumberPagination(PageNumberPagination):
             return list(self.page)
         except (PageNotAnInteger, EmptyPage):
             self.page = None
-            self._paginator = paginator          
-            self._requested_number = int(page_number) if str(page_number).isdigit() else 1
+            self._paginator = paginator
+            self._requested_number = int(page_number) if str(
+                page_number).isdigit() else 1
             return []
 
     def get_next_link(self):
@@ -1516,11 +1518,11 @@ class MobileCartView(APIView):
     )
     def delete(self, request):
         data = request.data
-        user_id     = data.get("user_id")
+        user_id = data.get("user_id")
         session_key = data.get("session_key")
-        item_id     = data.get("item_id")
-        product_id  = data.get("product_id")   
-        variant_id  = data.get("variant_id")   
+        item_id = data.get("item_id")
+        product_id = data.get("product_id")
+        variant_id = data.get("variant_id")
 
         if item_id is None and product_id is None:
             return Response(
@@ -1533,9 +1535,9 @@ class MobileCartView(APIView):
         )
 
         try:
-            if item_id is not None:                         
+            if item_id is not None:
                 item = CartItem.objects.get(cart=cart, id=item_id)
-            else:                                           
+            else:
                 filters = {"cart": cart, "product_id": product_id}
                 if variant_id is not None:
                     filters["variant_id"] = variant_id
@@ -1568,12 +1570,12 @@ class MobileCartView(APIView):
     )
     def patch(self, request):
         data = request.data
-        user_id     = data.get("user_id")
+        user_id = data.get("user_id")
         session_key = data.get("session_key")
-        item_id     = data.get("item_id")
-        product_id  = data.get("product_id")     
-        variant_id  = data.get("variant_id")   
-        qty         = data.get("quantity")
+        item_id = data.get("item_id")
+        product_id = data.get("product_id")
+        variant_id = data.get("variant_id")
+        qty = data.get("quantity")
 
         if item_id is None and product_id is None:
             return Response(
@@ -1597,9 +1599,9 @@ class MobileCartView(APIView):
         )
 
         try:
-            if item_id is not None:                         
+            if item_id is not None:
                 item = CartItem.objects.get(cart=cart, id=item_id)
-            else:                                          
+            else:
                 filters = {"cart": cart, "product_id": product_id}
                 if variant_id is not None:
                     filters["variant_id"] = variant_id
@@ -1858,6 +1860,30 @@ class WishlistAPIView(APIView):
 class MobileOrderView(APIView):
     parser_classes = [JSONParser]
 
+    def _get_or_create_cart(self, *, user_id, session_key):
+        if user_id:
+            cart, _ = Cart.objects.get_or_create(user_id=user_id)
+            if session_key:
+                try:
+                    anon = Cart.objects.get(
+                        session_key=session_key, user__isnull=True)
+                    for it in anon.items.all():
+                        CartItem.objects.update_or_create(
+                            cart=cart,
+                            product=it.product,
+                            defaults={"quantity": dj_models.F(
+                                "quantity") + it.quantity},
+                        )
+                    anon.delete()
+                except Cart.DoesNotExist:
+                    pass
+            return cart, session_key
+        if not session_key:
+            session_key = uuid.uuid4().hex
+        cart, _ = Cart.objects.get_or_create(
+            session_key=session_key, user=None)
+        return cart, session_key
+
     @swagger_auto_schema(
         operation_summary="Mobil sifariş yarat",
         request_body=openapi.Schema(
@@ -1902,7 +1928,6 @@ class MobileOrderView(APIView):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
-
         cart, session_key = self._get_or_create_cart(
             user_id=data.get("user_id"),
             session_key=data.get("session_key")
@@ -1933,57 +1958,38 @@ class MobileOrderView(APIView):
         try:
             delivery_date = datetime.strptime(date_str, "%d.%m.%Y").date()
         except ValueError:
-            raise ValidationError({
-                "delivery_date": "Format: DD.MM.YYYY olmalıdır (məs: 24.07.2025)."
-            })
+            raise ValidationError(
+                {"delivery_date": "Format: DD.MM.YYYY olmalıdır (məs: 24.07.2025)."})
         try:
             delivery_time = datetime.strptime(time_str, "%H:%M").time()
         except ValueError:
-            raise ValidationError({
-                "delivery_time": "Format: HH:MM olmalıdır (məs: 18:23)."
-            })
+            raise ValidationError(
+                {"delivery_time": "Format: HH:MM olmalıdır (məs: 18:23)."})
 
         parsed_items = []
         for idx, itm in enumerate(data["items"], start=1):
             if "product_id" not in itm or "quantity" not in itm or "unit_price" not in itm:
                 raise ValidationError(
-                    {f"items[{idx}]": "product_id, quantity və unit_price tələb olunur."}
-                )
+                    {f"items[{idx}]": "product_id, quantity və unit_price tələb olunur."})
 
             product = get_object_or_404(Product, pk=itm["product_id"])
             variant = None
             if itm.get("variant_id") is not None:
                 variant = get_object_or_404(
-                    ProductVariant,
-                    pk=itm["variant_id"],
-                    product=product,
-                    is_active=True
-                )
+                    ProductVariant, pk=itm["variant_id"], product=product, is_active=True)
 
             try:
                 qty = int(itm["quantity"])
             except Exception:
                 raise ValidationError(
-                    {f"items[{idx}].quantity": "quantity formatı yanlışdır."}
-                )
+                    {f"items[{idx}].quantity": "quantity formatı yanlışdır."})
 
-            if variant and variant.price_override is not None:
-                unit_price = variant.price_override
-            else:
-                unit_price = product.price
+            unit_price = variant.price_override if variant and variant.price_override is not None else product.price
+            parsed_items.append(
+                {"product": product, "variant": variant, "quantity": qty, "unit_price": unit_price})
 
-            parsed_items.append({
-                "product": product,
-                "variant": variant,
-                "quantity": qty,
-                "unit_price": unit_price
-            })
-
-        subtotal = sum(
-            itm["unit_price"] * itm["quantity"]
-            for itm in parsed_items
-        )
-
+        subtotal = sum(itm["unit_price"] * itm["quantity"]
+                       for itm in parsed_items)
         shipping_fee = Decimal('0.00') if subtotal >= Decimal(
             '200.00') else Decimal('10.00')
         total = subtotal + shipping_fee
@@ -2013,7 +2019,6 @@ class MobileOrderView(APIView):
             )
 
         cart.items.all().delete()
-
         serializer = OrderSerializer(order, context={"request": request})
         return Response(serializer.data, status=201)
 
