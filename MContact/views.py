@@ -43,7 +43,7 @@ from django.contrib import messages
 
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
-    page_size_query_param = 'perpage'
+    page_size_query_param = "perpage"
     max_page_size = 100
 
     def paginate_queryset(self, queryset, request, view=None):
@@ -57,25 +57,41 @@ class CustomPageNumberPagination(PageNumberPagination):
 
         try:
             self.page = paginator.page(page_number)
+            return list(self.page)
         except (PageNotAnInteger, EmptyPage):
-            self.page = []
+            self.page = None
+            self._paginator = paginator            
+            self._requested_number = int(page_number) if str(page_number).isdigit() else 1
             return []
 
-        return list(self.page)
+    def get_next_link(self):
+        if self.page is None:
+            return None
+        return super().get_next_link()
+
+    def get_previous_link(self):
+        if self.page is None:
+            return None
+        return super().get_previous_link()
 
     def get_paginated_response(self, data):
-        total_pages = self.page.paginator.num_pages if hasattr(self.page, 'paginator') else 0
-        total_items = self.page.paginator.count if hasattr(self.page, 'paginator') else 0
-        current_page = self.page.number if hasattr(self.page, 'number') else 1
+        if self.page is not None:
+            total_pages = self.page.paginator.num_pages
+            total_items = self.page.paginator.count
+            current_page = self.page.number
+        else:
+            total_pages = self._paginator.num_pages
+            total_items = self._paginator.count
+            current_page = self._requested_number
 
         return Response({
-            'page': current_page,
-            'perpage': self.get_page_size(self.request),
-            'total_pages': total_pages,
-            'total_items': total_items,
-            'results': data,
-            'next': None,
-            'previous': None,
+            "page":       current_page,
+            "perpage":    self.get_page_size(self.request),
+            "total_pages": total_pages,
+            "total_items": total_items,
+            "results":    data,
+            "next":       self.get_next_link(),
+            "previous":   self.get_previous_link(),
         })
 
     def get_paginated_response(self, data):
