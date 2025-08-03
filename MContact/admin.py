@@ -349,6 +349,16 @@ class PushNotificationAdmin(admin.ModelAdmin):
     filter_horizontal = ("recipients",)
     readonly_fields = ("created_at",)
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        sent = form.instance.send()
+        self.message_user(
+            request,
+            f"Bildiriş göndərildi • uğurlu cihaz sayı: {sent}"
+        )
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
