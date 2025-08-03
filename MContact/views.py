@@ -42,6 +42,10 @@ from .serializers import (
 from django.contrib import messages
 
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'perpage'
@@ -52,29 +56,30 @@ class CustomPageNumberPagination(PageNumberPagination):
         page_size = self.get_page_size(request)
         if not page_size:
             return None
-        paginator = self.django_paginator_class(queryset, page_size)
+        paginator = Paginator(queryset, page_size)
         page_number = request.query_params.get(self.page_query_param, 1)
-        self.page = paginator.get_page(page_number)
-        return list(self.page)
+        try:
+            page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            return []
+        self.page = page
+        return list(page)
 
     def get_paginated_response(self, data):
-        total_pages = (self.page.paginator.num_pages
-                       if hasattr(self.page, 'paginator') else 0)
-        total_items = (self.page.paginator.count
-                       if hasattr(self.page, 'paginator') else 0)
-        current_page = (self.page.number
-                        if hasattr(self.page, 'number') else 1)
-
+        total_pages = self.page.paginator.num_pages
+        total_items = self.page.paginator.count
+        current_page = self.page.number
         return Response({
             'page': current_page,
             'perpage': self.get_page_size(self.request),
             'total_pages': total_pages,
             'total_items': total_items,
             'results': data,
-            'next': None if not data else self.get_next_link(),
+            'next': self.get_next_link(),
             'previous': self.get_previous_link(),
         })
-
 
 def about_us(request):
     return render(request, 'about-us.html')
