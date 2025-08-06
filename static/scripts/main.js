@@ -477,17 +477,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-document.querySelectorAll("input[name='variant']").forEach(radio => {
-  radio.addEventListener("change", function() {
-    const newPrice = parseFloat(this.dataset.price).toFixed(2);
-    const priceEl = document.querySelector("#selected-product-info .price");
-    if (priceEl) {
-      priceEl.textContent = "₼" + newPrice;
-    }
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  const priceSpan = document.querySelector("#selected-product-info .price");
+  if (!priceSpan) return;
+
+  const radios = document.querySelectorAll("input[name='variant']");
+
+  function setPrice(el) {
+    const p = el.dataset.price;         
+    if (p) priceSpan.textContent = "₼" + p;
+  }
+
+  radios.forEach(r => r.addEventListener("change", () => setPrice(r)));
+
+  const firstChecked = document.querySelector("input[name='variant']:checked") || radios[0];
+  if (firstChecked) setPrice(firstChecked);
 });
 
-// form scripts
 const passwordIcons = document.querySelectorAll(".password-input i");
 
 passwordIcons.forEach((icon) => {

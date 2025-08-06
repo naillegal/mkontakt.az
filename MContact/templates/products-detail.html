@@ -77,22 +77,28 @@
               <h3>{% trans 'Versiyalar' %}</h3>
               <ul class="list-unstyled">
                 {% for variant in product.ordered_variants %}
-                  <li>
-                    <label>
-                      <input type="radio" name="variant" value="{{ variant.id }}" data-price="{{ variant.price_override|default:product.price|floatformat:2 }}" />
-                      {% for val in variant.attribute_values.all %}
-                        {{ val.attribute.name }}: {{ val.value }}{% if not forloop.last %}, {% endif %}
-                      {% endfor %}— ₼<span class="variant-price">{{ variant.price_override|default:product.price|floatformat:2 }}</span>
-                    </label>
-                  </li>
-                {% empty %}
-                  <li>
-                    {% trans 'Bu məhsul üçün versiya yoxdur.' %}
-                  </li>
-                {% endfor %}
+  {% with vprice=variant.price_override|default:product.price %}
+    <li>
+      <label>
+        <input
+          type="radio"
+          name="variant"
+          value="{{ variant.id }}"
+          data-price="{{ vprice|floatformat:2 }}"   
+          {% if forloop.first %}checked{% endif %}  
+        />
+        {% for val in variant.attribute_values.all %}
+          {{ val.attribute.name }}: {{ val.value }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+        — ₼{{ vprice|floatformat:2 }}
+      </label>
+    </li>
+  {% endwith %}
+{% empty %}
+  <li>{% trans 'Bu məhsul üçün versiya yoxdur.' %}</li>
+{% endfor %}
               </ul>
             </div>
-
             <span class="price">₼{{ product.price }}</span>
             <div class="count-and-type">
               <div class="counter">
