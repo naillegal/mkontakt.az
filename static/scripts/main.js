@@ -477,6 +477,16 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+document.querySelectorAll("input[name='variant']").forEach(radio => {
+  radio.addEventListener("change", function() {
+    const newPrice = parseFloat(this.dataset.price).toFixed(2);
+    const priceEl = document.querySelector("#selected-product-info .price");
+    if (priceEl) {
+      priceEl.textContent = "₼" + newPrice;
+    }
+  });
+});
+
 // form scripts
 const passwordIcons = document.querySelectorAll(".password-input i");
 

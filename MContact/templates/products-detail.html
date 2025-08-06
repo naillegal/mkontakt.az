@@ -79,10 +79,10 @@
                 {% for variant in product.ordered_variants %}
                   <li>
                     <label>
-                      <input type="radio" name="variant" value="{{ variant.id }}" />
+                      <input type="radio" name="variant" value="{{ variant.id }}" data-price="{{ variant.price_override|default:product.price|floatformat:2 }}" />
                       {% for val in variant.attribute_values.all %}
                         {{ val.attribute.name }}: {{ val.value }}{% if not forloop.last %}, {% endif %}
-                      {% endfor %}— ₼{{ variant.price_override|default:product.price }}
+                      {% endfor %}— ₼<span class="variant-price">{{ variant.price_override|default:product.price|floatformat:2 }}</span>
                     </label>
                   </li>
                 {% empty %}
