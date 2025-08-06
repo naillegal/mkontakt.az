@@ -8,6 +8,7 @@ from .models import (
     ProductAttribute, ProductVariant, ProductAttributeValue, SubCategory
 )
 import html
+import re
 from django.utils.html import strip_tags
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -35,8 +36,8 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ("id", "code", "price_override",
-                  "is_active", "attribute_values")
+        fields = ("id", "code", "price_override", "is_active",
+                  "attribute_values", "order")
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -137,11 +138,14 @@ class ProductListSerializer(serializers.ModelSerializer):
         )
 
     def get_variants(self, obj):
-        variants = getattr(obj, "filtered_variants", obj.variants.all())
-        return ProductVariantSerializer(variants, many=True, context=self.context).data
+        variants = getattr(obj, "filtered_variants",
+                           obj.variants.all().order_by('order', 'id'))
+        return ProductVariantSerializer(variants, many=True,
+                                        context=self.context).data
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     subcategory_names = serializers.SerializerMethodField()
@@ -161,6 +165,21 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "in_wishlist",
         )
 
+    def get_description(self, obj):
+        html_text = obj.description or ""
+
+        with_breaks = re.sub(r'</?p\s*>', '\n', html_text, flags=re.IGNORECASE)
+        with_breaks = re.sub(r'<br\s*/?>', '\n',
+                             with_breaks, flags=re.IGNORECASE)
+
+        raw = strip_tags(with_breaks)
+
+        raw = raw.replace('\r\n', '\n').replace('\r', '\n')
+
+        lines = [line.strip() for line in raw.split('\n')]
+        non_empty = [line for line in lines if line]
+        return '\n'.join(non_empty)
+
     def get_price(self, obj):
         dec = Decimal(obj.price).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -170,18 +189,14 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return list(obj.subcategories.values_list("name", flat=True))
 
     def get_images(self, obj):
-        qs = obj.images.all()
-        main = qs.filter(is_main=True).order_by("-created_at").first()
-        if main:
-            ordered = [main] + \
-                list(qs.exclude(pk=main.pk).order_by("-created_at"))
-        else:
-            ordered = list(qs.order_by("-created_at"))
+        qs = obj.images.order_by('-is_main', 'order', 'pk')
+        request = self.context.get('request')
 
-        req = self.context.get("request")
-        def make(i): return req.build_absolute_uri(
-            i.image.url) if req else i.image.url
-        return [make(i) for i in ordered]
+        return [
+            (request.build_absolute_uri(img.image.url)
+             if request else img.image.url)
+            for img in qs
+        ]
 
     def get_attributes(self, obj):
         qs = (ProductAttribute.objects

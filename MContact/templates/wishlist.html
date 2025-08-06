@@ -28,7 +28,7 @@
 
                     <div class="product-content">
                       <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div></a>
-                      <div class="description">{{ product.description|truncatechars:20 }}</div>
+                      <div class="description">{{ product.description|striptags|truncatechars:20 }}</div>
                       <div class="product-price-and-cart">
                         <div class="product-price">₼{{ product.price }}</div>
                         <div class="product-add-to-cart" data-product="{{ product.id }}">

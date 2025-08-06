@@ -42,7 +42,9 @@ class ProductVariantInline(admin.StackedInline):
     model = ProductVariant
     extra = 0
     filter_horizontal = ("attribute_values",)
-    fields = ("code", "attribute_values", "price_override", "is_active")
+    fields = ("code", "attribute_values",
+              "price_override", "is_active", "order")
+    ordering = ('order', 'id')
 
 
 @admin.register(Brand)
@@ -75,7 +77,8 @@ class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     readonly_fields = ('image_preview',)
-    fields = ('image', 'is_main', 'image_preview')
+    fields = ('image', 'is_main', 'order', 'image_preview')
+    ordering = ('-is_main', 'order', 'id')
 
     def image_preview(self, obj):
         if obj.image:
@@ -359,6 +362,7 @@ class PushNotificationAdmin(admin.ModelAdmin):
             request,
             f"Bildiriş göndərildi • uğurlu cihaz sayı: {sent}"
         )
+
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):

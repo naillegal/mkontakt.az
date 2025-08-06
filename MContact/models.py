@@ -66,12 +66,16 @@ class ProductVariant(models.Model):
         verbose_name="Alternativ qiymət",
         help_text="Boş saxlasanız əsas məhsul qiyməti qəbul edilir"
     )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Sıra nömrəsi"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Aktiv")
 
     class Meta:
         verbose_name = "Məhsul Versiyası"
         verbose_name_plural = "Məhsul Versiyaları"
-        ordering = ["product", "id"]
+        ordering = ['order', 'id']
 
     def __str__(self):
         label = self.code or f"Variant #{self.pk}"
@@ -205,7 +209,7 @@ class Product(models.Model):
     title = models.CharField(max_length=255, verbose_name="Məhsul adı")
     slug = models.SlugField(max_length=255, unique=True,
                             verbose_name="Slug", blank=True)
-    description = models.TextField(verbose_name="Təsvir", blank=True)
+    description = RichTextField(verbose_name="Təsvir", blank=True)
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Qiymət")
     discount = models.PositiveIntegerField(
@@ -244,6 +248,14 @@ class Product(models.Model):
             return self.images.all()[0].image.url
         return static('images/no-image.png')
 
+    @property
+    def ordered_images(self):
+        return self.images.order_by('-is_main', 'order', 'id')
+
+    @property
+    def ordered_variants(self):
+        return self.variants.order_by('order', 'id')
+
 
 class ProductImage(models.Model):
     product = models.ForeignKey(
@@ -256,6 +268,10 @@ class ProductImage(models.Model):
     is_main = models.BooleanField(
         default=False, verbose_name="Əsas şəkil"
     )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Sıra nömrəsi"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Yüklənmə tarixi"
     )
@@ -263,7 +279,7 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = "Məhsul Şəkli"
         verbose_name_plural = "Məhsul Şəkilləri"
-        ordering = ['-created_at']
+        ordering = ['-is_main', 'order', 'id']
 
     def __str__(self):
         return f"{self.product.title} - Şəkil {self.pk}"

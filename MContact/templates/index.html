@@ -306,7 +306,7 @@
                 </div>
                 <div class="product-content">
                   <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
-                  <div class="description">{{ product.description|truncatechars:20 }}</div></a>
+                  <div class="description">{{ product.description|striptags|truncatechars:20 }}</div></a>
                   <div class="product-price-and-cart">
                         <div class="product-price">₼{{ product.price }}</div>
                         {% if product.is_active %}
@@ -396,7 +396,7 @@
                 </div>
                 <div class="product-content">
                   <a href="{{ product.get_absolute_url }}"><div class="title">{{ product.title }}</div>
-                  <div class="description">{{ product.description|truncatechars:20 }}</div></a>
+                  <div class="description">{{ product.description|striptags|truncatechars:20 }}</div></a>
                   <div class="product-price-and-cart">
                         <div class="product-price">₼{{ product.price }}</div>
                         {% if product.is_active %}

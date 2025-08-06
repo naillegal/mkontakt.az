@@ -39,7 +39,7 @@
             <div class="swiper productDetailSwiper">
               <div class="swiper-wrapper">
                 {% if product.images.all %}
-                  {% for img in product.images.all %}
+                  {% for img in product.ordered_images %}
                     <div class="swiper-slide">
                       <img src="{{ img.image.url }}" alt="{{ product.title }}" />
                     </div>
@@ -71,12 +71,12 @@
 
               {% endfor %}
             </span>
-            <p>{{ product.description }}</p>
+            <p>{{ product.description|striptags|linebreaksbr }}</p>
 
             <div class="product-variants">
               <h3>{% trans 'Versiyalar' %}</h3>
               <ul class="list-unstyled">
-                {% for variant in product.variants.all %}
+                {% for variant in product.ordered_variants %}
                   <li>
                     <label>
                       <input type="radio" name="variant" value="{{ variant.id }}" />
@@ -143,7 +143,7 @@
               <div class="product-content">
                 <a href="{{ other.get_absolute_url }}">
                   <div class="title">{{ other.title }}</div>
-                  <div class="description">{{ other.description|truncatechars:20 }}</div>
+                  <div class="description">{{ other.description|striptags|truncatechars:20 }}</div>
                 </a>
                 <div class="product-price-and-cart">
                   <div class="product-price">₼{{ product.price }}</div>

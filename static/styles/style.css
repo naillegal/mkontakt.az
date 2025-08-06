@@ -2657,7 +2657,11 @@ footer .footer-copyright {
   -o-object-fit: cover;
      object-fit: cover;
   border-radius: 10px;
-  filter: brightness(80%);
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
 }
 #selected-product-info .selected-product-info-container .selected-product-info-slider .swiper .swiper-button-prev,
 #selected-product-info .selected-product-info-container .selected-product-info-slider .swiper .swiper-button-next {
